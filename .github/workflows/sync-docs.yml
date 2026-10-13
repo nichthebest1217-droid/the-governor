@@ -34,7 +34,7 @@ jobs:
       - name: Anything new?
         id: diff
         run: |
-          git add -A src/content public/media
+          git add -A src/content public/media src/data
           if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
       - name: Check the new content before it is committed
         if: steps.diff.outputs.changed == 'true'

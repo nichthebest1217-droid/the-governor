@@ -2,7 +2,8 @@
  * The Governor: publish from Google Docs.
  *
  * Lives in a Google Sheet (Extensions > Apps Script). Editors list articles in the Sheet, one
- * per row, each pointing at a Google Doc. Rows marked Approved are offered to the website
+ * per row, each pointing at a Google Doc. Rows marked Approved, and the Homepage, Site and
+ * Masthead tabs, are offered to the website
  * through this script's web address; the website's repository collects them every half hour
  * (or at once from GitHub's "Run workflow" button), checks them, and publishes.
  *
@@ -25,9 +26,33 @@ function onOpen() {
     .addToUi();
 }
 
-/** Writes the header row and the Status / Section / Type dropdowns. Safe to run twice. */
+const HOME_ROWS = [
+  ['Lead story', 'Paste the article\'s web address. Leave empty to use the newest story with a wide photo.'],
+  ['Top story 2', 'Optional. Stories shown beside the lead; leave empty for the newest ones.'],
+  ['Top story 3', ''], ['Top story 4', ''], ['Top story 5', ''],
+  ["Editors' pick 1", 'Up to four articles for the Editors\' Picks band. Leave all four empty to hide the band.'],
+  ["Editors' pick 2", ''], ["Editors' pick 3", ''], ["Editors' pick 4", ''],
+  ['Print issue to promote', 'The issue\'s ID, for example 2026-27-issue-1.'],
+  ['Banner text', 'Optional one-line notice across the top of every page.'],
+  ['Banner link', 'Optional web address the banner points to.'],
+];
+const SITE_ROWS = [
+  ['Contact email', 'Shown on the Contact, Corrections and Join pages. Use an address the adviser has approved.'],
+  ['Tips email', 'Optional. If empty, tips go to the contact email.'],
+  ['Masthead school year', 'For example 2026–27.'],
+];
+
+/** The tab that lists articles: the one named "Articles", or else the first tab. */
+function articlesSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  return ss.getSheetByName('Articles') || ss.getSheets()[0];
+}
+
+/** Writes headers, dropdowns and the settings tabs. Safe to run again: it never clears what you typed. */
 function setUpSheet() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = articlesSheet_();
+  if (sheet.getName() !== 'Articles' && !ss.getSheetByName('Articles')) sheet.setName('Articles');
   sheet.getRange(1, 1, 1, COLUMNS.length).setValues([COLUMNS]).setFontWeight('bold');
   sheet.setFrozenRows(1);
   const rule = (list) => SpreadsheetApp.newDataValidation().requireValueInList(list, true).setAllowInvalid(false).build();
@@ -35,11 +60,72 @@ function setUpSheet() {
   sheet.getRange(2, 4, 500, 1).setDataValidation(rule(['News', 'Opinion', 'Arts', 'Sports', 'Humor & Fun', 'People', 'School Culture']));
   sheet.getRange(2, 7, 500, 1).setDataValidation(rule(['Article', 'Editorial']));
   sheet.getRange(2, 6, 500, 1).setNumberFormat('yyyy-mm-dd');
+  keyValueTab_(ss, 'Homepage', HOME_ROWS);
+  keyValueTab_(ss, 'Site', SITE_ROWS);
+  if (!ss.getSheetByName('Masthead')) {
+    const m = ss.insertSheet('Masthead');
+    m.getRange(1, 1, 1, 3).setValues([['Group', 'Name', 'Role (optional)']]).setFontWeight('bold');
+    m.setFrozenRows(1);
+  }
+}
+
+/** Creates a two-column settings tab, or adds any settings rows it is missing. */
+function keyValueTab_(ss, name, rows) {
+  let tab = ss.getSheetByName(name);
+  if (!tab) {
+    tab = ss.insertSheet(name);
+    tab.getRange(1, 1, 1, 3).setValues([['Setting', 'Value', 'How to fill it in']]).setFontWeight('bold');
+    tab.setFrozenRows(1);
+    tab.setColumnWidth(1, 190); tab.setColumnWidth(2, 420); tab.setColumnWidth(3, 520);
+  }
+  const have = tab.getRange(1, 1, Math.max(1, tab.getLastRow()), 1).getValues().map((r) => String(r[0]).trim());
+  for (const row of rows) if (have.indexOf(row[0]) < 0) tab.appendRow([row[0], '', row[1]]);
+}
+
+/** Reads the Homepage, Site and Masthead tabs. A tab that does not exist is left out. */
+function readSettings_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const out = {};
+  const kv = (name) => {
+    const tab = ss.getSheetByName(name);
+    if (!tab) return null;
+    const map = {};
+    for (const r of tab.getDataRange().getValues().slice(1)) if (String(r[0]).trim()) map[String(r[0]).trim()] = String(r[1] == null ? '' : r[1]).trim();
+    return map;
+  };
+  const home = kv('Homepage');
+  if (home) {
+    const list = (prefix, from, to) => { const a = []; for (let i = from; i <= to; i++) { const v = articleId_(home[prefix + ' ' + i]); if (v) a.push(v); } return a; };
+    out.homepage = {
+      lead: articleId_(home['Lead story']) || null,
+      secondary: list('Top story', 2, 5),
+      editorsPicks: list("Editors' pick", 1, 4),
+      currentIssue: home['Print issue to promote'] || null,
+      alert: home['Banner text'] ? { text: home['Banner text'], href: home['Banner link'] || null } : null,
+    };
+  }
+  const site = kv('Site');
+  if (site) out.site = { contactEmail: site['Contact email'] || null, tipsEmail: site['Tips email'] || null, mastheadYear: site['Masthead school year'] || null };
+  const mast = ss.getSheetByName('Masthead');
+  if (mast) {
+    out.masthead = mast.getDataRange().getValues().slice(1)
+      .map((r) => ({ group: String(r[0]).trim(), name: String(r[1]).trim(), role: String(r[2] == null ? '' : r[2]).trim() }))
+      .filter((r) => r.group && r.name);
+  }
+  return out;
+}
+
+/** "https://.../2026/10/09/dummer-cup-2026/" or "2026-10-09-dummer-cup-2026" -> "2026-10-09-dummer-cup-2026". */
+function articleId_(value) {
+  const v = String(value || '').trim();
+  const m = /(\d{4})\/(\d{2})\/(\d{2})\/([a-z0-9-]+)/.exec(v);
+  if (m) return m[1] + '-' + m[2] + '-' + m[3] + '-' + m[4];
+  return /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/.test(v) ? v : '';
 }
 
 /** Reads every Approved row and writes what would be published into the Result column. */
 function checkApproved() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = articlesSheet_();
   const out = collect_(sheet);
   for (const a of out.articles) sheet.getRange(a.row, a.resultCol).setValue('Ready: ' + a.words + ' words. Will appear at ' + a.url + ' within about 30 minutes.');
   for (const p of out.problems) sheet.getRange(p.row, p.resultCol).setValue('NOT READY: ' + p.message);
@@ -48,7 +134,7 @@ function checkApproved() {
 
 /** Sets Approved rows to Published once their page is really on the website. */
 function markLive() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = articlesSheet_();
   const out = collect_(sheet);
   let n = 0;
   for (const a of out.articles) {
@@ -64,12 +150,13 @@ function markLive() {
 
 /** The website calls this address. It answers with every Approved row, ready to publish. Read-only. */
 function doGet() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const sheet = articlesSheet_();
   const out = collect_(sheet);
   const body = {
     generatedAt: new Date().toISOString(),
     articles: out.articles.map((a) => ({ row: a.row, title: a.title, path: a.path, url: a.url, files: a.files })),
     problems: out.problems.map((p) => ({ row: p.row, headline: p.headline, message: p.message })),
+    settings: readSettings_(),
   };
   return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(ContentService.MimeType.JSON);
 }
