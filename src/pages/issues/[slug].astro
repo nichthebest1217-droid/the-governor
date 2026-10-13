@@ -41,6 +41,9 @@ const when = data.dateLabel ?? `${data.season ?? ''} ${data.year}`.trim();
         {data.notes.map((n) => <p class="meta" style="margin-top:.8rem">{n}</p>)}
       </section>
     )}
+    {articles.length === 0 && data.notes.length > 0 && (
+      <div style="max-width:52rem;margin-bottom:2.5rem">{data.notes.map((n) => <p class="note">{n}</p>)}</div>
+    )}
 
     {pages.length > 0 && (
       <section aria-label="Pages">

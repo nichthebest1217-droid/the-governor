@@ -1,0 +1,29 @@
+{
+  "slug": "2026-27-issue-1",
+  "title": "Issue I, 2026–27",
+  "season": "Fall",
+  "year": 2026,
+  "number": 1,
+  "volume": null,
+  "dateLabel": "October 9, 2026",
+  "publishedOn": "2026-10-09",
+  "academicYear": "2026-2027",
+  "pdf": "/issues/2026-27-issue-1.pdf",
+  "pdfBytes": 4978017,
+  "pageImages": [
+    "/issues/2026-27-issue-1/page-1.jpg",
+    "/issues/2026-27-issue-1/page-2.jpg",
+    "/issues/2026-27-issue-1/page-3.jpg",
+    "/issues/2026-27-issue-1/page-4.jpg",
+    "/issues/2026-27-issue-1/page-5.jpg",
+    "/issues/2026-27-issue-1/page-6.jpg"
+  ],
+  "notes": [
+    "The articles in this issue have not been added to the website as individual articles yet. Read them in the pages below or in the PDF."
+  ],
+  "sourceEvidence": [
+    "Front-page nameplate reads '26-27 Issue I'.",
+    "Pages 2 to 6 carry the running header '26-27 Issue I' and 'October 9, 2026'.",
+    "PDF supplied by Nicholas Zhuo on 13 October 2026 ('The Governors Issue 1.pdf', 6 pages, SHA-256 bcbbdd0f1ab1e75d2acf517b55e7ef4c47f6e6749c462bba8daac86689bfc947). Page images were rendered from that PDF."
+  ]
+}
