@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactLine from '../components/ContactLine.astro';
+import { SECTIONS, href } from '../lib/site';
+---
+<BaseLayout title="Join the staff" description="Write, edit, photograph or design for The Governor.">
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">The paper</span><h1>Join the staff</h1><p>You do not need experience. You need curiosity and a deadline.</p></header>
+    <div class="page-body prose">
+      <p>The paper needs reporters, opinion writers, photographers, illustrators, page designers and editors. Pick a section that interests you:</p>
+      <ul>{SECTIONS.map((s) => <li><a href={href(`/${s.slug}/`)}>{s.label}</a></li>)}</ul>
+      <p>Read a few recent pieces, then pitch an idea in a sentence or two: what the story is, and who you would talk to.</p>
+      <ContactLine subject="Joining The Governor" label="Email the editors" />
+    </div>
+  </div>
+</BaseLayout>

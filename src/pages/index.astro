@@ -1,0 +1,111 @@
+---
+import { getEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StoryCard from '../components/StoryCard.astro';
+import SectionBand from '../components/SectionBand.astro';
+import homepage from '../data/homepage.json';
+import { SECTIONS, SITE, type Article, fileSize, getArticles, href, picture, refId } from '../lib/site';
+
+const all = await getArticles();
+const byId = new Map(all.map((a) => [a.id, a]));
+const pick = (refs: (string | null)[] | null | undefined) =>
+  (refs ?? []).map((r) => byId.get(refId(r))).filter((a): a is Article => Boolean(a));
+
+// Editors choose the lead and secondary stories in src/data/homepage.json (Pages CMS:
+// "Homepage"). Anything left blank falls back to the most recent stories.
+const used = new Set<Article>();
+const take = (list: Article[], n: number) => {
+  const out = list.filter((a) => !used.has(a)).slice(0, n);
+  out.forEach((a) => used.add(a));
+  return out;
+};
+const lead = pick([homepage.lead])[0] ?? all.find((a) => a.data.featured && a.data.coverImage) ?? all.find((a) => a.data.coverImage) ?? all[0];
+if (lead) used.add(lead);
+const chosen = pick(homepage.secondary).filter((a) => !used.has(a));
+const railRight = take([...chosen.filter((a) => a.data.coverImage), ...all.filter((a) => a.data.coverImage)], 2);
+const railLeft = take([...chosen, ...all], 3);
+const latest = take(all, 6);
+const picks = pick(homepage.editorsPicks).slice(0, 4);
+const issue = homepage.currentIssue ? await getEntry('issues', refId(homepage.currentIssue)) : undefined;
+const issueCover = issue ? picture(issue.data.pageImages[0]) : null;
+const bands = SECTIONS.map((s) => ({
+  ...s,
+  articles: all.filter((a) => a !== lead && (a.data.section === s.slug || a.data.secondarySections.includes(s.slug as never))).slice(0, 5),
+}));
+---
+<BaseLayout>
+  <h1 class="visually-hidden">{SITE.name}</h1>
+  {lead ? (
+    <div class="wrap">
+      <section class="lead-package" aria-label="Top stories">
+        <div class="rail-left stack">
+          {railLeft.map((a) => <StoryCard article={a} size="medium" image={false} heading="h2" />)}
+        </div>
+        <div class="lead">
+          <StoryCard article={lead} size="lead" heading="h2" eager sizes="(min-width: 1024px) 620px, 100vw" />
+        </div>
+        <div class="rail-right stack">
+          {railRight.map((a) => <StoryCard article={a} size="medium" dek={false} heading="h2" sizes="(min-width: 1024px) 300px, (min-width: 768px) 50vw, 100vw" />)}
+        </div>
+      </section>
+    </div>
+  ) : (
+    <div class="wrap band"><p>No articles have been published yet.</p></div>
+  )}
+
+  {latest.length > 0 && (
+    <section class="band wrap" aria-labelledby="latest-head" style="padding-top:0">
+      <div class="band-head">
+        <h2 id="latest-head">Latest</h2>
+        <a class="more-link" href={href('/archives/')}>All articles</a>
+      </div>
+      <div class="grid cols-3 ruled collapse-rules">
+        {latest.map((a) => <StoryCard article={a} size="small" image={false} />)}
+      </div>
+    </section>
+  )}
+
+  {picks.length > 0 && (
+    <section class="picks band" aria-labelledby="picks-head">
+      <div class="wrap">
+        <div class="band-head"><h2 id="picks-head">Editors’ Picks</h2></div>
+        <div class="grid cols-4 collapse-rules">
+          {picks.map((a) => <StoryCard article={a} size="small" sizes="(min-width: 1024px) 300px, 50vw" />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {bands.map((b, i) => <SectionBand slug={b.slug} label={b.label} articles={b.articles} reverse={i % 2 === 1} />)}
+
+  {issue && (issue.data.pdf || issueCover) && (
+    <section class="wrap band" aria-labelledby="issue-head">
+      <div class="issue-callout">
+        {issueCover && (
+          <a href={href(`/issues/${issue.id}/`)} tabindex="-1" aria-hidden="true">
+            <img class="page" src={issueCover.src} srcset={issueCover.srcset} sizes="220px" width={issueCover.width} height={issueCover.height} alt="" loading="lazy" decoding="async" />
+          </a>
+        )}
+        <div>
+          <span class="kicker">In print</span>
+          <h2 id="issue-head">{issue.data.title}{issue.data.dateLabel && <span style="font-weight:400;font-style:italic">, {issue.data.dateLabel}</span>}</h2>
+          <p>Read the paper as it was laid out for campus, page by page, or download the full edition.</p>
+          <div class="actions">
+            <a class="button" href={href(`/issues/${issue.id}/`)}>Read the issue</a>
+            {issue.data.pdf && <a class="button ghost" href={href(issue.data.pdf)}>Download PDF{issue.data.pdfBytes ? ` (${fileSize(issue.data.pdfBytes)})` : ''}</a>}
+            <a class="button ghost" href={href('/issues/')}>Browse print issues</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="wrap join" aria-labelledby="join-head">
+    <h2 id="join-head">Write for The Governor</h2>
+    <p>The paper is made by students, for the whole Academy. Pitch a story, send a tip, or write a letter to the editors.</p>
+    <div class="actions">
+      <a class="button" href={href('/join/')}>Join the staff</a>
+      <a class="button ghost" href={href('/contact/')}>Submit a tip or letter</a>
+    </div>
+  </section>
+</BaseLayout>

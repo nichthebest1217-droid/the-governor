@@ -1,0 +1,19 @@
+---
+// The old WordPress site listed sections at /category/<slug>/. Keep those links alive.
+import { SECTIONS, absolute, href } from '../../lib/site';
+export function getStaticPaths() { return SECTIONS.map((s) => ({ params: { slug: s.slug }, props: { label: s.label } })); }
+const { slug } = Astro.params;
+const { label } = Astro.props;
+const target = href(`/${slug}/`);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{label} has moved</title>
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={absolute(`/${slug}/`)} />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body><p>{label} is now at <a href={target}>{target}</a>.</p></body>
+</html>

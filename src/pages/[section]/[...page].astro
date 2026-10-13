@@ -1,0 +1,51 @@
+---
+import type { GetStaticPathsOptions, Page } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StoryCard from '../../components/StoryCard.astro';
+import { SECTIONS, type Article, getArticles, href } from '../../lib/site';
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const all = await getArticles();
+  return SECTIONS.flatMap((s) => {
+    const list = all.filter((a) => a.data.section === s.slug || a.data.secondarySections.includes(s.slug as never));
+    return paginate(list, { params: { section: s.slug }, props: { label: s.label }, pageSize: 12 });
+  });
+}
+interface Props { page: Page<Article>; label: string }
+const { page, label } = Astro.props;
+const { section } = Astro.params;
+const [first, ...rest] = page.data;
+const showFeature = page.currentPage === 1 && first?.data.coverImage;
+const others = SECTIONS.filter((s) => s.slug !== section);
+---
+<BaseLayout title={page.currentPage > 1 ? `${label}, page ${page.currentPage}` : label} description={`${label} from The Governor, the student newspaper of The Governor's Academy.`}>
+  <div class="wrap">
+    <header class="page-head">
+      <span class="kicker">Section</span>
+      <h1>{label}</h1>
+      <p class="meta" style="margin-top:.6rem">{page.total} {page.total === 1 ? 'article' : 'articles'}{page.lastPage > 1 && ` · Page ${page.currentPage} of ${page.lastPage}`}</p>
+    </header>
+    {page.total === 0 ? <p>Nothing has been published in this section yet.</p> : (
+      <div class="with-rail">
+        <div>
+          {showFeature && <div style="margin-bottom:1.6rem;padding-bottom:1.6rem;border-bottom:1px solid var(--rule-strong)"><StoryCard article={first} size="large" kicker={false} heading="h2" eager sizes="(min-width: 900px) 60vw, 100vw" /></div>}
+          <div class="river">
+            {(showFeature ? rest : page.data).map((a) => <StoryCard article={a} size="medium" kicker={a.data.kind === 'editorial'} heading="h2" sizes="240px" />)}
+          </div>
+          {page.lastPage > 1 && (
+            <nav class="pagination" aria-label="Pagination">
+              <span>{page.url.prev && <a href={page.url.prev} rel="prev">← Newer</a>}</span>
+              <span class="meta">Page {page.currentPage} of {page.lastPage}</span>
+              <span>{page.url.next && <a href={page.url.next} rel="next">Older →</a>}</span>
+            </nav>
+          )}
+        </div>
+        <aside aria-label="Other sections">
+          <h2 class="label-head">Other sections</h2>
+          <ul class="plain-list">{others.map((s) => <li><a href={href(`/${s.slug}/`)}>{s.label}</a></li>)}</ul>
+          <p style="margin-top:1.5rem"><a class="more-link" href={href('/archives/')}>Browse the full archive</a></p>
+        </aside>
+      </div>
+    )}
+  </div>
+</BaseLayout>

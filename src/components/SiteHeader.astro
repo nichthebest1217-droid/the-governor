@@ -1,0 +1,61 @@
+---
+import { getEntry } from 'astro:content';
+import Icon from './Icon.astro';
+import navigation from '../data/navigation.json';
+import homepage from '../data/homepage.json';
+import { SITE, href, refId } from '../lib/site';
+
+const path = Astro.url.pathname;
+const isCurrent = (target: string) => path === href(target) || (target !== '/' && path.startsWith(href(target)));
+const issue = homepage.currentIssue ? await getEntry('issues', refId(homepage.currentIssue)) : undefined;
+const links = [
+  ...navigation.sections.map((s) => ({ href: `/${s.slug}/`, label: s.label })),
+];
+---
+<header class="site-header">
+  <div class="wrap">
+    <div class="utility">
+      <span class="left" data-today></span>
+      <span class="motto">{SITE.motto}</span>
+      <span class="right">
+        {issue && <a href={href(`/issues/${issue.id}/`)}>Latest print edition: {issue.data.title}</a>}
+      </span>
+    </div>
+    <div class="header-main">
+      <details class="nav-toggle">
+        <summary aria-label="Menu"><Icon name="menu" /><Icon name="close" /></summary>
+        <nav class="drawer" aria-label="Sections (mobile)">
+          <ul>
+            {links.map((l) => <li><a href={href(l.href)} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a></li>)}
+            {navigation.more.map((l) => <li><a href={href(l.href)}>{l.label}</a></li>)}
+            <li><a href={href('/issues/')}>Print Issues</a></li>
+            <li><a href={href('/search/')}>Search</a></li>
+          </ul>
+        </nav>
+      </details>
+      <a class="mobile-search" href={href('/search/')} aria-label="Search"><Icon name="search" /></a>
+      <div class="nameplate">
+        <a href={href('/')} aria-label={`${SITE.name}, home`}>
+          <div class="title">{SITE.name}</div>
+        </a>
+        <p class="tagline">The student newspaper of {SITE.school} <span aria-hidden="true">·</span> {SITE.location}</p>
+      </div>
+    </div>
+    <nav class="site-nav" aria-label="Sections">
+      <ul>
+        {links.map((l) => <li><a href={href(l.href)} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a></li>)}
+        <li class="divider" aria-hidden="true"></li>
+        {navigation.more.map((l) => <li><a href={href(l.href)} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a></li>)}
+        <li><a class="search-link" href={href('/search/')} aria-current={isCurrent('/search/') ? 'page' : undefined}><Icon name="search" />Search</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+<script is:inline>
+  (() => {
+    const el = document.querySelector('[data-today]');
+    if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const menu = document.querySelector('.nav-toggle');
+    if (menu) document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.open) { menu.open = false; menu.querySelector('summary').focus(); } });
+  })();
+</script>

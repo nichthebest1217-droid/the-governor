@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArchiveList from '../../components/ArchiveList.astro';
+import { type Article, academicYear, academicYearLabel, getArticles, href } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const all = await getArticles();
+  const years = [...new Set(all.map((a) => academicYear(a.data.publishedAt)))];
+  return years.map((year) => ({ params: { year }, props: { articles: all.filter((a) => academicYear(a.data.publishedAt) === year) } }));
+}
+interface Props { articles: Article[] }
+const { articles } = Astro.props;
+const year = Astro.params.year!;
+---
+<BaseLayout title={`${academicYearLabel(year)} archive`} description={`Articles The Governor published during the ${academicYearLabel(year)} school year.`}>
+  <div class="wrap">
+    <header class="page-head">
+      <a class="kicker" href={href('/archives/')}>Archives</a>
+      <h1>{academicYearLabel(year)}</h1>
+      <p>{articles.length} articles from the {academicYearLabel(year)} school year.</p>
+    </header>
+    <div style="max-width:52rem"><ArchiveList articles={articles} /></div>
+  </div>
+</BaseLayout>

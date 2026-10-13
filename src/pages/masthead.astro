@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import masthead from '../data/masthead.json';
+import { href } from '../lib/site';
+const data = masthead as { academicYear: string | null; groups: { title: string; members: { name: string; role?: string | null }[] }[] };
+---
+<BaseLayout title="Masthead" description="The editorial board and staff of The Governor.">
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">The paper</span><h1>Masthead</h1>{data.academicYear && <p>Editorial board and staff, {data.academicYear}.</p>}</header>
+    <div class="page-body">
+      {data.groups.length === 0 ? (
+        <p class="note">This year’s editorial board has not been posted yet. Everyone who has written for the paper online is listed under <a href={href('/authors/')}>Writers</a>.</p>
+      ) : data.groups.map((g) => (
+        <section style="margin-bottom:2rem">
+          <h2 class="label-head">{g.title}</h2>
+          <ul class="plain-list">{g.members.map((m) => <li><span style="font:500 1.0625rem var(--font-display)">{m.name}</span>{m.role && <span class="count">{m.role}</span>}</li>)}</ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

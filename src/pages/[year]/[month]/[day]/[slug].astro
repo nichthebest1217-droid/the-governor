@@ -1,0 +1,123 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import StoryCard from '../../../../components/StoryCard.astro';
+import {
+  SITE, type Article, absolute, authorLabel, formatDate, getArticles, getAuthorMap, href, permalink, picture, readingMinutes, sectionLabel, summary,
+} from '../../../../lib/site';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  return articles.map((article) => {
+    const [year, month, day, slug] = permalink(article).split('/').filter(Boolean);
+    return { params: { year, month, day, slug }, props: { article } };
+  });
+}
+
+interface Props { article: Article }
+const { article } = Astro.props;
+const { data } = article;
+const { Content } = await render(article);
+const authorMap = await getAuthorMap();
+const authors = data.authors.map((id) => authorMap.get(id)).filter((a) => a && a.data.visible);
+const cover = picture(data.coverImage);
+const issue = data.issueId ? await getEntry('issues', data.issueId) : undefined;
+const isEditorial = data.kind === 'editorial';
+const minutes = readingMinutes(article);
+const path = permalink(article);
+
+// Related: same section first, then by shared author, newest first; never the article itself.
+const all = await getArticles();
+const related = all
+  .filter((a) => a.id !== article.id)
+  .map((a) => ({ a, score: (a.data.section === data.section ? 2 : 0) + (a.data.authors.some((x) => data.authors.includes(x)) ? 1 : 0) }))
+  .filter((x) => x.score > 0)
+  .sort((x, y) => y.score - x.score)
+  .slice(0, 3)
+  .map((x) => x.a);
+
+const jsonLd: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': data.section === 'opinion' ? 'OpinionNewsArticle' : 'NewsArticle',
+  headline: data.title,
+  datePublished: data.publishedAt,
+  ...(data.updatedAt ? { dateModified: data.updatedAt } : {}),
+  mainEntityOfPage: absolute(path),
+  articleSection: sectionLabel(data.section),
+  publisher: { '@type': 'NewsMediaOrganization', name: SITE.name },
+  ...(authors.length ? { author: authors.map((a) => ({ '@type': 'Person', name: a!.data.name, url: absolute(`/authors/${a!.id}/`) })) } : {}),
+  ...(data.coverImage ? { image: [absolute(data.coverImage)] } : {}),
+};
+---
+<BaseLayout title={data.title} description={summary(article, 155)} image={data.coverImage} type="article" canonicalPath={path} jsonLd={jsonLd} searchable>
+  <Fragment slot="head">
+    <meta property="article:published_time" content={data.publishedAt} />
+    {data.updatedAt && <meta property="article:modified_time" content={data.updatedAt} />}
+    <meta property="article:section" content={sectionLabel(data.section)} />
+  </Fragment>
+  <article class="wrap">
+    <header class:list={['article-head', { 'is-opinion': data.section === 'opinion' }]}>
+      <a class="kicker" href={href(`/${data.section}/`)} data-pagefind-filter="section">{sectionLabel(data.section)}</a>
+      {isEditorial && <span class="kicker" style="color:var(--ink-soft)"> · Editorial</span>}
+      <h1 data-pagefind-meta="title">{data.title}</h1>
+      {data.excerpt && <p class="deck">{data.excerpt}</p>}
+      <div class="byline-block">
+        {authors.length > 0 && (
+          <p class="names">
+            By {authors.map((a, i) => (<>{i > 0 && (i === authors.length - 1 ? ' and ' : ', ')}<a href={href(`/authors/${a!.id}/`)} data-pagefind-filter="author">{authorLabel(a!)}</a></>))}
+          </p>
+        )}
+        <p>
+          <time datetime={data.publishedAt} data-pagefind-meta={`date:${formatDate(data.publishedAt)}`}>{formatDate(data.publishedAt)}</time>
+          {data.updatedAt && <span class="sep"> · Updated <time datetime={data.updatedAt}>{formatDate(data.updatedAt)}</time></span>}
+          <span> · {minutes} min read</span>
+        </p>
+      </div>
+    </header>
+
+    {cover && (
+      <figure class="article-cover" style="margin-inline:auto">
+        <img src={cover.src} srcset={cover.srcset} sizes="(min-width: 1040px) 992px, 100vw" width={cover.width} height={cover.height} alt={data.coverAlt ?? ''} fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
+        {(data.coverCaption || data.coverCredit) && (
+          <figcaption class="caption">
+            {data.coverCaption} {data.coverCredit && <span class="credit">{data.coverCredit}</span>}
+          </figcaption>
+        )}
+      </figure>
+    )}
+
+    <div class="article-body">
+      {data.correction && <p class="note" style="margin-bottom:1.5rem"><strong>Correction:</strong> {data.correction}</p>}
+      <div class="prose"><Content /></div>
+    </div>
+
+    <footer class="article-foot" data-pagefind-ignore>
+      {issue && (
+        <p>
+          {isEditorial ? 'The editorial of ' : 'Appeared in print in '}
+          <a href={href(`/issues/${issue.id}/`)}>{issue.data.title}{issue.data.dateLabel ? `, ${issue.data.dateLabel}` : ` (${issue.data.year})`}</a>.
+        </p>
+      )}
+      {data.tags.length > 0 && <ul class="tag-list" aria-label="Tags">{data.tags.map((t) => <li>{t}</li>)}</ul>}
+      <div class="row">
+        <button class="copy-link" type="button" data-copy={absolute(path)}>Copy link</button>
+        <span>Spotted an error? <a href={href('/corrections/')}>Request a correction</a>.</span>
+      </div>
+    </footer>
+  </article>
+
+  {related.length > 0 && (
+    <section class="wrap band related" aria-labelledby="related-head" style="margin-top:2rem" data-pagefind-ignore>
+      <div class="band-head"><h2 id="related-head">More from {sectionLabel(data.section)}</h2><a class="more-link" href={href(`/${data.section}/`)}>View all</a></div>
+      <div class="grid cols-3 collapse-rules">
+        {related.map((a) => <StoryCard article={a} size="small" sizes="(min-width: 768px) 33vw, 100vw" />)}
+      </div>
+    </section>
+  )}
+  <script is:inline>
+    document.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = 'Link copied'; }
+      catch { window.prompt('Copy this link', btn.dataset.copy); }
+    }));
+  </script>
+</BaseLayout>

@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StoryCard from '../components/StoryCard.astro';
+import { getArticles, href } from '../lib/site';
+const latest = (await getArticles()).slice(0, 3);
+---
+<BaseLayout title="Page not found" noindex>
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">Error 404</span><h1>We can’t find that page</h1><p>The address may be mistyped, or the page may have moved when the paper’s website was rebuilt.</p></header>
+    <div class="actions" style="margin-bottom:2.5rem">
+      <a class="button" href={href('/search/')}>Search the archive</a>
+      <a class="button ghost" href={href('/archives/')}>Browse by date</a>
+      <a class="button ghost" href={href('/')}>Front page</a>
+    </div>
+    <h2 class="label-head">Latest</h2>
+    <div class="grid cols-3 collapse-rules">{latest.map((a) => <StoryCard article={a} size="small" image={false} />)}</div>
+  </div>
+</BaseLayout>

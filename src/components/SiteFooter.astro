@@ -1,0 +1,45 @@
+---
+import navigation from '../data/navigation.json';
+import { SITE, href } from '../lib/site';
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="name" href={href('/')}>{SITE.name}</a>
+        <p style="margin-top:.8rem;max-width:26rem">{SITE.description} Written, edited and produced by students in {SITE.location}.</p>
+        <p style="margin-top:.6rem;font-style:italic;font-family:var(--font-display);font-size:1rem">{SITE.motto}</p>
+      </div>
+      <nav aria-label="Footer sections">
+        <h2>Sections</h2>
+        <ul>{navigation.sections.map((s) => <li><a href={href(`/${s.slug}/`)}>{s.label}</a></li>)}</ul>
+      </nav>
+      <nav aria-label="Footer archive">
+        <h2>Archive</h2>
+        <ul>
+          <li><a href={href('/archives/')}>All articles</a></li>
+          <li><a href={href('/issues/')}>Print issues</a></li>
+          <li><a href={href('/authors/')}>Writers</a></li>
+          <li><a href={href('/search/')}>Search</a></li>
+          <li><a href={href('/rss.xml')}>RSS feed</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Footer newspaper">
+        <h2>The paper</h2>
+        <ul>
+          <li><a href={href('/about/')}>About</a></li>
+          <li><a href={href('/masthead/')}>Masthead</a></li>
+          <li><a href={href('/join/')}>Join the staff</a></li>
+          <li><a href={href('/contact/')}>Contact &amp; tips</a></li>
+          <li><a href={href('/corrections/')}>Corrections</a></li>
+          <li><a href={href('/privacy/')}>Privacy</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="fine">
+      <span>© {year} {SITE.name}. Articles and photographs belong to their student authors and photographers.</span>
+      <span>Views expressed in Opinion are the writers’ own.</span>
+    </div>
+  </div>
+</footer>

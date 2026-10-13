@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArchiveList from '../../components/ArchiveList.astro';
+import { academicYear, academicYearLabel, getArticles, href } from '../../lib/site';
+
+const all = await getArticles();
+const years = [...new Set(all.map((a) => academicYear(a.data.publishedAt)))].sort().reverse();
+const current = years[0];
+const issues = await getCollection('issues');
+---
+<BaseLayout title="Archives" description="Every article The Governor has published online, by date, section and writer.">
+  <div class="wrap">
+    <header class="page-head">
+      <span class="kicker">Archives</span>
+      <h1>The article archive</h1>
+      <p>{all.length} articles, newest first. Looking for a phrase or a name? <a href={href('/search/')}>Search the full text</a>.</p>
+    </header>
+    <div class="with-rail">
+      <div>
+        {current ? (
+          <>
+            <h2 class="label-head">{academicYearLabel(current)} school year</h2>
+            <ArchiveList articles={all.filter((a) => academicYear(a.data.publishedAt) === current)} />
+          </>
+        ) : <p>No articles have been published yet.</p>}
+      </div>
+      <aside>
+        <h2 class="label-head">By school year</h2>
+        <ul class="plain-list">
+          {years.map((y) => (
+            <li>
+              <a href={href(`/archives/${y}/`)}>{academicYearLabel(y)}</a>
+              <span class="count">{all.filter((a) => academicYear(a.data.publishedAt) === y).length} articles</span>
+            </li>
+          ))}
+        </ul>
+        <h2 class="label-head" style="margin-top:2rem">Print issues</h2>
+        <p class="meta" style="margin-bottom:.8rem">Whole editions as they were printed are kept separately from web articles.</p>
+        <a class="button ghost" href={href('/issues/')}>Browse {issues.length} print {issues.length === 1 ? 'issue' : 'issues'}</a>
+        <h2 class="label-head" style="margin-top:2rem">Writers</h2>
+        <a class="more-link" href={href('/authors/')}>All writers</a>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

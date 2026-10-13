@@ -1,0 +1,40 @@
+---
+import { type Article, authorLabel, formatDate, getAuthorMap, href, permalink, picture, sectionLabel, summary } from '../lib/site';
+
+interface Props {
+  article: Article;
+  size?: 'lead' | 'large' | 'medium' | 'small';
+  layout?: 'stack' | 'side';
+  image?: boolean;
+  dek?: boolean;
+  kicker?: boolean;
+  date?: boolean;
+  heading?: 'h2' | 'h3';
+  eager?: boolean;
+  sizes?: string;
+}
+const { article, size = 'medium', layout = 'stack', image = true, dek = true, kicker = true, date = true, heading: H = 'h3', eager = false, sizes = '(min-width: 1024px) 30vw, (min-width: 768px) 50vw, 100vw' } = Astro.props;
+const { data } = article;
+const authorMap = await getAuthorMap();
+const authors = data.authors.map((id) => authorMap.get(id)).filter((a) => a && a.data.visible);
+const pic = image ? picture(data.coverImage) : null;
+const url = href(permalink(article));
+const isOpinion = data.section === 'opinion';
+const label = data.kind === 'editorial' ? 'Editorial' : sectionLabel(data.section);
+---
+<article class:list={['story', `size-${size}`, `layout-${layout}`, { 'is-opinion': isOpinion, 'no-media': !pic }]}>
+  {pic && (
+    <a class="media" href={url} tabindex="-1" aria-hidden="true">
+      <img src={pic.src} srcset={pic.srcset} sizes={pic.srcset ? sizes : undefined} width={pic.width} height={pic.height} alt="" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined} decoding="async" />
+    </a>
+  )}
+  {kicker && <a class="kicker" href={href(`/${data.section}/`)}>{label}</a>}
+  <H class="hed"><a href={url}>{data.title}</a></H>
+  {dek && <p class="dek">{summary(article)}</p>}
+  <p class="meta">
+    {authors.length > 0 && (
+      <span>By {authors.map((a, i) => (<>{i > 0 && (i === authors.length - 1 ? ' and ' : ', ')}<a href={href(`/authors/${a!.id}/`)}>{authorLabel(a!)}</a></>))}</span>
+    )}
+    {date && <time class:list={[{ sep: authors.length > 0 }]} datetime={data.publishedAt}>{formatDate(data.publishedAt, 'short')}</time>}
+  </p>
+</article>

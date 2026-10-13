@@ -1,0 +1,12 @@
+---
+// Renders a real mailto link only when an address has been approved in src/data/site.json.
+// With no address configured it says so plainly; it never shows a form that goes nowhere.
+import { SITE } from '../lib/site';
+interface Props { kind?: 'contact' | 'tips'; subject?: string; label?: string }
+const { kind = 'contact', subject, label } = Astro.props;
+const email = (kind === 'tips' ? SITE.tipsEmail : null) ?? SITE.contactEmail;
+const link = email ? `mailto:${email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}` : null;
+---
+{link
+  ? <p><a class="button" href={link}>{label ?? `Email ${email}`}</a> <span class="meta" style="margin-left:.5rem">Opens your email app ({email}).</span></p>
+  : <p class="note">The staff’s public email address has not been posted here yet. Until it is, speak to any editor or the paper’s faculty adviser on campus.</p>}

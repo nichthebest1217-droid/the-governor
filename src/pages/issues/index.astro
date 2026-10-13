@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { href, picture } from '../../lib/site';
+
+const seasonOrder: Record<string, number> = { Winter: 0, Spring: 1, Summer: 2, Fall: 3 };
+const issues = (await getCollection('issues')).sort((a, b) =>
+  b.data.year - a.data.year || (seasonOrder[b.data.season ?? ''] ?? 0) - (seasonOrder[a.data.season ?? ''] ?? 0) || (b.data.number ?? 0) - (a.data.number ?? 0));
+const years = [...new Set(issues.map((i) => i.data.year))];
+---
+<BaseLayout title="Print issues" description="Print editions of The Governor, with page images and PDFs where the staff has them.">
+  <div class="wrap">
+    <header class="page-head">
+      <span class="kicker">Archives</span>
+      <h1>Print issues</h1>
+      <p>Editions of the paper as they were printed. Only issues the staff can document are listed; an issue without a scan is marked as such.</p>
+    </header>
+    {issues.length === 0 && <p>No print issues have been added yet.</p>}
+    {years.map((year) => (
+      <section style="margin-bottom:2.5rem">
+        <h2 class="label-head">{year}</h2>
+        <div class="issue-grid">
+          {issues.filter((i) => i.data.year === year).map((issue) => {
+            const cover = picture(issue.data.pageImages[0]);
+            return (
+              <a class="issue-card" href={href(`/issues/${issue.id}/`)}>
+                {cover
+                  ? <span class="cover"><img src={cover.src} srcset={cover.srcset} sizes="220px" width={cover.width} height={cover.height} alt="" loading="lazy" decoding="async" /></span>
+                  : <span class="cover empty">No scan in the archive yet</span>}
+                <span>
+                  <h3>{issue.data.title}</h3>
+                  <span class="meta">{issue.data.dateLabel ?? `${issue.data.season ?? ''} ${issue.data.year}`.trim()}{issue.data.pdf && ' · PDF'}</span>
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

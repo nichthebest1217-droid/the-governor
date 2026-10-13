@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { authorLabel, getArticles, href } from '../../lib/site';
+
+const all = await getArticles();
+const authors = (await getCollection('authors', (a) => a.data.visible))
+  .map((a) => ({ a, count: all.filter((x) => x.data.authors.includes(a.id)).length }))
+  .filter((x) => x.count > 0)
+  .sort((x, y) => x.a.data.name.split(' ').slice(-1)[0].localeCompare(y.a.data.name.split(' ').slice(-1)[0]));
+---
+<BaseLayout title="Writers" description="Students who have written for The Governor.">
+  <div class="wrap">
+    <header class="page-head">
+      <span class="kicker">Archives</span>
+      <h1>Writers</h1>
+      <p>Everyone with a byline in the online archive, by last name.</p>
+    </header>
+    <ul class="plain-list" style="columns:18rem 3;column-gap:var(--gap)">
+      {authors.map(({ a, count }) => (
+        <li style="break-inside:avoid"><a href={href(`/authors/${a.id}/`)}>{authorLabel(a)}</a><span class="count">{count} {count === 1 ? 'article' : 'articles'}</span></li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>

@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { href } from '../lib/site';
+---
+<BaseLayout title="Privacy" description="What this website does and does not collect.">
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">The paper</span><h1>Privacy</h1></header>
+    <div class="page-body prose">
+      <p>This website is a set of static pages. It sets no cookies, runs no advertising or analytics scripts, and has no reader accounts or comments.</p>
+      <ul>
+        <li><strong>Search</strong> runs entirely in your browser against an index file; what you type is not sent to us.</li>
+        <li><strong>Fonts and images</strong> are served from this site, not from third-party services.</li>
+        <li><strong>Hosting.</strong> Like any web host, the company that serves these pages may log technical details such as IP addresses.</li>
+        <li><strong>Email.</strong> If you write to the staff, we see your address and message and use them only to reply or to consider your letter or tip.</li>
+      </ul>
+      <p>Subscriber lists and comments from the paper’s earlier website were not carried over to this one.</p>
+      <p>Students named or pictured in an article who have a concern can <a href={href('/contact/')}>contact the editors</a>.</p>
+    </div>
+  </div>
+</BaseLayout>

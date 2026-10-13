@@ -1,0 +1,30 @@
+---
+import StoryCard from './StoryCard.astro';
+import { type Article, href } from '../lib/site';
+
+interface Props { slug: string; label: string; articles: Article[]; reverse?: boolean }
+const { slug, label, articles, reverse = false } = Astro.props;
+// Lead with the newest story that has a photograph; if none has one, run a text grid.
+const feature = articles.find((a) => a.data.coverImage);
+const rest = articles.filter((a) => a !== feature).slice(0, feature ? 3 : 4);
+---
+{articles.length > 0 && (
+  <section class="band wrap" aria-labelledby={`band-${slug}`}>
+    <div class="band-head">
+      <h2 id={`band-${slug}`}><a href={href(`/${slug}/`)}>{label}</a></h2>
+      <a class="more-link" href={href(`/${slug}/`)} aria-label={`View all ${label}`}>View all</a>
+    </div>
+    {feature ? (
+      <div class:list={['feature-split', { reverse }]}>
+        <StoryCard article={feature} size="large" kicker={false} sizes="(min-width: 768px) 55vw, 100vw" />
+        <div class="stack">
+          {rest.map((a) => <StoryCard article={a} size="medium" layout="side" kicker={false} sizes="110px" />)}
+        </div>
+      </div>
+    ) : (
+      <div class:list={['grid', 'ruled', 'collapse-rules', rest.length >= 4 ? 'cols-4' : rest.length === 3 ? 'cols-3' : 'cols-2']}>
+        {rest.map((a) => <StoryCard article={a} size="medium" image={false} kicker={a.data.kind === 'editorial'} />)}
+      </div>
+    )}
+  </section>
+)}

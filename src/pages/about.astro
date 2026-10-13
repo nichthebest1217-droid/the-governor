@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { SECTIONS, SITE, getArticles, href } from '../lib/site';
+const articles = await getArticles();
+const writers = new Set(articles.flatMap((a) => a.data.authors)).size;
+const issues = await getCollection('issues');
+---
+<BaseLayout title="About" description="About The Governor, the student newspaper of The Governor's Academy." searchable>
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">The paper</span><h1>About The Governor</h1></header>
+    <div class="page-body prose">
+      <p><em>The Governor</em> is the student newspaper of {SITE.school} in {SITE.location}. Students report, write, edit, photograph and lay out every issue.</p>
+      <p>The paper is published in print on campus and online here. This site holds {articles.length} articles by {writers} student writers, along with <a href={href('/issues/')}>{issues.length} print {issues.length === 1 ? 'issue' : 'issues'}</a> the staff has on record.</p>
+      <h2>Sections</h2>
+      <ul>{SECTIONS.map((s) => <li><a href={href(`/${s.slug}/`)}>{s.label}</a></li>)}</ul>
+      <h2>News and opinion</h2>
+      <p>News articles report what happened and who said it. Opinion pieces carry one writer’s view and are labelled Opinion. An Editorial is the shared position of the editors who sign it. Humor &amp; Fun is satire and entertainment and should be read that way.</p>
+      <h2>Get involved</h2>
+      <p>Any student can <a href={href('/join/')}>write for the paper</a>. Readers can <a href={href('/contact/')}>send a tip or a letter</a>, and anyone can <a href={href('/corrections/')}>ask for a correction</a>.</p>
+      <h2>The archive</h2>
+      <p>Articles first published on the paper’s earlier website keep their original headlines, text, dates and web addresses. See the <a href={href('/archives/')}>archive</a>.</p>
+    </div>
+  </div>
+</BaseLayout>

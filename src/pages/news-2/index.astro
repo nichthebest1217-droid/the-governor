@@ -1,0 +1,16 @@
+---
+// Old WordPress page "/news-2/" (an empty page titled "News").
+import { absolute, href } from '../../lib/site';
+const target = href('/news/');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>News has moved</title>
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={absolute('/news/')} />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body><p>News is now at <a href={target}>{target}</a>.</p></body>
+</html>

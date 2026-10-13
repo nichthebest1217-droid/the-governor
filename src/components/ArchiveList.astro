@@ -1,0 +1,69 @@
+---
+import { type Article, authorLabel, formatDate, getAuthorMap, href, monthLabel, permalink, sectionLabel, SECTIONS } from '../lib/site';
+interface Props { articles: Article[] }
+const { articles } = Astro.props;
+const authorMap = await getAuthorMap();
+const months = new Map<string, Article[]>();
+for (const a of articles) {
+  const key = a.data.publishedAt.slice(0, 7);
+  months.set(key, [...(months.get(key) ?? []), a]);
+}
+const authorIds = [...new Set(articles.flatMap((a) => a.data.authors))]
+  .filter((id) => authorMap.get(id)?.data.visible)
+  .sort((a, b) => authorMap.get(a)!.data.name.localeCompare(authorMap.get(b)!.data.name));
+const sections = SECTIONS.filter((s) => articles.some((a) => a.data.section === s.slug));
+---
+<form class="filters" data-archive-filters hidden>
+  <label>Section
+    <select name="section"><option value="">All sections</option>{sections.map((s) => <option value={s.slug}>{s.label}</option>)}</select>
+  </label>
+  <label>Writer
+    <select name="author"><option value="">All writers</option>{authorIds.map((id) => <option value={id}>{authorMap.get(id)!.data.name}</option>)}</select>
+  </label>
+  <p class="meta" data-archive-count aria-live="polite" style="margin:0 0 .55rem"></p>
+</form>
+<div data-archive-list>
+  {[...months].map(([month, list]) => (
+    <section data-month>
+      <h2 class="month-head">{monthLabel(month)}</h2>
+      {list.map((a) => (
+        <div class="archive-row" data-section={a.data.section} data-authors={a.data.authors.join(' ')}>
+          <time datetime={a.data.publishedAt}>{formatDate(a.data.publishedAt, 'short').replace(/, \d{4}$/, '')}</time>
+          <div>
+            <h3><a href={href(permalink(a))}>{a.data.title}</a></h3>
+            <p class="meta">
+              <span class="kicker">{a.data.kind === 'editorial' ? 'Editorial' : sectionLabel(a.data.section)}</span>
+              {a.data.authors.map((id) => authorMap.get(id)).filter((x) => x?.data.visible).map((x, i) => <span class="sep">{i === 0 && 'By '}{authorLabel(x!)}</span>)}
+            </p>
+          </div>
+        </div>
+      ))}
+    </section>
+  ))}
+</div>
+<script is:inline>
+  (() => {
+    const form = document.querySelector('[data-archive-filters]');
+    if (!form) return;
+    form.hidden = false;
+    const rows = [...document.querySelectorAll('.archive-row')];
+    const count = form.querySelector('[data-archive-count]');
+    const params = new URLSearchParams(location.search);
+    for (const name of ['section', 'author']) if (params.get(name)) form.elements[name].value = params.get(name);
+    const apply = () => {
+      const section = form.elements.section.value;
+      const author = form.elements.author.value;
+      let shown = 0;
+      for (const row of rows) {
+        const ok = (!section || row.dataset.section === section) && (!author || row.dataset.authors.split(' ').includes(author));
+        row.hidden = !ok;
+        if (ok) shown++;
+      }
+      document.querySelectorAll('[data-month]').forEach((m) => { m.hidden = !m.querySelector('.archive-row:not([hidden])'); });
+      count.textContent = shown + (shown === 1 ? ' article' : ' articles');
+    };
+    form.addEventListener('change', apply);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    apply();
+  })();
+</script>

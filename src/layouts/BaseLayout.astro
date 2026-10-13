@@ -1,0 +1,55 @@
+---
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import homepage from '../data/homepage.json';
+import { SITE, INDEXABLE, absolute, href } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string | null;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  canonicalPath?: string;
+  jsonLd?: Record<string, unknown>;
+  /** Set false on pages that must stay out of the search index (lists, utility pages). */
+  searchable?: boolean;
+}
+const { title, description = SITE.description, image, type = 'website', noindex = false, canonicalPath, jsonLd, searchable = false } = Astro.props;
+const fullTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} | ${SITE.description.replace(/\.$/, '')}`;
+const canonical = canonicalPath ? absolute(canonicalPath) : new URL(Astro.url.pathname, Astro.site).toString();
+const ogImage = image ? absolute(image) : null;
+const alert = (homepage as { alert: null | { text: string; href?: string | null } }).alert;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {(noindex || !INDEXABLE) && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" href={href('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.name} href={href('/rss.xml')} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title ?? SITE.name} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <slot name="head" />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {alert?.text && <div class="alert-banner" role="status">{alert.href ? <a href={alert.href}>{alert.text}</a> : alert.text}</div>}
+    <SiteHeader />
+    <main id="main" data-pagefind-body={searchable ? '' : undefined}>
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

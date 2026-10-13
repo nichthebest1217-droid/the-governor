@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactLine from '../components/ContactLine.astro';
+import { href } from '../lib/site';
+---
+<BaseLayout title="Contact and tips" description="Send The Governor a news tip, a letter to the editors, or a question.">
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">The paper</span><h1>Contact, tips and letters</h1><p>Seen something the school should know about? Disagree with something we ran? Write to us.</p></header>
+    <div class="page-body prose">
+      <h2>Send a news tip</h2>
+      <p>Say what happened, when, and who we could talk to. Tell us if you want your name kept out of it; we will ask before using it.</p>
+      <ContactLine kind="tips" subject="News tip" label="Email a tip" />
+      <h2>Letters to the editors</h2>
+      <p>Letters should carry your name and class year or role, and respond to something in the paper or on campus. The editors choose which letters run and may edit for length and clarity.</p>
+      <ContactLine subject="Letter to the editors" label="Email a letter" />
+      <h2>Corrections</h2>
+      <p>See the <a href={href('/corrections/')}>corrections page</a>.</p>
+    </div>
+  </div>
+</BaseLayout>

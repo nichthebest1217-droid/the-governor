@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StoryCard from '../../components/StoryCard.astro';
+import { type Article, type Author, getArticles, href, picture } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const all = await getArticles();
+  const authors = await getCollection('authors', (a) => a.data.visible);
+  return authors.map((author) => ({ params: { slug: author.id }, props: { author, articles: all.filter((a) => a.data.authors.includes(author.id)) } }));
+}
+interface Props { author: Author; articles: Article[] }
+const { author, articles } = Astro.props;
+const photo = picture(author.data.photo);
+---
+<BaseLayout title={author.data.name} description={`Articles by ${author.data.name} in The Governor.`}>
+  <div class="wrap">
+    <header class="page-head">
+      <a class="kicker" href={href('/authors/')}>Writers</a>
+      <h1>{author.data.name}</h1>
+      <p class="meta" style="margin-top:.6rem">
+        {author.data.classYear && <span>Class of {author.data.classYear}</span>}
+        <span class:list={[{ sep: author.data.classYear }]}>{articles.length} {articles.length === 1 ? 'article' : 'articles'}</span>
+      </p>
+      {photo && <img src={photo.src} srcset={photo.srcset} sizes="160px" width={photo.width} height={photo.height} alt={`Portrait of ${author.data.name}`} style="width:160px;margin-top:1rem" />}
+      {author.data.bio && <p>{author.data.bio}</p>}
+    </header>
+    <div class="river" style="max-width:56rem">
+      {articles.map((a) => <StoryCard article={a} size="medium" heading="h2" sizes="240px" />)}
+    </div>
+  </div>
+</BaseLayout>

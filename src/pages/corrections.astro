@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactLine from '../components/ContactLine.astro';
+import { getArticles, formatDate, href, permalink } from '../lib/site';
+const corrected = (await getArticles()).filter((a) => a.data.correction);
+---
+<BaseLayout title="Corrections" description="How The Governor handles corrections, and a log of corrected articles." searchable>
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">The paper</span><h1>Corrections</h1><p>If we got something wrong, we want to fix it and say so.</p></header>
+    <div class="page-body prose">
+      <h2>Our policy</h2>
+      <p>When an article contains a factual error, the editors correct the text and add a note to the article saying what changed and when. Fixes to spelling or punctuation that do not change meaning are made without a note. Articles are not removed because someone disagrees with them.</p>
+      <h2>Ask for a correction</h2>
+      <p>Tell us which article, what is wrong, and how you know. An editor will check and reply.</p>
+      <ContactLine subject="Correction request" label="Email a correction request" />
+      <h2>Correction log</h2>
+      {corrected.length === 0 ? <p>No corrections have been logged on this site.</p> : (
+        <ul>{corrected.map((a) => <li><a href={href(permalink(a))}>{a.data.title}</a> ({formatDate(a.data.updatedAt ?? a.data.publishedAt)}): {a.data.correction}</li>)}</ul>
+      )}
+    </div>
+  </div>
+</BaseLayout>

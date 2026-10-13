@@ -1,0 +1,15 @@
+{
+  "sections": [
+    { "slug": "news", "label": "News" },
+    { "slug": "opinion", "label": "Opinion" },
+    { "slug": "arts", "label": "Arts" },
+    { "slug": "sports", "label": "Sports" },
+    { "slug": "humor-fun", "label": "Humor & Fun" },
+    { "slug": "people", "label": "People" },
+    { "slug": "school-culture", "label": "School Culture" }
+  ],
+  "more": [
+    { "href": "/archives/", "label": "Archives" },
+    { "href": "/about/", "label": "About" }
+  ]
+}

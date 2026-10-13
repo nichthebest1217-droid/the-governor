@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { type Article, type Issue, fileSize, getArticles, getAuthorMap, authorLabel, href, permalink, picture, sectionLabel } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const all = await getArticles();
+  return (await getCollection('issues')).map((issue) => ({ params: { slug: issue.id }, props: { issue, articles: all.filter((a) => a.data.issueId === issue.id) } }));
+}
+interface Props { issue: Issue; articles: Article[] }
+const { issue, articles } = Astro.props;
+const { data } = issue;
+const authorMap = await getAuthorMap();
+const pages = data.pageImages.map((p) => picture(p)).filter(Boolean);
+const when = data.dateLabel ?? `${data.season ?? ''} ${data.year}`.trim();
+---
+<BaseLayout title={`${data.title}, ${when}`} description={`The Governor, ${data.title} (${when}).`} image={data.pageImages[0]} searchable>
+  <div class="wrap">
+    <header class="page-head">
+      <a class="kicker" href={href('/issues/')}>Print issues</a>
+      <h1 data-pagefind-meta="title">{data.title}</h1>
+      <p>{when}{data.volume ? ` · Volume ${data.volume}` : ''}{pages.length > 0 && ` · ${pages.length} pages`}</p>
+      {data.pdf && <p style="margin-top:1rem"><a class="button" href={href(data.pdf)}>Download PDF{data.pdfBytes ? ` (${fileSize(data.pdfBytes)})` : ''}</a></p>}
+    </header>
+
+    {!data.pdf && pages.length === 0 && (
+      <p class="note" style="max-width:var(--measure)">This edition is known from the editorial published with it, but no PDF or page scans are in the archive yet. If you have a copy, please <a href={href('/contact/')}>get in touch</a>.</p>
+    )}
+
+    {articles.length > 0 && (
+      <section style="max-width:52rem;margin-bottom:2.5rem" data-pagefind-ignore>
+        <h2 class="label-head">{pages.length > 0 ? 'Articles from this issue, online' : 'From this issue, online'}</h2>
+        <ul class="plain-list">
+          {articles.map((a) => (
+            <li>
+              <a href={href(permalink(a))}>{a.data.title}</a>
+              <span class="count">{a.data.kind === 'editorial' ? 'Editorial' : sectionLabel(a.data.section)}{a.data.authors[0] && authorMap.get(a.data.authors[0]) && ` · ${authorLabel(authorMap.get(a.data.authors[0])!)}${a.data.authors.length > 1 ? ' and others' : ''}`}</span>
+            </li>
+          ))}
+        </ul>
+        {data.notes.map((n) => <p class="meta" style="margin-top:.8rem">{n}</p>)}
+      </section>
+    )}
+
+    {pages.length > 0 && (
+      <section aria-label="Pages">
+        <h2 class="label-head" style="max-width:56rem;margin-inline:auto">The issue, page by page</h2>
+        <div class="issue-pages">
+          {pages.map((p, i) => (
+            <figure style="margin:0">
+              <a href={href(data.pageImages[i])}><img src={p!.src} srcset={p!.srcset} sizes="(min-width: 960px) 896px, 100vw" width={p!.width} height={p!.height} alt={`${data.title}, page ${i + 1}. The text of this page is in the PDF and in the linked articles.`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" /></a>
+              <figcaption>Page {i + 1}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>
