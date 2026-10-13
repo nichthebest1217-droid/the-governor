@@ -1,0 +1,233 @@
+# Pages CMS configuration (https://pagescms.org/docs/). Editors use app.pagescms.org; this file
+# decides what they can edit. Read docs/ and EDITORIAL_HANDBOOK.md before changing it.
+#
+# IMPORTANT: Pages CMS commits to whichever branch is selected in its branch menu. Editors work on
+# the `drafts` branch; nothing is public until a pull request into `main` is approved and merged.
+
+media:
+  - name: photos
+    input: public/media
+    output: /media
+    categories: [image]
+  - name: issues
+    input: public/issues
+    output: /issues
+    extensions: [pdf, png, jpg, jpeg, webp]
+
+settings:
+  content:
+    merge: true # keep fields the form does not show (archive IDs, original URLs)
+  commit:
+    templates:
+      create: "content: add {path}"
+      update: "content: update {path}"
+      delete: "content: remove {path}"
+      rename: "content: rename {oldPath} -> {newPath}"
+
+components:
+  section:
+    type: select
+    options:
+      values:
+        - { value: news, label: News }
+        - { value: opinion, label: Opinion }
+        - { value: arts, label: Arts }
+        - { value: sports, label: Sports }
+        - { value: humor-fun, label: "Humor & Fun" }
+        - { value: people, label: People }
+        - { value: school-culture, label: School Culture }
+
+content:
+  - name: articles
+    label: Articles
+    type: collection
+    path: src/content/articles
+    format: yaml-frontmatter
+    filename: "{year}-{month}-{day}-{primary}.md"
+    exclude: ["0000-00-00-draft-example-not-published.md"]
+    view:
+      fields: [title, section, publishedAt, published]
+      primary: title
+      sort: [publishedAt, title]
+      default: { sort: publishedAt, order: desc }
+      search: [title]
+    fields:
+      - { name: title, label: Headline, type: string, required: true }
+      - name: excerpt
+        label: Deck (optional)
+        type: text
+        description: One or two sentences under the headline. Leave empty and the site shows the article's opening words.
+      - name: publishedAt
+        label: Publication date
+        type: date
+        required: true
+        description: The date printed on the article. It also sets the web address, so do not change it after publishing.
+      - { name: section, label: Section, component: section, required: true }
+      - { name: secondarySections, label: Also show in, component: section, list: true }
+      - name: kind
+        label: Type
+        type: select
+        options:
+          values:
+            - { value: article, label: Article }
+            - { value: editorial, label: "Editorial (the editors' shared position)" }
+      - name: authors
+        label: Writers
+        type: reference
+        description: Add the writer under Writers first if they are not in the list.
+        options: { collection: authors, multiple: true, search: "name", value: "{fields.slug}", label: "{fields.name}" }
+      - name: coverImage
+        label: Cover photo
+        type: image
+        options: { media: photos }
+      - name: coverAlt
+        label: Cover photo description (alt text)
+        type: string
+        description: Describe what the photo shows for readers who cannot see it. Not a caption.
+      - { name: coverCaption, label: Cover photo caption, type: string }
+      - name: coverCredit
+        label: Photo credit
+        type: string
+        description: "Who took it, e.g. Photo by Jane Doe ’27. Required unless the editor confirms none is needed."
+      - { name: tags, label: Tags, type: string, list: true }
+      - name: issueId
+        label: Print issue
+        type: reference
+        description: Only if this article ran in that printed issue.
+        options: { collection: issues, search: "title", value: "{fields.slug}", label: "{fields.title} ({fields.year})" }
+      - name: featured
+        label: Prefer as front-page lead
+        type: boolean
+      - name: published
+        label: Published
+        type: boolean
+        description: Off = hidden from the site, feeds and search. On only after the editor-in-chief approves. Files in this repository are publicly readable either way, so never store a sensitive unpublished story here.
+      - name: updatedAt
+        label: Updated on (corrections only)
+        type: date
+      - name: correction
+        label: Correction note
+        type: text
+        description: Shown at the top of the article. Say what was wrong and what changed.
+      - { name: body, label: Article, type: rich-text, options: { media: photos } }
+      # Archive record. Do not edit.
+      - { name: originalByline, label: Byline as originally printed, type: string, readonly: true }
+      - { name: legacyUrl, label: Original web address, type: string, readonly: true }
+      - { name: legacyPath, type: string, hidden: true }
+      - { name: legacyWpId, type: number, hidden: true }
+      - { name: sourceModifiedAt, type: string, hidden: true }
+      - { name: authorNeedsReview, label: Byline needs review, type: boolean }
+      - { name: migrationNeedsReview, label: Import needs review, type: boolean }
+
+  - name: authors
+    label: Writers
+    type: collection
+    path: src/content/authors
+    format: json
+    filename: "{fields.slug}.json"
+    view: { fields: [name, classYear], primary: name, sort: [name], search: [name] }
+    fields:
+      - { name: name, label: Name as it should be printed, type: string, required: true }
+      - name: slug
+        label: Web ID
+        type: string
+        required: true
+        pattern: { regex: "^[a-z0-9]+(-[a-z0-9]+)*$", message: "Lowercase letters, numbers and hyphens, e.g. jane-doe" }
+        description: "first-last in lowercase. Never change it once the writer has a published article."
+      - { name: classYear, label: Class year (four digits), type: number }
+      - { name: bio, label: Short bio (optional), type: text }
+      - { name: photo, label: Portrait (optional), type: image, options: { media: photos } }
+      - { name: visible, label: Show writer page, type: boolean, default: true }
+      - { name: needsReview, label: Needs review, type: boolean }
+      - { name: sourceEvidence, label: Source of this record, type: string, readonly: true }
+
+  - name: issues
+    label: Print issues
+    type: collection
+    path: src/content/issues
+    format: json
+    filename: "{fields.slug}.json"
+    view: { fields: [title, year], primary: title, sort: [year, title] }
+    fields:
+      - { name: title, label: Title, type: string, required: true, description: "e.g. Fall Issue 1" }
+      - name: slug
+        label: Web ID
+        type: string
+        required: true
+        pattern: { regex: "^[a-z0-9]+(-[a-z0-9]+)*$", message: "e.g. 2026-fall-issue-1" }
+      - { name: season, label: Season, type: select, options: { values: [Fall, Winter, Spring] } }
+      - { name: year, label: Calendar year, type: number, required: true }
+      - { name: number, label: Issue number, type: number }
+      - { name: volume, label: Volume (only if printed on the issue), type: number }
+      - { name: dateLabel, label: Date as printed on the front page, type: string }
+      - { name: publishedOn, label: Exact publication date (if known), type: date }
+      - { name: academicYear, label: School year, type: string, description: "e.g. 2026-2027" }
+      - { name: pdf, label: PDF, type: file, options: { media: issues, extensions: [pdf] } }
+      - { name: pageImages, label: Page images in page order, type: image, list: true, options: { media: issues } }
+      - { name: notes, label: Notes for readers, type: string, list: true }
+      - { name: sourceEvidence, label: How we know these facts, type: string, list: true }
+
+  - name: homepage
+    label: Homepage
+    type: file
+    path: src/data/homepage.json
+    format: json
+    fields:
+      - name: lead
+        label: Lead story
+        type: reference
+        description: Leave empty to use the newest article with a photo.
+        options: { collection: articles, search: "title", value: "{name}", label: "{fields.title}" }
+      - name: secondary
+        label: Top stories beside the lead (up to 5)
+        type: reference
+        options: { collection: articles, multiple: true, max: 5, search: "title", value: "{name}", label: "{fields.title}" }
+      - name: editorsPicks
+        label: Editors' Picks (up to 4)
+        type: reference
+        options: { collection: articles, multiple: true, max: 4, search: "title", value: "{name}", label: "{fields.title}" }
+      - name: currentIssue
+        label: Print issue to promote
+        type: reference
+        options: { collection: issues, search: "title", value: "{fields.slug}", label: "{fields.title} ({fields.year})" }
+      - name: alert
+        label: Banner across the top (optional)
+        type: object
+        fields:
+          - { name: text, label: Text, type: string }
+          - { name: href, label: Link (optional), type: string }
+
+  - name: masthead
+    label: Masthead
+    type: file
+    path: src/data/masthead.json
+    format: json
+    fields:
+      - { name: academicYear, label: School year, type: string, description: "e.g. 2026–27" }
+      - name: groups
+        label: Groups
+        type: object
+        list: true
+        fields:
+          - { name: title, label: Group, type: string, description: "e.g. Editorial Board" }
+          - name: members
+            label: Members
+            type: object
+            list: true
+            fields:
+              - { name: name, label: Name, type: string }
+              - { name: role, label: Role, type: string }
+
+  - name: site
+    label: Site details
+    type: file
+    path: src/data/site.json
+    format: json
+    fields:
+      - { name: name, type: string, readonly: true }
+      - { name: description, label: One-line description, type: string }
+      - { name: school, type: string, readonly: true }
+      - { name: location, type: string, readonly: true }
+      - { name: motto, type: string, readonly: true }
+      - { name: contactEmail, label: Public contact email (approved by the adviser), type: string }
+      - { name: tipsEmail, label: Tips email (optional), type: string }

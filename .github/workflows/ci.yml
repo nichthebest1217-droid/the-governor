@@ -1,0 +1,46 @@
+name: CI
+
+# Runs on every pull request and on pushes to the drafts branch. Nothing is deployed here.
+on:
+  pull_request:
+  push:
+    branches: [drafts]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Type and schema check
+        run: npm run check
+      - name: Build (project-page base path, to catch broken links early)
+        run: npm run build
+        env:
+          SITE_URL: https://example.github.io
+          BASE_PATH: /${{ github.event.repository.name }}
+      - name: Tests
+        run: npm test
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+      - name: Internal links
+        run: npm run check:links
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+      - name: Media
+        run: npm run check:media
+      - name: Migration reconciliation
+        run: npm run reconcile
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
