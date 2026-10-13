@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import StoryCard from '../components/StoryCard.astro';
 import AlignedRows from '../components/AlignedRows.astro';
 import homepage from '../data/homepage.json';
-import { SITE, type Article, type Issue, dayOf, fileSize, formatDate, getArticles, href, picture, refId } from '../lib/site';
+import { SITE, type Article, type Issue, dayOf, formatDate, getArticles, href, picture, refId } from '../lib/site';
 
 // The front page is a timeline. The newest edition sits at the top; scrolling down goes back
 // in time. Articles are grouped by print issue when the issue is documented, otherwise by the
@@ -33,21 +33,20 @@ for (const g of timeline) {
 
 const [newest, ...older] = timeline;
 const byId = new Map(all.map((a) => [a.id, a]));
-let lead: Article | undefined, railLeft: Article[] = [], railRight: Article[] = [], restPhotos: Article[] = [], restText: Article[] = [];
+// Newest edition, laid out like a broadsheet front: photo stories run down the main column as
+// text-beside-picture rows, text stories fill the right-hand column, the rest follow in rows.
+let photoRows: Article[] = [], rail: Article[] = [], overflow: Article[] = [];
 if (newest) {
   const pool = [...newest.articles];
   const chosen = byId.get(refId(homepage.lead));
-  // Lead: the editors' pick, else a story marked "featured", else the first story (in the
-  // paper's running order) whose photo is wide enough to carry the top of the page.
   const wide = (a: Article) => { const p = picture(a.data.coverImage); return Boolean(p?.width && p.height && p.width / p.height >= 1.4); };
-  lead = (chosen && pool.includes(chosen) ? chosen : undefined) ?? pool.find((a) => a.data.featured && a.data.coverImage) ?? pool.find(wide) ?? pool.find((a) => a.data.coverImage) ?? pool[0];
+  // Lead: the editors' pick, else a story marked "featured", else the first story with a wide photo.
+  const lead = (chosen && pool.includes(chosen) ? chosen : undefined) ?? pool.find((a) => a.data.featured && a.data.coverImage) ?? pool.find(wide) ?? pool.find((a) => a.data.coverImage) ?? pool[0];
   const rest = pool.filter((a) => a !== lead);
-  railRight = rest.filter((a) => a.data.coverImage).slice(0, 2);
-  railLeft = rest.filter((a) => !railRight.includes(a) && !a.data.coverImage).slice(0, 3);
-  if (railLeft.length < 2) railLeft = rest.filter((a) => !railRight.includes(a)).slice(0, 3);
-  const remaining = rest.filter((a) => !railRight.includes(a) && !railLeft.includes(a));
-  restPhotos = remaining.filter((a) => a.data.coverImage);
-  restText = remaining.filter((a) => !a.data.coverImage);
+  photoRows = [lead, ...rest.filter((a) => a.data.coverImage)].filter((a) => a.data.coverImage).slice(0, 6);
+  if (photoRows.length === 0) photoRows = [lead];
+  rail = rest.filter((a) => !photoRows.includes(a)).slice(0, Math.max(4, Math.round(photoRows.length * 1.35)));
+  overflow = rest.filter((a) => !photoRows.includes(a) && !rail.includes(a));
 }
 const heading = (g: Group) => (g.issue ? g.issue.data.title : formatDate(g.day));
 const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue.data.season ?? ''} ${g.issue.data.year}`.trim() : null);
@@ -56,7 +55,7 @@ const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue
   <h1 class="visually-hidden">{SITE.name}</h1>
   {!newest && <div class="wrap band"><p>No articles have been published yet.</p></div>}
 
-  {newest && lead && (
+  {newest && (
     <section class="wrap edition is-newest" aria-labelledby="edition-0">
       <header class="edition-head">
         <div>
@@ -66,23 +65,22 @@ const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue
         {newest.issue && (
           <p class="edition-links">
             <a href={href(`/issues/${newest.issue.id}/`)}>Read the print edition</a>
-            {newest.issue.data.pdf && <a href={href(newest.issue.data.pdf)}>PDF{newest.issue.data.pdfBytes ? ` (${fileSize(newest.issue.data.pdfBytes)})` : ''}</a>}
+            {newest.issue.data.pdf && <a href={href(newest.issue.data.pdf)}>PDF</a>}
           </p>
         )}
       </header>
-      <div class="lead-package">
-        <div class="rail-left rail">
-          {railLeft.map((a) => <StoryCard article={a} size="medium" image={false} heading="h3" dekLength={300} />)}
+      <div class="front">
+        <div class="front-main">
+          {photoRows.map((a, i) => (
+            <StoryCard article={a} size={i === 0 ? 'large' : 'medium'} layout="row" heading="h3" eager={i === 0} dekLength={i === 0 ? 300 : 210}
+              sizes={i === 0 ? '(min-width: 768px) 400px, 100vw' : '(min-width: 768px) 280px, 120px'} />
+          ))}
         </div>
-        <div class="lead">
-          <StoryCard article={lead} size="lead" heading="h3" eager sizes="(min-width: 1024px) 620px, 100vw" />
-        </div>
-        <div class="rail-right rail">
-          {railRight.map((a) => <StoryCard article={a} size="medium" heading="h3" sizes="(min-width: 1024px) 300px, (min-width: 768px) 50vw, 100vw" />)}
-        </div>
+        <aside class="front-rail" aria-label="More from this issue">
+          {rail.map((a) => <StoryCard article={a} size="small" image={false} heading="h3" dekLength={200} />)}
+        </aside>
       </div>
-      <AlignedRows articles={restPhotos} image max={4} />
-      <AlignedRows articles={restText} max={4} />
+      <AlignedRows articles={overflow} max={4} />
     </section>
   )}
 

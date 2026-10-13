@@ -51,6 +51,12 @@ date order. An issue gets its own block once three of its articles are online (s
 article; **Order within the issue** controls their sequence). Older articles with no recorded issue are grouped
 by the day they were published. Rows always fill their width and cards in a row share a top and a bottom.
 The lead story is the editors' pick under **Homepage**, otherwise the first story with a wide photo.
+The newest issue is laid out like a broadsheet front: photo stories as text-beside-picture rows in the main
+column, text stories in the right-hand column. Photos are kept small on purpose so low-resolution originals
+stay sharp.
+
+The nameplate at the top is an image cut from the paper's own print front page
+(`public/brand/nameplate.webp`, and `wordmark.webp` for phones). To change it, replace those two files.
 
 ## How publishing works
 

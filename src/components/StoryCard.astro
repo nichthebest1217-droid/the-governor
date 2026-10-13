@@ -4,7 +4,7 @@ import { type Article, authorLabel, formatDate, getAuthorMap, href, permalink, p
 interface Props {
   article: Article;
   size?: 'lead' | 'large' | 'medium' | 'small';
-  layout?: 'stack' | 'side';
+  layout?: 'stack' | 'side' | 'row';
   image?: boolean;
   dek?: boolean;
   kicker?: boolean;
@@ -30,6 +30,7 @@ const label = data.kind === 'editorial' ? 'Editorial' : sectionLabel(data.sectio
       <img src={pic.src} srcset={pic.srcset} sizes={pic.srcset ? sizes : undefined} width={pic.width} height={pic.height} alt="" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined} decoding="async" />
     </a>
   )}
+  <div class="story-text">
   {kicker && <a class="kicker" href={href(`/${data.section}/`)}>{label}</a>}
   <H class="hed"><a href={url}>{data.title}</a></H>
   {dek && <p class="dek">{summary(article, dekLength)}</p>}
@@ -39,4 +40,5 @@ const label = data.kind === 'editorial' ? 'Editorial' : sectionLabel(data.sectio
     )}
     {date && <time class:list={[{ sep: authors.length > 0 }]} datetime={data.publishedAt}>{formatDate(data.publishedAt, 'short')}</time>}
   </p>
+  </div>
 </article>

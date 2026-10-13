@@ -1,4 +1,3 @@
-@import '@fontsource/unifrakturmaguntia/latin-400.css';
 @import '@fontsource/old-standard-tt/latin-400.css';
 @import '@fontsource/old-standard-tt/latin-400-italic.css';
 @import '@fontsource/old-standard-tt/latin-700.css';
@@ -58,7 +57,9 @@ a.kicker:hover { text-decoration: underline; }
 .utility a:hover { text-decoration: underline; }
 .nameplate { text-align: center; padding-block: clamp(1.1rem, 0.6rem + 2.2vw, 2.1rem) clamp(0.9rem, 0.5rem + 1.5vw, 1.5rem); }
 .nameplate a { text-decoration: none; color: var(--ink); display: inline-block; }
-.nameplate .title { font: 400 clamp(3rem, 1.2rem + 8vw, 6.2rem)/1 var(--font-nameplate); letter-spacing: 0; }
+.nameplate .np { display: block; margin-inline: auto; height: auto; mix-blend-mode: multiply; }
+.nameplate .np-full { width: min(100%, 47rem); }
+.nameplate .np-word { display: none; width: min(100%, 21rem); }
 .nameplate .tagline { margin-top: 0.5rem; font: 700 0.75rem/1.3 var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
 .site-nav { border-top: 3px double var(--rule-strong); }
 .site-nav ul { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; column-gap: clamp(0.9rem, 0.3rem + 1.5vw, 1.9rem); }
@@ -72,7 +73,8 @@ a.kicker:hover { text-decoration: underline; }
   .utility { grid-template-columns: 1fr; text-align: center; gap: 0.15rem; }
   .utility .left, .utility .right { display: none; }
   .nameplate { padding-inline: 2.75rem; }
-  .nameplate .title { font-size: min(11.5vw, 3.6rem); white-space: nowrap; }
+  .nameplate .np-full { display: none; }
+  .nameplate .np-word { display: block; }
   .nameplate .tagline { letter-spacing: 0.08em; font-size: 0.625rem; }
   .header-main { position: relative; }
   .nav-toggle { display: block; position: absolute; top: 0.9rem; left: 0; }
@@ -256,7 +258,8 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
 /* ---------- footer ---------- */
 .site-footer { margin-top: clamp(3rem, 6vw, 5rem); border-top: 3px double var(--rule-strong); padding-block: clamp(2rem, 4vw, 3rem) 2rem; font: 400 0.875rem/1.6 var(--font-ui); color: var(--ink-soft); }
 .site-footer .cols { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: var(--gap); }
-.site-footer .name { font: 400 2.4rem/1 var(--font-nameplate); color: var(--ink); text-decoration: none; }
+.site-footer .name { display: inline-block; }
+.site-footer .name img { width: 15rem; height: auto; mix-blend-mode: multiply; }
 .site-footer h2 { font: 700 0.6875rem/1 var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); margin-bottom: 0.8rem; }
 .site-footer ul { list-style: none; display: grid; gap: 0.35rem; }
 .site-footer a { text-decoration: none; }
@@ -294,7 +297,7 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
 .aligned-row:last-child { border-bottom: 0; }
 .aligned-row > .story { height: 100%; position: relative; }
 .aligned-row > .story + .story::before { content: ''; position: absolute; left: calc(var(--gap) / -2); top: 0; bottom: 0; border-left: 1px solid var(--rule); }
-.story > .meta { margin-top: auto; padding-top: 0.35rem; }
+
 .aligned-row .story .dek { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
 @media (max-width: 1023px) {
   .aligned-row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 1.25rem; }
@@ -321,4 +324,47 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
 }
 @media (max-width: 1023px) {
   .lead-package .rail-left, .lead-package .rail-right { border-top: 1px solid var(--rule-strong); padding-top: 1.1rem; }
+}
+
+
+/* ---------- card internals ---------- */
+.story-text { display: flex; flex-direction: column; gap: 0.5rem; flex: 1 1 auto; min-width: 0; }
+.story-text > .meta { margin-top: auto; padding-top: 0.35rem; }
+.story.layout-side .story-text { grid-column: 1; grid-row: 1; }
+.story.layout-side .media { grid-row: 1; }
+.river .story .story-text { grid-column: 1; grid-row: 1; }
+.river .story .media { grid-row: 1; }
+/* Photographs are never drawn larger than a card needs; small originals stay sharp. */
+.aligned-row .story .media { max-width: 22rem; }
+
+/* ---------- broadsheet front: photo rows beside a text column ---------- */
+.front { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); column-gap: var(--gap); padding-block: 1.25rem; border-bottom: 1px solid var(--rule); }
+.front-main, .front-rail { display: flex; flex-direction: column; }
+.front-rail { position: relative; }
+.front-rail::before { content: ''; position: absolute; left: calc(var(--gap) / -2); top: 0; bottom: 0; border-left: 1px solid var(--rule); }
+.front-main > .story, .front-rail > .story { flex: 1 1 auto; }
+.front-main > .story + .story, .front-rail > .story + .story { border-top: 1px solid var(--rule); margin-top: 1.1rem; padding-top: 1.1rem; }
+.story.layout-row { display: grid; grid-template-columns: minmax(0, 1fr) 17.5rem; gap: 0.5rem 1.5rem; align-items: start; }
+.story.layout-row .media { grid-column: 2; grid-row: 1; aspect-ratio: 3 / 2; }
+.story.layout-row .story-text { grid-column: 1; grid-row: 1; height: 100%; }
+.story.layout-row.size-large { grid-template-columns: minmax(0, 1fr) 25rem; }
+.story.layout-row.size-large .hed { font-size: var(--step-4); line-height: 1.08; }
+.story.layout-row.size-large .dek { font-size: 1.0625rem; }
+.story.layout-row.no-media { grid-template-columns: 1fr; }
+.front-rail .story .hed { font-size: 1.125rem; }
+.front-rail .story .dek { display: block; font-size: 0.9375rem; }
+@media (max-width: 1023px) {
+  .front { grid-template-columns: 1fr; }
+  .front-rail::before { display: none; }
+  .front-rail { border-top: 1px solid var(--rule-strong); margin-top: 1.25rem; padding-top: 1.25rem; }
+  .story.layout-row.size-large { grid-template-columns: minmax(0, 1fr) 20rem; }
+}
+@media (max-width: 599px) {
+  .story.layout-row { grid-template-columns: minmax(0, 1fr) 6.5rem; gap: 0.4rem 1rem; }
+  .story.layout-row .media { aspect-ratio: 1; }
+  .story.layout-row .dek { display: none; }
+  .story.layout-row.size-large { grid-template-columns: 1fr; }
+  .story.layout-row.size-large .media { grid-column: 1; grid-row: 1; aspect-ratio: 3 / 2; }
+  .story.layout-row.size-large .story-text { grid-row: 2; }
+  .story.layout-row.size-large .dek { display: block; }
 }

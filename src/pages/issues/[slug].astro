@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { type Article, type Issue, fileSize, getArticles, getAuthorMap, authorLabel, href, permalink, picture, sectionLabel } from '../../lib/site';
+import { type Article, type Issue, getArticles, getAuthorMap, authorLabel, href, permalink, picture, sectionLabel } from '../../lib/site';
 
 export async function getStaticPaths() {
   const all = await getArticles();
@@ -20,7 +20,7 @@ const when = data.dateLabel ?? `${data.season ?? ''} ${data.year}`.trim();
       <a class="kicker" href={href('/issues/')}>Print issues</a>
       <h1 data-pagefind-meta="title">{data.title}</h1>
       <p>{when}{data.volume ? ` · Volume ${data.volume}` : ''}{pages.length > 0 && ` · ${pages.length} pages`}</p>
-      {data.pdf && <p style="margin-top:1rem"><a class="button" href={href(data.pdf)}>Download PDF{data.pdfBytes ? ` (${fileSize(data.pdfBytes)})` : ''}</a></p>}
+      {data.pdf && <p style="margin-top:1rem"><a class="button" href={href(data.pdf)}>Download PDF</a></p>}
     </header>
 
     {!data.pdf && pages.length === 0 && (
