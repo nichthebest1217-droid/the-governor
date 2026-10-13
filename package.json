@@ -1,0 +1,44 @@
+{
+  "name": "the-governor",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Governor — student newspaper of The Governor's Academy",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "npm run media && astro dev",
+    "media": "node scripts/optimize-media.ts",
+    "build": "npm run media && astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "node --test tests/*.test.ts",
+    "audit:wp": "node scripts/audit-wordpress.ts",
+    "import:wp": "node scripts/import-wordpress.ts",
+    "reconcile": "node scripts/reconcile-migration.ts",
+    "check:links": "node scripts/check-links.ts",
+    "check:media": "node scripts/check-media.ts",
+    "verify": "npm run check && npm run build && npm run test && npm run check:links && npm run check:media"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.2",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@fontsource-variable/source-serif-4": "^5.3.1",
+    "astro": "^7.3.8",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.6.5",
+    "@types/turndown": "^5.0.6",
+    "pagefind": "^1.5.2",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2",
+    "typescript": "^6.0.3",
+    "unist-util-visit": "^5.1.0"
+  }
+}

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+# Responsive image derivatives are rebuilt from public/media by `npm run media`.
+public/_img/
+src/data/media-manifest.json
