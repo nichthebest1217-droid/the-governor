@@ -44,6 +44,7 @@ jobs:
         run: npm test && npm run check:links && npm run check:media
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

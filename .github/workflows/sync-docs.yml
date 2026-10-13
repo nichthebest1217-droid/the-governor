@@ -39,6 +39,8 @@ jobs:
       - name: Check the new content before it is committed
         if: steps.diff.outputs.changed == 'true'
         run: npm run check && npm run build && npm test && npm run check:links && npm run check:media
+        env:
+          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
       - name: Commit
         id: commit
         run: |
