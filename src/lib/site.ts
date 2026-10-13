@@ -117,6 +117,13 @@ export function picture(path: string | null | undefined): Picture | null {
   };
 }
 
+/** Public path of the largest web-sized copy of an image (the original is not published). */
+export function webImage(path: string | null | undefined): string | null {
+  if (!path) return null;
+  const info = (mediaManifest() as Record<string, any>)[path];
+  return info?.variants?.length ? info.variants[info.variants.length - 1].path : path;
+}
+
 export function fileSize(bytes: number | null | undefined) {
   if (!bytes) return '';
   return bytes > 1048576 ? `${(bytes / 1048576).toFixed(0)} MB` : `${Math.round(bytes / 1024)} KB`;

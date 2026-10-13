@@ -12,6 +12,7 @@ form-based editor, and GitHub Actions deploys to GitHub Pages. There is no datab
 | Changing code or design          | [CONTRIBUTING.md](CONTRIBUTING.md)                         |
 | Checking what came from WordPress | [MIGRATION_REPORT.md](MIGRATION_REPORT.md)                 |
 | Getting ready to launch          | [LAUNCH_REPORT.md](LAUNCH_REPORT.md)                       |
+| Publishing straight from Google Docs | [google-workspace/SETUP.md](google-workspace/SETUP.md)  |
 | Looking for the original brief   | [The_Governor_Claude_Code_Masterplan.md](The_Governor_Claude_Code_Masterplan.md) |
 
 ## Run it on your computer
@@ -84,9 +85,9 @@ on a custom domain. Three settings are needed once, in the repository on GitHub:
 
 ## Limits to know about
 
-- GitHub Pages sites may be up to about 1 GB. The site is currently about 110 MB, of which media is about 88 MB
-  (`npm run check:media` prints the figure). One 28 MB issue PDF is the largest file. At roughly 30 MB per
-  issue PDF plus photos, expect to add 150 to 250 MB a year; plan separate school-approved storage for PDFs
-  before the site passes about 800 MB (the check fails at that point on purpose).
+- GitHub Pages sites may be up to about 1 GB. The published site is about 45 MB, 34 MB of it two issue PDFs.
+  Full-size photo originals are **not** published: the build serves web-sized copies and removes the
+  originals from the output (`scripts/prune-dist.ts` prints the total and fails the build above 900 MB).
+  Keep originals in the staff's Drive. Export issue PDFs small (the 26-27 Issue I PDF is 4.7 MB).
 - A single file over 100 MB cannot be pushed to GitHub.
 - The repository is public if it is on a free plan. Never put an unpublished sensitive story in it.

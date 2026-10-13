@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { type Article, type Issue, getArticles, getAuthorMap, authorLabel, href, permalink, picture, sectionLabel } from '../../lib/site';
+import { type Article, type Issue, getArticles, getAuthorMap, authorLabel, href, permalink, picture, sectionLabel, webImage } from '../../lib/site';
 
 export async function getStaticPaths() {
   const all = await getArticles();
@@ -14,7 +14,7 @@ const authorMap = await getAuthorMap();
 const pages = data.pageImages.map((p) => picture(p)).filter(Boolean);
 const when = data.dateLabel ?? `${data.season ?? ''} ${data.year}`.trim();
 ---
-<BaseLayout title={`${data.title}, ${when}`} description={`The Governor, ${data.title} (${when}).`} image={data.pageImages[0]} searchable>
+<BaseLayout title={`${data.title}, ${when}`} description={`The Governor, ${data.title} (${when}).`} image={webImage(data.pageImages[0])} searchable>
   <div class="wrap">
     <header class="page-head">
       <a class="kicker" href={href('/issues/')}>Print issues</a>
@@ -51,7 +51,7 @@ const when = data.dateLabel ?? `${data.season ?? ''} ${data.year}`.trim();
         <div class="issue-pages">
           {pages.map((p, i) => (
             <figure style="margin:0">
-              <a href={href(data.pageImages[i])}><img src={p!.src} srcset={p!.srcset} sizes="(min-width: 960px) 896px, 100vw" width={p!.width} height={p!.height} alt={`${data.title}, page ${i + 1}. The text of this page is in the PDF and in the linked articles.`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" /></a>
+              <a href={href(webImage(data.pageImages[i])!)}><img src={p!.src} srcset={p!.srcset} sizes="(min-width: 960px) 896px, 100vw" width={p!.width} height={p!.height} alt={`${data.title}, page ${i + 1}. The text of this page is in the PDF and in the linked articles.`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" /></a>
               <figcaption>Page {i + 1}</figcaption>
             </figure>
           ))}

@@ -35,6 +35,8 @@ const articles = defineCollection({
     // Position in the print edition (page, then order on the front-to-back read). Optional.
     printPage: z.number().int().nullish(),
     printOrder: z.number().nullish(),
+    // Set by the Google Docs publishing sheet: the Doc this article was published from.
+    sourceDoc: z.string().url().nullish(),
     legacyWpId: z.number().int().nullish(),
     legacyUrl: z.url().nullish(),
     legacyPath: z.string().regex(/^\/\d{4}\/\d{2}\/\d{2}\/[^/]+\/$/).nullish(),

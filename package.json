@@ -3,14 +3,14 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "The Governor — student newspaper of The Governor's Academy",
+  "description": "The Governor \u2014 student newspaper of The Governor's Academy",
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
     "dev": "npm run media && astro dev",
     "media": "node scripts/optimize-media.ts",
-    "build": "npm run media && astro build && pagefind --site dist",
+    "build": "npm run media && astro build && node scripts/prune-dist.ts && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
     "test": "node --test tests/*.test.ts",
