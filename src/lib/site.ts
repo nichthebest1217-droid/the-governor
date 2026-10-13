@@ -86,9 +86,15 @@ export function plainText(markdown: string) {
  */
 export function summary(article: Article, max = 170) {
   if (article.data.excerpt) return article.data.excerpt;
-  const firstPara = (article.body ?? '').split(/\n\s*\n/).map(plainText).find((t) => t.length > 40) ?? '';
-  if (firstPara.length <= max) return firstPara;
-  const cut = firstPara.slice(0, max);
+  // Opening paragraphs, joined, so a long card has enough of the article to fill its space.
+  const paras = (article.body ?? '').split(/\n\s*\n/).map(plainText).filter((t) => t.length > 0);
+  let text = '';
+  for (const para of paras) {
+    if (text.length >= max || (text.length > 40 && max <= 320)) break;
+    text += (text ? ' ' : '') + para;
+  }
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
   return cut.slice(0, cut.lastIndexOf(' ')).replace(/[,;:.\-–—]+$/, '') + '…';
 }
 

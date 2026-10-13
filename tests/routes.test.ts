@@ -52,7 +52,7 @@ test('sections, archives, authors, issues and info pages exist', { skip }, () =>
     '/category/news/', '/category/humor-fun/', '/news-2/']) {
     assert.ok(exists(join(DIST, path, 'index.html')), `missing ${path}`);
   }
-  for (const f of ['404.html', 'rss.xml', 'sitemap-index.xml', 'robots.txt', 'favicon.svg', 'issues/2026-spring-issue-3.pdf', 'pagefind/pagefind.js', 'pagefind/pagefind-ui.js']) assert.ok(exists(join(DIST, f)), `missing ${f}`);
+  for (const f of ['404.html', 'rss.xml', 'sitemap-index.xml', 'robots.txt', 'favicon.png', 'issues/2026-spring-issue-3.pdf', 'pagefind/pagefind.js', 'pagefind/pagefind-ui.js']) assert.ok(exists(join(DIST, f)), `missing ${f}`);
   assert.equal((page('/issues/2026-spring-issue-3/').match(/<figcaption>Page \d<\/figcaption>/g) ?? []).length, 8);
   assert.match(page('/category/news/'), new RegExp(`url=${BASE}news/`));
 });

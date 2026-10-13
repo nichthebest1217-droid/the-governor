@@ -2,9 +2,9 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StoryCard from '../components/StoryCard.astro';
-import AlignedRows from '../components/AlignedRows.astro';
+import Band from '../components/Band.astro';
 import homepage from '../data/homepage.json';
-import { SITE, type Article, type Issue, dayOf, formatDate, getArticles, href, picture, refId } from '../lib/site';
+import { SECTIONS, SITE, type Article, type Issue, academicYear, dayOf, formatDate, getArticles, href, permalink, picture, refId } from '../lib/site';
 
 // The front page is a timeline. The newest edition sits at the top; scrolling down goes back
 // in time. Articles are grouped by print issue when the issue is documented, otherwise by the
@@ -33,32 +33,29 @@ for (const g of timeline) {
 
 const [newest, ...older] = timeline;
 const byId = new Map(all.map((a) => [a.id, a]));
-// Newest edition: a composed front page. Modules differ in width, picture placement and
-// headline size, and every photograph keeps its own shape (upright pictures stay upright).
-const shapeOf = (a: Article) => { const p = picture(a.data.coverImage); const r = p?.width && p.height ? p.width / p.height : 1.5; return r < 0.95 ? 'tall' : 'wide'; };
-// A proper landscape picture (not a near-square portrait, not a thin strip) suits the lead spot.
-const landscape = (a: Article) => { const p = picture(a.data.coverImage); const r = p?.width && p.height ? p.width / p.height : 0; return r >= 1.4 && r <= 1.9; };
-interface Band { beside?: Article; stack?: Article; text: Article[]; flip: boolean }
-let lead: Article | undefined, topLeft: Article[] = [], topRight: { photo?: Article; text: Article[] } = { text: [] }, bands: Band[] = [], overflow: Article[] = [];
+// Newest edition: a lead package, then one band per section, as on a newspaper front.
+let lead: Article | undefined, second: Article[] = [], also: Article[] = [];
+let sectionBands: { slug: string | null; label: string; articles: Article[] }[] = [];
 if (newest) {
   const pool = [...newest.articles];
   const chosen = byId.get(refId(homepage.lead));
-  // Lead: the editors' pick, else a story marked "featured", else the first story with a wide photo.
-  lead = (chosen && pool.includes(chosen) ? chosen : undefined) ?? pool.find((a) => a.data.featured && a.data.coverImage) ?? pool.find(landscape) ?? pool.find((a) => a.data.coverImage && shapeOf(a) === 'wide') ?? pool.find((a) => a.data.coverImage) ?? pool[0];
-  const photos = pool.filter((a) => a !== lead && a.data.coverImage);
-  const texts = pool.filter((a) => a !== lead && !a.data.coverImage);
-  const takePhoto = (prefer: 'tall' | 'wide') => { const i = Math.max(0, photos.findIndex((a) => shapeOf(a) === prefer)); return photos.splice(i, 1)[0]; };
-  topRight = { photo: takePhoto('tall'), text: [] };
-  topLeft = texts.splice(0, topRight.photo ? 3 : 2);
-  topRight.text = texts.splice(0, topRight.photo ? 1 : 3);
-  while (photos.length > 0 && bands.length < 4) {
-    const flip = bands.length % 2 === 1;
-    const beside = takePhoto('tall');
-    const stack = photos.length ? takePhoto('wide') : undefined;
-    bands.push({ beside, stack, text: texts.splice(0, 2), flip });
+  const landscape = (a: Article) => { const p = picture(a.data.coverImage); const r = p?.width && p.height ? p.width / p.height : 0; return r >= 1.4; };
+  // Lead: the editors' pick, else a story marked "featured", else the first story with a landscape photo.
+  lead = (chosen && pool.includes(chosen) ? chosen : undefined) ?? pool.find((a) => a.data.featured && a.data.coverImage) ?? pool.find(landscape) ?? pool.find((a) => a.data.coverImage) ?? pool[0];
+  const rest = pool.filter((a) => a !== lead);
+  const noPhoto = rest.filter((a) => !a.data.coverImage);
+  second = noPhoto.slice(0, 1);
+  also = noPhoto.slice(1, 3);
+  const remaining = rest.filter((a) => !second.includes(a) && !also.includes(a));
+  const leftovers: Article[] = [];
+  for (const s of SECTIONS) {
+    const list = remaining.filter((a) => a.data.section === s.slug);
+    if (list.length >= 2) sectionBands.push({ slug: s.slug, label: s.label, articles: list });
+    else leftovers.push(...list);
   }
-  overflow = [...photos, ...texts];
+  if (leftovers.length) sectionBands.push({ slug: null, label: 'More from this issue', articles: leftovers });
 }
+const leadPic = lead ? picture(lead.data.coverImage) : null;
 const heading = (g: Group) => (g.issue ? g.issue.data.title : formatDate(g.day));
 const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue.data.season ?? ''} ${g.issue.data.year}`.trim() : null);
 ---
@@ -66,7 +63,7 @@ const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue
   <h1 class="visually-hidden">{SITE.name}</h1>
   {!newest && <div class="wrap band"><p>No articles have been published yet.</p></div>}
 
-  {newest && (
+  {newest && lead && (
     <section class="wrap edition is-newest" aria-labelledby="edition-0">
       <header class="edition-head">
         <div>
@@ -80,63 +77,53 @@ const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue
           </p>
         )}
       </header>
-      {lead && (
-        <div class="mosaic mosaic-top">
-          <div class="cell cell-3">
-            {topLeft.map((a, i) => <StoryCard article={a} size={i === 0 ? 'medium' : 'small'} image={false} heading="h3" dekLength={i === 0 ? 300 : 160} />)}
-          </div>
-          <div class="cell cell-6 cell-lead">
-            <StoryCard article={lead} size="lead" heading="h3" eager dekLength={260} sizes="(min-width: 1024px) 600px, 100vw" />
-          </div>
-          <div class="cell cell-3">
-            {topRight.photo && <StoryCard article={topRight.photo} size="medium" heading="h3" dek={false} sizes="(min-width: 1024px) 290px, (min-width: 768px) 40vw, 100vw" />}
-            {topRight.text.map((a) => <StoryCard article={a} size="small" image={false} heading="h3" dekLength={170} />)}
-          </div>
+      <div class:list={['top', { 'no-photo': !leadPic }]}>
+        <div class="top-text">
+          <StoryCard article={lead} size="lead" image={false} heading="h3" dekLength={520} />
+          {second.map((a) => <StoryCard article={a} size="medium" image={false} heading="h3" dekLength={300} />)}
         </div>
-      )}
-      {bands.map((band) => (
-        <div class:list={['mosaic', 'mosaic-band', { flip: band.flip }]}>
-          {band.beside && (
-            <div class="cell cell-5 cell-beside">
-              <StoryCard article={band.beside} size="large" layout="row" mediaSide={band.flip ? 'right' : 'left'} heading="h3" dekLength={300} sizes="(min-width: 768px) 230px, 45vw" />
-            </div>
-          )}
-          {band.stack && (
-            <div class:list={['cell', band.text.length ? 'cell-4' : 'cell-7']}>
-              <StoryCard article={band.stack} size="medium" heading="h3" dekLength={200} sizes="(min-width: 1024px) 400px, 100vw" />
-            </div>
-          )}
-          {band.text.length > 0 && (
-            <div class:list={['cell', band.stack ? 'cell-3' : 'cell-7']}>
-              {band.text.map((a) => <StoryCard article={a} size="small" image={false} heading="h3" dekLength={150} />)}
-            </div>
-          )}
+        {leadPic && (
+          <figure class="top-photo">
+            <a href={href(permalink(lead))} tabindex="-1" aria-hidden="true">
+              <img src={leadPic.src} srcset={leadPic.srcset} sizes="(min-width: 1024px) 720px, 100vw" width={leadPic.width} height={leadPic.height} alt="" fetchpriority="high" decoding="async" />
+            </a>
+            {(lead.data.coverCaption || lead.data.coverCredit) && <figcaption>{lead.data.coverCaption} {lead.data.coverCredit && <span class="credit">{lead.data.coverCredit}</span>}</figcaption>}
+          </figure>
+        )}
+        {also.length > 0 && (
+          <aside class="top-also" aria-labelledby="also-head">
+            <h3 class="also-head" id="also-head">Also in this issue</h3>
+            {also.map((a) => <StoryCard article={a} size="medium" image={false} heading="h4" dekLength={220} />)}
+          </aside>
+        )}
+      </div>
+      {sectionBands.map((b) => (
+        <div class="section-band">
+          <div class="section-band-head">
+            <h3>{b.slug ? <a href={href(`/${b.slug}/`)}>{b.label}</a> : b.label}</h3>
+            {b.slug && <a class="view-more" href={href(`/${b.slug}/`)} aria-label={`View more ${b.label}`}>View more</a>}
+          </div>
+          <Band articles={b.articles} listLimit={4} />
         </div>
       ))}
-      <AlignedRows articles={overflow} max={4} />
     </section>
   )}
 
-  {older.map((g, i) => {
-    const photos = g.articles.filter((a) => a.data.coverImage);
-    const text = g.articles.filter((a) => !a.data.coverImage);
-    return (
-      <section class="wrap edition" aria-labelledby={`edition-${i + 1}`}>
-        <header class="edition-head">
-          <div>
-            <span class="kicker">{g.issue ? 'Print issue' : 'Published'}</span>
-            <h2 id={`edition-${i + 1}`}>{heading(g)}{subheading(g) && <span class="when">{subheading(g)}</span>}</h2>
-          </div>
-          <p class="edition-links">
-            {g.issue && <a href={href(`/issues/${g.issue.id}/`)}>Read the print edition</a>}
-            <span>{g.articles.length} {g.articles.length === 1 ? 'article' : 'articles'}</span>
-          </p>
-        </header>
-        <AlignedRows articles={photos} image max={4} offset={i} />
-        <AlignedRows articles={text} max={4} offset={i + 1} />
-      </section>
-    );
-  })}
+  {older.map((g, i) => (
+    <section class="wrap edition" aria-labelledby={`edition-${i + 1}`}>
+      <header class="edition-head">
+        <div>
+          <span class="kicker">{g.issue ? 'Print issue' : 'Published'}</span>
+          <h2 id={`edition-${i + 1}`}>{heading(g)}{subheading(g) && <span class="when">{subheading(g)}</span>}</h2>
+        </div>
+        <p class="edition-links">
+          {g.issue && <a href={href(`/issues/${g.issue.id}/`)}>Read the print edition</a>}
+          {g.articles.length > 4 && <a href={href(g.issue ? `/issues/${g.issue.id}/` : `/archives/${academicYear(g.day)}/`)}>All {g.articles.length} articles</a>}
+        </p>
+      </header>
+      <div class="section-band"><Band articles={g.articles} listLimit={3} /></div>
+    </section>
+  ))}
 
   <section class="wrap join" aria-labelledby="join-head">
     <h2 id="join-head">Write for The Governor</h2>

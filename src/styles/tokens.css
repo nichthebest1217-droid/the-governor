@@ -28,8 +28,8 @@
   --step-5: clamp(2.2rem, 1.2rem + 4.4vw, 3.75rem);
 
   /* Layout */
-  --page: 1280px;
+  --page: 1760px;
   --measure: 43rem;
-  --gutter: clamp(1rem, 0.5rem + 2vw, 2rem);
+  --gutter: clamp(1rem, 0.4rem + 2.6vw, 3.5rem);
   --gap: clamp(1.25rem, 0.8rem + 1.6vw, 2rem);
 }

@@ -1,5 +1,5 @@
 ---
-import { type Article, authorLabel, formatDate, getAuthorMap, href, permalink, picture, sectionLabel, summary } from '../lib/site';
+import { type Article, authorLabel, formatDate, getAuthorMap, href, permalink, picture, readingMinutes, sectionLabel, summary } from '../lib/site';
 
 interface Props {
   article: Article;
@@ -44,6 +44,7 @@ const label = data.kind === 'editorial' ? 'Editorial' : sectionLabel(data.sectio
       <span>By {authors.map((a, i) => (<>{i > 0 && (i === authors.length - 1 ? ' and ' : ', ')}<a href={href(`/authors/${a!.id}/`)}>{authorLabel(a!)}</a></>))}</span>
     )}
     {date && <time class:list={[{ sep: authors.length > 0 }]} datetime={data.publishedAt}>{formatDate(data.publishedAt, 'short')}</time>}
+    <span class="sep">{readingMinutes(article)} min read</span>
   </p>
   </div>
 </article>
