@@ -2,128 +2,169 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StoryCard from '../components/StoryCard.astro';
-import Band from '../components/Band.astro';
 import homepage from '../data/homepage.json';
-import { SECTIONS, SITE, type Article, type Issue, academicYear, dayOf, formatDate, getArticles, href, permalink, picture, refId } from '../lib/site';
+import {
+  SECTIONS, SITE, type Article, authorLabel, dayOf, formatDate, getArticles, getAuthorMap, href, permalink, picture, refId, sectionLabel,
+} from '../lib/site';
 
-// The front page is a timeline. The newest edition sits at the top; scrolling down goes back
-// in time. Articles are grouped by print issue when the issue is documented, otherwise by the
-// day they were published.
+// Front page = the newest edition, then a look back.
+// An "edition" is a print issue once three of its articles are online; otherwise the most
+// recent publication day.
 const all = await getArticles();
-const issues = new Map((await getCollection('issues')).map((i) => [i.id, i]));
+const authorMap = await getAuthorMap();
+const issues = await getCollection('issues');
+const issueById = new Map(issues.map((i) => [i.id, i]));
 const perIssue = new Map<string, number>();
 for (const a of all) if (a.data.issueId) perIssue.set(a.data.issueId, (perIssue.get(a.data.issueId) ?? 0) + 1);
 
-interface Group { key: string; issue?: Issue; day: string; articles: Article[] }
-const groups = new Map<string, Group>();
-for (const a of all) {
-  // An issue gets its own block once at least three of its articles are online.
-  const issue = a.data.issueId && (perIssue.get(a.data.issueId) ?? 0) >= 3 ? issues.get(a.data.issueId) : undefined;
-  const key = issue ? `issue:${issue.id}` : `day:${dayOf(a.data.publishedAt)}`;
-  const g = groups.get(key) ?? { key, issue, day: dayOf(a.data.publishedAt), articles: [] };
-  g.articles.push(a);
-  if (dayOf(a.data.publishedAt) > g.day) g.day = dayOf(a.data.publishedAt);
-  groups.set(key, g);
-}
-const timeline = [...groups.values()].sort((x, y) => y.day.localeCompare(x.day));
-for (const g of timeline) {
-  // Inside an issue, follow the paper's own running order (front page first).
-  if (g.issue) g.articles.sort((a, b) => (a.data.printOrder ?? 999) - (b.data.printOrder ?? 999));
-}
+const first = all[0];
+const firstIssue = first?.data.issueId && (perIssue.get(first.data.issueId) ?? 0) >= 3 ? issueById.get(first.data.issueId) : undefined;
+const edition = !first ? [] : firstIssue
+  ? all.filter((a) => a.data.issueId === firstIssue.id).sort((a, b) => (a.data.printOrder ?? 999) - (b.data.printOrder ?? 999))
+  : all.filter((a) => dayOf(a.data.publishedAt) === dayOf(first.data.publishedAt));
+const earlier = all.filter((a) => !edition.includes(a));
 
-const [newest, ...older] = timeline;
+// Lead: the editors' pick, else a story marked "featured", else the first with a landscape photo.
 const byId = new Map(all.map((a) => [a.id, a]));
-// Newest edition: a lead package, then one band per section, as on a newspaper front.
-let lead: Article | undefined, second: Article[] = [], also: Article[] = [];
-let sectionBands: { slug: string | null; label: string; articles: Article[] }[] = [];
-if (newest) {
-  const pool = [...newest.articles];
-  const chosen = byId.get(refId(homepage.lead));
-  const landscape = (a: Article) => { const p = picture(a.data.coverImage); const r = p?.width && p.height ? p.width / p.height : 0; return r >= 1.4; };
-  // Lead: the editors' pick, else a story marked "featured", else the first story with a landscape photo.
-  lead = (chosen && pool.includes(chosen) ? chosen : undefined) ?? pool.find((a) => a.data.featured && a.data.coverImage) ?? pool.find(landscape) ?? pool.find((a) => a.data.coverImage) ?? pool[0];
-  const rest = pool.filter((a) => a !== lead);
-  const noPhoto = rest.filter((a) => !a.data.coverImage);
-  second = noPhoto.slice(0, 1);
-  also = noPhoto.slice(1, 3);
-  const remaining = rest.filter((a) => !second.includes(a) && !also.includes(a));
-  const leftovers: Article[] = [];
-  for (const s of SECTIONS) {
-    const list = remaining.filter((a) => a.data.section === s.slug);
-    if (list.length >= 2) sectionBands.push({ slug: s.slug, label: s.label, articles: list });
-    else leftovers.push(...list);
-  }
-  if (leftovers.length) sectionBands.push({ slug: null, label: 'More from this issue', articles: leftovers });
-}
+const ratio = (a: Article) => { const p = picture(a.data.coverImage); return p?.width && p.height ? p.width / p.height : 0; };
+const chosen = byId.get(refId(homepage.lead));
+const lead = (chosen && edition.includes(chosen) ? chosen : undefined)
+  ?? edition.find((a) => a.data.featured && a.data.coverImage)
+  ?? edition.find((a) => ratio(a) >= 1.4)
+  ?? edition.find((a) => a.data.coverImage)
+  ?? edition[0];
 const leadPic = lead ? picture(lead.data.coverImage) : null;
-const heading = (g: Group) => (g.issue ? g.issue.data.title : formatDate(g.day));
-const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue.data.season ?? ''} ${g.issue.data.year}`.trim() : null);
+const editorial = edition.find((a) => a !== lead && a.data.kind === 'editorial');
+const rest = edition.filter((a) => a !== lead && a !== editorial);
+const trio = rest.slice(0, 3);
+const rows = rest.slice(3);
+
+const cover = firstIssue ? picture(firstIssue.data.pageImages[0]) : null;
+const desks = SECTIONS.map((s) => ({ ...s, count: all.filter((a) => a.data.section === s.slug).length })).filter((s) => s.count > 0);
+
+// Looking back: eight photo stories, then a column list of headlines.
+const earlierPhotos = earlier.filter((a) => a.data.coverImage).slice(0, 8);
+const earlierHeads = earlier.filter((a) => !earlierPhotos.includes(a)).slice(0, 15);
+const shelf = issues.filter((i) => i.data.pageImages.length > 0).sort((a, b) => (b.data.publishedOn ?? `${b.data.year}`).localeCompare(a.data.publishedOn ?? `${a.data.year}`));
+const editionLabel = firstIssue ? firstIssue.data.title : first ? formatDate(first.data.publishedAt) : '';
+const byline = (a: Article) => a.data.authors.map((id) => authorMap.get(id)).filter((x) => x?.data.visible).map((x) => authorLabel(x!)).join(', ');
 ---
 <BaseLayout>
   <h1 class="visually-hidden">{SITE.name}</h1>
-  {!newest && <div class="wrap band"><p>No articles have been published yet.</p></div>}
+  {!lead && <div class="wrap band"><p>No articles have been published yet.</p></div>}
 
-  {newest && lead && (
-    <section class="wrap edition is-newest" aria-labelledby="edition-0">
-      <header class="edition-head">
-        <div>
-          <span class="kicker">{newest.issue ? 'Latest issue' : 'Latest'}</span>
-          <h2 id="edition-0">{heading(newest)}{subheading(newest) && <span class="when">{subheading(newest)}</span>}</h2>
-        </div>
-        {newest.issue && (
-          <p class="edition-links">
-            <a href={href(`/issues/${newest.issue.id}/`)}>Read the print edition</a>
-            {newest.issue.data.pdf && <a href={href(newest.issue.data.pdf)}>PDF</a>}
-          </p>
-        )}
-      </header>
-      <div class:list={['top', { 'no-photo': !leadPic }]}>
-        <div class="top-text">
-          <StoryCard article={lead} size="lead" image={false} heading="h3" dekLength={520} />
-          {second.map((a) => <StoryCard article={a} size="medium" image={false} heading="h3" dekLength={300} />)}
-        </div>
+  {lead && (
+    <div class="wrap">
+      <p class="issue-strip">
+        <strong>{editionLabel}</strong>
+        {firstIssue?.data.dateLabel && <span>{firstIssue.data.dateLabel}</span>}
+        {firstIssue && <a href={href(`/issues/${firstIssue.id}/`)}>Read the print edition</a>}
+      </p>
+
+      <section class:list={['lead', { 'no-photo': !leadPic }]} aria-label="Lead story">
         {leadPic && (
-          <figure class="top-photo">
+          <figure class="lead-photo">
             <a href={href(permalink(lead))} tabindex="-1" aria-hidden="true">
-              <img src={leadPic.src} srcset={leadPic.srcset} sizes="(min-width: 1024px) 720px, 100vw" width={leadPic.width} height={leadPic.height} alt="" fetchpriority="high" decoding="async" />
+              <img src={leadPic.src} srcset={leadPic.srcset} sizes="(min-width: 1024px) 700px, 100vw" width={leadPic.width} height={leadPic.height} alt="" fetchpriority="high" decoding="async" />
             </a>
             {(lead.data.coverCaption || lead.data.coverCredit) && <figcaption>{lead.data.coverCaption} {lead.data.coverCredit && <span class="credit">{lead.data.coverCredit}</span>}</figcaption>}
           </figure>
         )}
-        {also.length > 0 && (
-          <aside class="top-also" aria-labelledby="also-head">
-            <h3 class="also-head" id="also-head">Also in this issue</h3>
-            {also.map((a) => <StoryCard article={a} size="medium" image={false} heading="h4" dekLength={220} />)}
-          </aside>
+        <StoryCard article={lead} size="lead" image={false} heading="h2" dekLength={330} />
+      </section>
+
+      {trio.length > 0 && (
+        <section class="trio" aria-label="Top stories">
+          {trio.map((a) => <StoryCard article={a} size="medium" image={false} heading="h2" dekLength={260} />)}
+        </section>
+      )}
+
+      <div class="issue-body">
+        <section aria-labelledby="more-head">
+          <div class="section-label"><h2 id="more-head">{firstIssue ? 'More from this issue' : 'More stories'}</h2></div>
+          <div class="rows">
+            {rows.map((a) => <StoryCard article={a} size="medium" layout="row" heading="h3" dekLength={240} sizes="(min-width: 700px) 190px, 110px" />)}
+          </div>
+        </section>
+
+        <aside class="aside" aria-label="This issue">
+          {firstIssue && cover && (
+            <div class="print-card">
+              <div class="section-label" style="margin-bottom:0"><h2>In print</h2></div>
+              <a class="cover" href={href(`/issues/${firstIssue.id}/`)} tabindex="-1" aria-hidden="true">
+                <img src={cover.src} srcset={cover.srcset} sizes="(min-width: 1024px) 380px, 260px" width={cover.width} height={cover.height} alt="" loading="lazy" decoding="async" />
+              </a>
+              <div>
+                <h3>{firstIssue.data.title}</h3>
+                <p>{firstIssue.data.dateLabel}{firstIssue.data.pageImages.length > 0 && ` · ${firstIssue.data.pageImages.length} pages`}</p>
+              </div>
+              <div class="actions">
+                <a class="button" href={href(`/issues/${firstIssue.id}/`)}>Read page by page</a>
+                {firstIssue.data.pdf && <a class="button ghost" href={href(firstIssue.data.pdf)}>PDF</a>}
+              </div>
+            </div>
+          )}
+          {editorial && (
+            <div class="editorial-box">
+              <StoryCard article={editorial} size="medium" image={false} heading="h3" dekLength={420} />
+            </div>
+          )}
+          <nav aria-labelledby="desks-head">
+            <div class="section-label" style="margin-bottom:.25rem"><h2 id="desks-head">Sections</h2></div>
+            <ul class="desk-list">
+              {desks.map((s) => <li><a href={href(`/${s.slug}/`)}>{s.label}<span class="count">{s.count}</span></a></li>)}
+            </ul>
+          </nav>
+        </aside>
+      </div>
+    </div>
+  )}
+
+  {earlier.length > 0 && (
+    <section class="archive" aria-labelledby="archive-head">
+      <div class="wrap">
+        <div class="archive-intro">
+          <div>
+            <span class="eyebrow">From the archive</span>
+            <h2 id="archive-head">Earlier in <em>The Governor</em></h2>
+          </div>
+          <a class="more-link" href={href('/archives/')}>All {all.length} articles</a>
+        </div>
+        {earlierPhotos.length > 0 && (
+          <div class="photo-grid uniform">
+            {earlierPhotos.map((a) => <StoryCard article={a} size="small" heading="h3" dek={false} sizes="(min-width: 1024px) 290px, 50vw" />)}
+          </div>
+        )}
+        {earlierHeads.length > 0 && (
+          <ul class="headline-list">
+            {earlierHeads.map((a) => (
+              <li>
+                <a href={href(permalink(a))}>{a.data.title}</a>
+                <span class="meta"><span class="kicker">{a.data.kind === 'editorial' ? 'Editorial' : sectionLabel(a.data.section)}</span>{byline(a)}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-      {sectionBands.map((b) => (
-        <div class:list={['section-band', { 'one-section': b.slug }]}>
-          <div class="section-band-head">
-            <h3>{b.slug ? <a href={href(`/${b.slug}/`)}>{b.label}</a> : b.label}</h3>
-            {b.slug && <a class="view-more" href={href(`/${b.slug}/`)} aria-label={`View more ${b.label}`}>View more</a>}
-          </div>
-          <Band articles={b.articles} listLimit={4} />
-        </div>
-      ))}
     </section>
   )}
 
-  {older.map((g, i) => (
-    <section class="wrap edition" aria-labelledby={`edition-${i + 1}`}>
-      <header class="edition-head">
-        <div>
-          <span class="kicker">{g.issue ? 'Print issue' : 'Published'}</span>
-          <h2 id={`edition-${i + 1}`}>{heading(g)}{subheading(g) && <span class="when">{subheading(g)}</span>}</h2>
-        </div>
-        <p class="edition-links">
-          {g.issue && <a href={href(`/issues/${g.issue.id}/`)}>Read the print edition</a>}
-          {g.articles.length > 4 && <a href={href(g.issue ? `/issues/${g.issue.id}/` : `/archives/${academicYear(g.day)}/`)}>All {g.articles.length} articles</a>}
-        </p>
-      </header>
-      <div class="section-band"><Band articles={g.articles} listLimit={3} /></div>
+  {shelf.length > 0 && (
+    <section class="wrap shelf" aria-labelledby="shelf-head">
+      <div class="section-label"><h2 id="shelf-head">Print editions</h2><a class="more-link" href={href('/issues/')}>All issues</a></div>
+      <div class="shelf-grid">
+        {shelf.map((issue) => {
+          const c = picture(issue.data.pageImages[0]);
+          return (
+            <a class="issue-card" href={href(`/issues/${issue.id}/`)}>
+              <span class="cover">{c && <img src={c.src} srcset={c.srcset} sizes="220px" width={c.width} height={c.height} alt="" loading="lazy" decoding="async" />}</span>
+              <span><h3>{issue.data.title}</h3><span class="meta">{issue.data.dateLabel ?? issue.data.year}</span></span>
+            </a>
+          );
+        })}
+      </div>
     </section>
-  ))}
+  )}
 
   <section class="wrap join" aria-labelledby="join-head">
     <h2 id="join-head">Write for The Governor</h2>
@@ -131,7 +172,6 @@ const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue
     <div class="actions">
       <a class="button" href={href('/join/')}>Join the staff</a>
       <a class="button ghost" href={href('/contact/')}>Submit a tip or letter</a>
-      <a class="button ghost" href={href('/archives/')}>Browse the full archive</a>
     </div>
   </section>
 </BaseLayout>

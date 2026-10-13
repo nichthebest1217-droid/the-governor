@@ -46,17 +46,16 @@ tests/                  unit tests and built-site smoke tests
 
 ## The front page
 
-The front page is a timeline: the newest print issue's stories at the top, older material below in reverse
-date order. An issue gets its own block once three of its articles are online (set **Print issue** on each
-article; **Order within the issue** controls their sequence). Older articles with no recorded issue are grouped
-by the day they were published. Rows always fill their width and cards in a row share a top and a bottom.
-The lead story is the editors' pick under **Homepage**, otherwise the first story with a wide photo.
-The newest issue opens with a lead package (lead story text, its photo, and "Also in this issue"), followed
-by one band per section: a photo story on the left and a list of stories with summaries on the right. Older
-issues and dates each get one band and a link to the rest. Upright photos stay upright.
+Top to bottom: the newest edition (lead story with its photo, three top stories, then the rest of the issue
+as a list beside a column holding the print edition, the editorial and the section index), a look back at
+earlier articles, the shelf of print editions, and the call for writers.
 
-The nameplate at the top is an image cut from the paper's own print front page
-(`public/brand/nameplate.webp`, and `wordmark.webp` for phones). To change it, replace those two files.
+- An "edition" is a print issue once three of its articles are online (set **Print issue** on each article;
+  **Order within the issue** sets their sequence). Until then it is the most recent publication day.
+- The lead is the editors' pick under **Homepage**, otherwise the first story with a landscape photo.
+- The wordmark is an image cut from the paper's print front page (`public/brand/wordmark.webp`); the site
+  icon is its G in red (`public/favicon.png`).
+- The look is set in two files: `src/styles/tokens.css` (colours, fonts, sizes) and `src/styles/global.css`.
 
 ## How publishing works
 

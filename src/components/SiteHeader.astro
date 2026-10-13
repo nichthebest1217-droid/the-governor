@@ -36,9 +36,8 @@ const links = [
       <a class="mobile-search" href={href('/search/')} aria-label="Search"><Icon name="search" /></a>
       <div class="nameplate">
         <a href={href('/')} aria-label={`${SITE.name}, home`}>
-          {/* The paper's own print nameplate, cut from the front page of 26-27 Issue I. */}
-          <img class="np np-full" src={href('/brand/nameplate.webp')} width="2400" height="244" alt={SITE.name} decoding="async" />
-          <img class="np np-word" src={href('/brand/wordmark.webp')} width="1600" height="222" alt={SITE.name} decoding="async" />
+          {/* The paper's own print wordmark, cut from the front page of 26-27 Issue I. */}
+          <img class="np" src={href('/brand/wordmark.webp')} width="1600" height="222" alt={SITE.name} decoding="async" />
         </a>
         <p class="tagline">The student newspaper of {SITE.school} <span aria-hidden="true">·</span> {SITE.location}</p>
       </div>
