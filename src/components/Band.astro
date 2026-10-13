@@ -14,13 +14,13 @@ const shape = (a: Article) => { const p = picture(a.data.coverImage); return p?.
   {feature && (
     <div class="band-feature">
       {shape(feature) === 'tall'
-        ? <StoryCard article={feature} size="large" layout="row" mediaSide="left" kicker={false} dekLength={520} sizes="(min-width: 768px) 280px, 40vw" />
-        : <StoryCard article={feature} size="large" kicker={false} dekLength={420} sizes="(min-width: 1024px) 640px, 100vw" />}
+        ? <StoryCard article={feature} size="large" layout="row" mediaSide="left" dekLength={520} sizes="(min-width: 768px) 280px, 40vw" />
+        : <StoryCard article={feature} size="large" dekLength={420} sizes="(min-width: 1024px) 640px, 100vw" />}
     </div>
   )}
   {list.length > 0 && (
     <div class:list={['band-list', `count-${Math.min(list.length, 3)}`]}>
-      {list.map((a) => <StoryCard article={a} size="medium" layout="row" kicker={false} dekLength={list.length === 1 ? 1100 : list.length === 2 ? 760 : 460} sizes="120px" />)}
+      {list.map((a) => <StoryCard article={a} size="medium" layout="row" dekLength={list.length === 1 ? 1100 : list.length === 2 ? 760 : 460} sizes="(min-width: 768px) 230px, 110px" />)}
     </div>
   )}
 </div>

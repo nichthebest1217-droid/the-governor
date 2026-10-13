@@ -98,7 +98,7 @@ const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue
         )}
       </div>
       {sectionBands.map((b) => (
-        <div class="section-band">
+        <div class:list={['section-band', { 'one-section': b.slug }]}>
           <div class="section-band-head">
             <h3>{b.slug ? <a href={href(`/${b.slug}/`)}>{b.label}</a> : b.label}</h3>
             {b.slug && <a class="view-more" href={href(`/${b.slug}/`)} aria-label={`View more ${b.label}`}>View more</a>}

@@ -439,3 +439,25 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
 .band-grid:not(.no-feature) .band-list.count-1 .story .dek { -webkit-line-clamp: 9; line-clamp: 9; }
 .band-grid:not(.no-feature) .band-list.count-2 .story .dek { -webkit-line-clamp: 5; line-clamp: 5; }
 .band-feature .story:not(.layout-row) .media { max-height: 24rem; }
+
+/* ---------- headline scale: titles clearly larger and heavier than summaries ---------- */
+.story .hed { font-weight: 700; font-style: normal; color: var(--ink); font-size: 1.75rem; line-height: 1.12; }
+.story.size-small .hed { font-size: 1.4rem; line-height: 1.15; }
+.story.size-large .hed { font-size: clamp(1.9rem, 1.4rem + 1.2vw, 2.4rem); }
+.story .dek { font-family: var(--font-body); font-weight: 400; color: var(--ink-soft); font-size: 1.0625rem; line-height: 1.55; }
+.top-text .story.size-lead .hed { font-size: clamp(2.4rem, 1.4rem + 2.6vw, 3.6rem); line-height: 1.04; }
+.top-text .story.size-medium .hed, .top-also .story .hed { font-size: 1.6rem; }
+.band-list .story .hed { font-size: 1.75rem; }
+.band-feature .story.size-large .hed { font-size: clamp(2rem, 1.4rem + 1.5vw, 2.6rem); }
+.band-list .story.layout-row { grid-template-columns: minmax(0, 1fr) minmax(0, 14rem); }
+.also-head { font-size: 0.8125rem; font-family: var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule-strong); padding-bottom: 0.45rem; }
+.archive-row h3 { font-size: 1.35rem; font-weight: 700; }
+.edition-head h2 { font-size: 1.75rem; }
+@media (max-width: 599px) {
+  .story .hed, .band-list .story .hed { font-size: 1.45rem; }
+  .story.size-large .hed, .band-feature .story.size-large .hed { font-size: 1.75rem; }
+  .top-text .story.size-lead .hed { font-size: 2.1rem; }
+  .band-list .story.layout-row { grid-template-columns: minmax(0, 1fr) 6rem; }
+}
+/* inside a single-section band the section label is already in the band's heading */
+.section-band.one-section .story .kicker { display: none; }
