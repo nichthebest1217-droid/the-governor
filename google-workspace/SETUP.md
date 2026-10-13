@@ -10,10 +10,10 @@ Set up and running in the school account `nicholas.zhuo@govsacademy.org`:
 
 - Sheet: "The Governor: Publication" (with the script attached; menu **The Governor**).
 - The script's web address is deployed (version 2) and recorded in `endpoint.json`.
-- Verified: the script reads a real Google Doc and turns it into an article; the web address answers without
-  sign-in; the GitHub workflow reaches it.
-- **Not yet exercised with a real article:** the final commit-and-publish step. The first approved row is
-  that test. Watch the run under the repository's **Actions** tab.
+- **Tested end to end on 13 October 2026:** a test Doc listed in the Sheet and marked Approved was collected
+  by the GitHub workflow, passed the checks, was committed and went live with the right headline, byline and
+  text. The test article was then removed.
+- Not yet tried with a real article: a cover photo from Drive.
 
 ## What goes where
 
