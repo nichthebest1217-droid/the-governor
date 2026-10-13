@@ -12,19 +12,24 @@ interface Props {
   heading?: 'h2' | 'h3';
   eager?: boolean;
   sizes?: string;
+  /** For layout="row": which side the photograph sits on. */
+  mediaSide?: 'left' | 'right';
   /** Longest summary to show, in characters. */
   dekLength?: number;
 }
-const { article, size = 'medium', layout = 'stack', image = true, dek = true, kicker = true, date = true, heading: H = 'h3', eager = false, dekLength = 170, sizes = '(min-width: 1024px) 30vw, (min-width: 768px) 50vw, 100vw' } = Astro.props;
+const { article, size = 'medium', layout = 'stack', image = true, dek = true, kicker = true, date = true, heading: H = 'h3', eager = false, mediaSide = 'right', dekLength = 170, sizes = '(min-width: 1024px) 30vw, (min-width: 768px) 50vw, 100vw' } = Astro.props;
 const { data } = article;
 const authorMap = await getAuthorMap();
 const authors = data.authors.map((id) => authorMap.get(id)).filter((a) => a && a.data.visible);
 const pic = image ? picture(data.coverImage) : null;
+// Keep a photograph's own shape (upright stays upright), within sensible limits.
+const ratio = pic?.width && pic.height ? Math.min(2.6, Math.max(0.66, pic.width / pic.height)) : 1.5;
+const shape = ratio < 0.95 ? 'tall' : ratio > 1.9 ? 'pano' : 'wide';
 const url = href(permalink(article));
 const isOpinion = data.section === 'opinion';
 const label = data.kind === 'editorial' ? 'Editorial' : sectionLabel(data.section);
 ---
-<article class:list={['story', `size-${size}`, `layout-${layout}`, { 'is-opinion': isOpinion, 'no-media': !pic }]}>
+<article class:list={['story', `size-${size}`, `layout-${layout}`, pic && `shape-${shape}`, layout === 'row' && `media-${mediaSide}`, { 'is-opinion': isOpinion, 'no-media': !pic }]} style={pic ? `--ar:${ratio.toFixed(3)}` : undefined}>
   {pic && (
     <a class="media" href={url} tabindex="-1" aria-hidden="true">
       <img src={pic.src} srcset={pic.srcset} sizes={pic.srcset ? sizes : undefined} width={pic.width} height={pic.height} alt="" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined} decoding="async" />

@@ -58,8 +58,8 @@ a.kicker:hover { text-decoration: underline; }
 .nameplate { text-align: center; padding-block: clamp(1.1rem, 0.6rem + 2.2vw, 2.1rem) clamp(0.9rem, 0.5rem + 1.5vw, 1.5rem); }
 .nameplate a { text-decoration: none; color: var(--ink); display: inline-block; }
 .nameplate .np { display: block; margin-inline: auto; height: auto; mix-blend-mode: multiply; }
-.nameplate .np-full { width: min(100%, 47rem); }
-.nameplate .np-word { display: none; width: min(100%, 21rem); }
+.nameplate .np-full { width: 100%; }
+.nameplate .np-word { display: none; width: 100%; }
 .nameplate .tagline { margin-top: 0.5rem; font: 700 0.75rem/1.3 var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
 .site-nav { border-top: 3px double var(--rule-strong); }
 .site-nav ul { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; column-gap: clamp(0.9rem, 0.3rem + 1.5vw, 1.9rem); }
@@ -72,7 +72,7 @@ a.kicker:hover { text-decoration: underline; }
 @media (max-width: 767px) {
   .utility { grid-template-columns: 1fr; text-align: center; gap: 0.15rem; }
   .utility .left, .utility .right { display: none; }
-  .nameplate { padding-inline: 2.75rem; }
+  .nameplate { padding-inline: 2.9rem; }
   .nameplate .np-full { display: none; }
   .nameplate .np-word { display: block; }
   .nameplate .tagline { letter-spacing: 0.08em; font-size: 0.625rem; }
@@ -105,7 +105,7 @@ a.kicker:hover { text-decoration: underline; }
 
 /* ---------- story cards ---------- */
 .story { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
-.story .media { display: block; overflow: hidden; background: var(--paper-deep); aspect-ratio: 3 / 2; }
+.story .media { display: block; overflow: hidden; background: var(--paper-deep); aspect-ratio: var(--ar, 1.5); }
 .story .media img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; transition: transform 0.5s ease; }
 .story:hover .media img { transform: scale(1.025); }
 .story .hed { font-size: var(--step-2); }
@@ -285,15 +285,14 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
 /* ---------- front-page timeline: editions, aligned rows ---------- */
 .edition { padding-block: clamp(1.25rem, 0.8rem + 1.6vw, 2rem) clamp(1.5rem, 1rem + 2vw, 2.5rem); }
 .edition-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; flex-wrap: wrap; border-top: 3px double var(--rule-strong); border-bottom: 1px solid var(--rule-strong); padding-block: 0.75rem 0.7rem; }
-.edition-head h2 { font-size: var(--step-3); margin-top: 0.25rem; }
-.edition.is-newest .edition-head h2 { font-size: var(--step-4); }
+.edition-head h2 { font-size: var(--step-2); margin-top: 0.2rem; }
 .edition-head .when { font-weight: 400; font-style: italic; margin-left: 0.6em; color: var(--ink-soft); font-size: 0.72em; white-space: nowrap; }
 .edition-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1.25rem; font: 700 0.75rem/1.4 var(--font-display); letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); }
 .edition-links a { text-decoration: none; color: var(--accent-ink); }
 .edition-links a:hover { text-decoration: underline; }
 
 /* Cards stretch to the row's height; the byline line is pinned to the bottom of each card. */
-.aligned-row { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--gap); border-bottom: 1px solid var(--rule); padding-block: 1.25rem; }
+.aligned-row { display: grid; grid-template-columns: var(--template); column-gap: var(--gap); border-bottom: 1px solid var(--rule); padding-block: 1.25rem; }
 .aligned-row:last-child { border-bottom: 0; }
 .aligned-row > .story { height: 100%; position: relative; }
 .aligned-row > .story + .story::before { content: ''; position: absolute; left: calc(var(--gap) / -2); top: 0; bottom: 0; border-left: 1px solid var(--rule); }
@@ -335,7 +334,8 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
 .river .story .story-text { grid-column: 1; grid-row: 1; }
 .river .story .media { grid-row: 1; }
 /* Photographs are never drawn larger than a card needs; small originals stay sharp. */
-.aligned-row .story .media { max-width: 22rem; }
+.aligned-row .story .media { height: 12.5rem; width: auto; max-width: 100%; align-self: flex-start; }
+.aligned-row .story.size-large .media { height: 15rem; }
 
 /* ---------- broadsheet front: photo rows beside a text column ---------- */
 .front { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); column-gap: var(--gap); padding-block: 1.25rem; border-bottom: 1px solid var(--rule); }
@@ -367,4 +367,51 @@ figcaption, .caption { font: 400 var(--step--1)/1.45 var(--font-ui); color: var(
   .story.layout-row.size-large .media { grid-column: 1; grid-row: 1; aspect-ratio: 3 / 2; }
   .story.layout-row.size-large .story-text { grid-row: 2; }
   .story.layout-row.size-large .dek { display: block; }
+}
+
+
+/* ---------- composed front page (newest issue) ---------- */
+.mosaic { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); padding-block: 1.25rem; border-bottom: 1px solid var(--rule); }
+.mosaic .cell { display: flex; flex-direction: column; position: relative; min-width: 0; }
+.mosaic .cell + .cell::before { content: ''; position: absolute; left: calc(var(--gap) / -2); top: 0; bottom: 0; border-left: 1px solid var(--rule); }
+.mosaic .cell > .story { flex: 1 1 auto; }
+.mosaic .cell > .story + .story { border-top: 1px solid var(--rule); margin-top: 1rem; padding-top: 1rem; }
+.cell-3 { grid-column: span 3; } .cell-4 { grid-column: span 4; } .cell-5 { grid-column: span 5; } .cell-6 { grid-column: span 6; } .cell-7 { grid-column: span 7; }
+.mosaic.flip .cell-beside { order: 3; }
+.mosaic.flip .cell-beside::before { display: block; }
+.mosaic.flip .cell:first-child::before { display: none; }
+.mosaic.flip .cell:not(.cell-beside):first-of-type::before { display: none; }
+.cell-lead .story { text-align: center; }
+.cell-lead .story .story-text { align-items: center; }
+.cell-lead .story.size-lead .hed { font-size: var(--step-4); }
+.cell-lead .story .dek { max-width: 32rem; font-size: 1.0625rem; }
+/* picture beside text; the picture keeps its own proportions */
+.mosaic .story.layout-row { grid-template-columns: minmax(0, 1fr) minmax(0, 42%); gap: 0.5rem 1.25rem; }
+.mosaic .story.layout-row.media-left { grid-template-columns: minmax(0, 42%) minmax(0, 1fr); }
+.mosaic .story.layout-row .media { aspect-ratio: var(--ar, 1.5); }
+.mosaic .story.layout-row.media-left .media { grid-column: 1; }
+.mosaic .story.layout-row.media-left .story-text { grid-column: 2; }
+.mosaic .story.layout-row.size-large .hed { font-size: var(--step-3); }
+.mosaic .story.layout-row.size-large .dek { font-size: 1rem; }
+.mosaic .story.size-small .dek { display: block; font-size: 0.9375rem; }
+@media (max-width: 1023px) {
+  .mosaic { grid-template-columns: repeat(6, minmax(0, 1fr)); row-gap: 1.25rem; }
+  .mosaic .cell { grid-column: span 3; }
+  .mosaic .cell-lead, .mosaic .cell-beside { grid-column: 1 / -1; order: -1; }
+  .mosaic .cell::before { display: none !important; }
+  .mosaic .cell-lead ~ .cell, .mosaic .cell-beside ~ .cell { border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+  .mosaic .cell:only-child, .mosaic .cell:last-child:nth-child(even) { grid-column: 1 / -1; }
+}
+@media (max-width: 599px) {
+  .mosaic .cell { grid-column: 1 / -1; }
+  .mosaic .cell + .cell { border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+  .cell-lead .story { text-align: left; }
+  .cell-lead .story .story-text { align-items: flex-start; }
+  .mosaic .story.layout-row, .mosaic .story.layout-row.media-left { grid-template-columns: minmax(0, 1fr) 38%; }
+  .mosaic .story.layout-row.media-left .media { grid-column: 2; }
+  .mosaic .story.layout-row.media-left .story-text { grid-column: 1; }
+  .mosaic .story.layout-row.size-large { grid-template-columns: minmax(0, 1fr) 38%; }
+  .mosaic .story.layout-row.size-large .media { grid-column: 2; grid-row: 1; aspect-ratio: var(--ar, 1.5); }
+  .mosaic .story.layout-row.size-large .story-text { grid-row: 1; }
+  .mosaic .story.layout-row.size-large .dek { display: none; }
 }
