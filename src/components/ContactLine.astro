@@ -10,7 +10,10 @@ const list = email ? email.split(',').map((e) => e.trim()).filter(Boolean) : [];
 const link = list.length ? `mailto:${list.join(',')}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}` : null;
 ---
 {link
-  ? <p><a class="button" href={link}>{label ?? `Email ${list.join(' and ')}`}</a> <span class="meta" style="margin-left:.5rem">Opens your email app ({list.join(' and ')}).</span></p>
+  ? <p class="contact-line">
+      <a class="button" href={link}>{label ?? 'Email the editors'}</a>
+      <span class="addresses">{list.map((e, i) => <>{i > 0 && <span class="dot" aria-hidden="true">·</span>}<a href={`mailto:${e}`}>{e}</a></>)}</span>
+    </p>
   : <p class="note">
       The staff’s public email address has not been posted here yet.
       {SITE.social.length > 0
