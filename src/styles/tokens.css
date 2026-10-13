@@ -15,6 +15,9 @@
 
   /* Type: one serif family for headlines and text (its optical sizes do the work), one quiet
      sans for labels. */
+  /* Headings: blackletter, chosen by the editor on 13 October 2026. To return to the text serif,
+     set this to var(--font-display). */
+  --font-heading: 'UnifrakturMaguntia', 'Old English Text MT', 'Newsreader Variable', Georgia, serif;
   --font-display: 'Newsreader Variable', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-body: 'Newsreader Variable', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
   --font-ui: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
