@@ -1,7 +1,16 @@
 # Launch Report
 
-Status as of 13 October 2026. **Not launched.** The site is built and verified locally; nothing has been
-pushed to GitHub or deployed, and the WordPress site is untouched.
+Status as of 13 October 2026. **Deployed, not announced.** The site is live at
+<https://nichthebest1217-droid.github.io/the-governor/> from the public repository
+`nichthebest1217-droid/the-governor` (Nicholas Zhuo's personal GitHub account, by his choice, for now).
+Search engines are told not to index it (`SITE_INDEXABLE` is unset). The WordPress site is untouched.
+
+First deploy: GitHub Actions run 38415514585 passed type check, build, tests, link and media checks, then
+published. Live checks: front page, a new and an archive article, a section, the issue page and PDF, search
+assets, RSS and an old `/category/news/` link all return 200; an unknown address returns the 404 page.
+
+Still to do on GitHub: protect `main` (pull request + one approval + checks), transfer the repository to a
+school-owned organization when one exists, and have an editor sign in to Pages CMS and make a test edit.
 
 ## Where each phase stands
 
@@ -39,7 +48,7 @@ spot-check           13 live WordPress pages match the new site
 | Search finds archive articles; drafts excluded | **Met** | Verified in the browser ("Fafa"); a draft fixture is proven absent from pages, feed, sitemap and index |
 | Authors, sections, issues, about, masthead, corrections, contact | **Met** | Masthead and contact show honest "not posted yet" notices until data is supplied |
 | No broken internal links or missing images | **Met** locally | Re-check on the live URL after first deploy |
-| Deployable by GitHub Actions; build passes locally and in CI | **Local: met. CI: not run** | Workflows written; no repository exists yet to run them |
+| Deployable by GitHub Actions; build passes locally and in CI | **Met** | Deployed by `deploy.yml` on 13 October 2026 |
 | Pages CMS create/edit tested by an authorized user | **Blocked** | Needs the repository and a login. Field types follow the current Pages CMS docs; the `list`, `select` and `date` options could not be exercised and should be confirmed on first login |
 | README and handover docs | **Met** | README, CONTRIBUTING, EDITORIAL_HANDBOOK |
 | WordPress site intact | **Met** | Read-only access only |
