@@ -12,7 +12,7 @@
     "media": "node scripts/optimize-media.ts",
     "build": "npm run media && astro build && node scripts/prune-dist.ts && pagefind --site dist",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "npm run media && astro check",
     "test": "node --test tests/*.test.ts",
     "audit:wp": "node scripts/audit-wordpress.ts",
     "import:wp": "node scripts/import-wordpress.ts",
