@@ -165,7 +165,7 @@ function idFromLink_(link) {
 }
 
 function exportDocAsMarkdown_(docId) {
-  const res = UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/' + docId + '/export?mimeType=text/markdown', { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
+  const res = UrlFetchApp.fetch('https://docs.google.com/document/d/' + docId + '/export?format=md', { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
   if (res.getResponseCode() !== 200) throw new Error('Could not read the Doc (HTTP ' + res.getResponseCode() + '). Share it with the account that runs this script.');
   return res.getContentText('UTF-8');
 }
@@ -176,6 +176,7 @@ function cleanMarkdown_(md, title) {
   text = text.replace(/^\[image\d+\]:\s*<data:[^>]*>\s*$/gm, '');      // embedded pictures (add photos through the sheet)
   text = text.replace(/!\[[^\]]*\]\[image\d+\]/g, '');
   text = text.replace(/\\([-.!#()+_>~])/g, '$1');                        // needless escapes
+  text = text.replace(/ {2,}\n/g, '\n\n');                                 // a line break typed with Shift+Enter becomes a paragraph
   const lines = text.split('\n');
   // Drop a leading title line, and a "by ..." line under it: both come from the sheet.
   while (lines.length && !lines[0].trim()) lines.shift();
