@@ -10,6 +10,9 @@ Publishing runs from Google Docs: editors mark rows Approved in the Sheet "The G
 account), and `sync-docs.yml` collects, checks, commits and publishes them every half hour. That chain was
 tested end to end on launch day; see [google-workspace/SETUP.md](google-workspace/SETUP.md).
 
+A Google Site in the school account, <https://sites.google.com/govsacademy.org/thegovernor>, shows the
+newspaper as a full-page embed. It is visible to the school's Google accounts only until someone widens it.
+
 Still open after launch, none of which a developer can settle alone:
 
 - Editors proofread the 14 Issue I articles against the PDF and confirm the section labels.

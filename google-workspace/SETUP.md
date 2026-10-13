@@ -69,9 +69,16 @@ The Sheet belongs to a student account, which closes after graduation. Before th
 adviser's account or a school shared drive, have the new owner run **Deploy > New deployment**, and update
 `endpoint.json` with the new address.
 
-## A Google Site as the school's front door
+## The Google Site (the school's front door)
 
-New Google Sites has no way for a script to add pages, so articles cannot flow from Docs into Google Sites
-pages automatically. What works: create a Google Site with one **Full page embed** of the newspaper's
-address, and ask the Workspace administrator to map it to a school address (Admin console > Apps > Google
-Workspace > Sites > Custom URL). Inside the frame the address bar does not change from article to article.
+Published on 13 October 2026 from the school account: <https://sites.google.com/govsacademy.org/thegovernor>.
+It is one page, a full-page embed of the newspaper, set as the homepage. A blank "Home" page is hidden from
+its navigation and can be deleted.
+
+- **Who can see it:** "Anyone at The Governor's Academy" (Google's default for the school). To open it to
+  the public, use Publish > Publish settings > Manage, if the school allows public Sites.
+- **A school address:** a Workspace administrator can map it to something like `governor.govsacademy.org`
+  (Admin console > Apps > Google Workspace > Sites > Custom URL).
+- **Limits:** new Google Sites cannot be filled by a script, so the articles live on the newspaper site and
+  appear here through the embed. Inside the frame the address bar does not change from article to article;
+  the "Copy link" button on each article gives the real address.
