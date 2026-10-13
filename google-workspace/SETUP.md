@@ -13,7 +13,8 @@ Set up and running in the school account `nicholas.zhuo@govsacademy.org`:
 - **Tested end to end on 13 October 2026:** a test Doc listed in the Sheet and marked Approved was collected
   by the GitHub workflow, passed the checks, was committed and went live with the right headline, byline and
   text. The test article was then removed.
-- Not yet tried with a real article: a cover photo from Drive.
+- The photo path was tested the same way: a Drive image was fetched, converted to a clean JPEG and
+  published with its description. Both test articles were removed afterwards.
 
 ## What goes where
 
