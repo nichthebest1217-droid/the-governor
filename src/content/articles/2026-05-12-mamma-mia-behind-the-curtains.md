@@ -1,0 +1,34 @@
+---
+title: "Mamma Mia! Behind the Curtains"
+publishedAt: "2026-05-12T10:19:01-04:00"
+updatedAt: null
+section: "arts"
+secondarySections: []
+kind: "article"
+tags: []
+authors: 
+  - "henry-loughman"
+originalByline: "by Henry Loughman"
+excerpt: null
+coverImage: "/media/2026/05/wp-189.jpeg"
+coverAlt: null
+coverCaption: null
+coverCredit: null
+featured: false
+published: true
+issueId: null
+legacyWpId: 181
+legacyUrl: "https://govsacademynews.wpcomstaging.com/2026/05/12/mamma-mia-behind-the-curtains/"
+legacyPath: "/2026/05/12/mamma-mia-behind-the-curtains/"
+sourceModifiedAt: "2026-05-12T10:19:01-04:00"
+authorNeedsReview: false
+migrationNeedsReview: false
+---
+
+This year’s winter musical took an immense amount of work. Making a show is more than just memorizing lines; it’s building the set, learning songs, dances, and understanding how to act as a character. Over the course of three months, the cast had to learn all of this for a two hour long show.
+
+This year was made somewhat easier by the catchy and well-known song list of *Mamma Mia!*, thanks to the popularity of ABBA. However, that meant we had to spend a lot of time having the ensemble learn the background parts of the songs to support the melody. We spent most of the first two months working solely on music, with two days a week being concentrated on the dances. After that came blocking and memorizing our lines, which is where much of the stress begins.
+
+Our anticipation continued to build as the set design was finalized and tech began work on it. Just like every year, tech shot for the stars, with a set that replicated a Greek coastal town complete with boat, dock, tavern, and a hotel with a second story balcony. This incredible set gave the actors many spaces to work with and allowed for a more dynamic staging.
+
+On opening night, we had a completely packed theater, extending all the way into the balcony. Our first performance went quite smoothly. The energy on display from this audience raised everyone’s confidence. We were inspired to raise our level in every scene, every song, and every dance. The rush we felt from that opening night show was the reward for all of the long rehearsals in the winter dark. The reprises of “Mamma Mia” and “Dancing Queen,” as well as the performance of “Waterloo,” brought out energy from the audience, giving them a chance to dance and sing along with these well known songs. Saturday’s performance came with less anxiety and far more confidence. After a restful night’s sleep and a calm morning, we all arrived at the theater ready to make this last performance our best. The crowd was slightly smaller, but the energy was about equal, and we put on an even tighter show. In the end, I would consider this show to be the best in my high school career, and I’m glad that if any show had to be my last one at Govs, it was *Mamma Mia!*.

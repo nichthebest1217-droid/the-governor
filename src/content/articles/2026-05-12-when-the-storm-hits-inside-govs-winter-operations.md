@@ -1,0 +1,40 @@
+---
+title: "When the Storm Hits: Inside Govs Winter Operations"
+publishedAt: "2026-05-12T10:40:07-04:00"
+updatedAt: null
+section: "news"
+secondarySections: []
+kind: "article"
+tags: []
+authors: 
+  - "toby-grenier"
+originalByline: "by Toby Grenier ‘26"
+excerpt: null
+coverImage: null
+coverAlt: null
+coverCaption: null
+coverCredit: null
+featured: false
+published: true
+issueId: null
+legacyWpId: 234
+legacyUrl: "https://govsacademynews.wpcomstaging.com/2026/05/12/when-the-storm-hits-inside-govs-winter-operations/"
+legacyPath: "/2026/05/12/when-the-storm-hits-inside-govs-winter-operations/"
+sourceModifiedAt: "2026-05-12T10:40:07-04:00"
+authorNeedsReview: false
+migrationNeedsReview: false
+---
+
+At 4:00 a.m., while most of the Govs are still asleep hoping for a snow day, campus is already awake. Before the sun rises, headlights glide across the fresh snow as plows scrape against the frozen pavement. This marks the beginning of another long morning for the hidden heroes of the Facilities team.
+
+According to Mr. Woodruff, the timing of the storm determines everything. The aim is to begin plowing the snow before it reaches about four to five inches. If the snow is heavy and wet, they start even earlier, sometimes when only two to three inches have fallen. This is in order to get ahead of the burden, as this type of snow is harder on the team’s equipment and takes longer to clear.
+
+On many storm days, the team arrives between 3:00 and 4:00 a.m. During major storms, this can turn into an all night operation. One full pass of campus roads and primary walkways can take seven to eight staff members about two hours. But if snow continues to fall, the process repeats itself. Before the storm hits, Mr. Woodruff and his team prepare by fueling vehicles, mounting plows, filling ice-melt buckets, and staging shovels and snowblowers across campus. By the time most students wake up to check their emails, the hardest work has been underway for hours.
+
+Determining whether campus is safe is not based on one singular rule. Mr. Woodruff explained that they rely on multiple factors including road conditions, walkways, ice patches, the forecast for the rest of the day, and whether their tools will be effective. He mentioned that dry snow is manageable, but sleet and freezing rain pose a bigger challenge.
+
+Communication with administration starts early. A day or two before the storm, Mr. Woodruff connects with school leaders to discuss forecasts and possible schedule changes. On the morning of a storm, updates begin as early as 4:00 a.m. Real-time updates between the winter staff and the administration help guide decisions, but the final call is made by Dr. Quimby. As Mr. Woodruff put it, their responsibility is “to maintain conditions that are safe and passable so students and employees can get to class, the dining hall, practice, and activities without unnecessary risk.”
+
+What many students don’t see are the harsh conditions and physical demands. Heavy snow strains equipment and bodies. Long shifts stretch through freezing temperatures and can take a toll on physical health. Mr. Woodruff said that he is most proud of the team itself. “Every member of the Facilities department brings distinct skills, experience, and strengths,” he explained. If students walk to breakfast safely and never think about what happened before sunrise, that means they’ve done their job well.
+
+Snowstorms at Govs are not just about the weather. They are about preparation, teamwork, and quiet dedication. While students hope for a cancellation, the winter crew hopes for something else: a safe campus and a seamless start to the day.

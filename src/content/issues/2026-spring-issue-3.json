@@ -1,0 +1,32 @@
+{
+  "slug": "2026-spring-issue-3",
+  "title": "Spring Issue 3",
+  "season": "Spring",
+  "year": 2026,
+  "number": 3,
+  "volume": null,
+  "dateLabel": "April 2026",
+  "publishedOn": null,
+  "academicYear": "2025-2026",
+  "pdf": "/issues/2026-spring-issue-3.pdf",
+  "pdfBytes": 29769729,
+  "pageImages": [
+    "/issues/2026-spring-issue-3/page-1.png",
+    "/issues/2026-spring-issue-3/page-2.png",
+    "/issues/2026-spring-issue-3/page-3.png",
+    "/issues/2026-spring-issue-3/page-4.png",
+    "/issues/2026-spring-issue-3/page-5.png",
+    "/issues/2026-spring-issue-3/page-6.png",
+    "/issues/2026-spring-issue-3/page-7.png",
+    "/issues/2026-spring-issue-3/page-8.png"
+  ],
+  "notes": [
+    "Page 8 'Memes' and 'Crosswords' exist only in the PDF and page images."
+  ],
+  "sourceEvidence": [
+    "Front page nameplate reads 'BYFIELD, MASSACHUSETTS · NON SIBI SED ALIIS · SPRING ISSUE 3 - APRIL 2026' (media 70).",
+    "PDF media 65 is titled 'Governor Spring Issue 3' and has 8 pages; media 66, 67 and 69 are byte-identical re-uploads (same SHA-256).",
+    "Page order follows the screenshots' own timestamps (11.16.28 to 11.17.34). The old homepage slideshow showed pages 3-8 in reverse; media 77 carries the page-3 stories and media 72 the page-8 crossword, matching the front-page index.",
+    "Article list: the two front-page stories plus the front page 'What's Inside' index, matched to web posts by headline. Post 148 also labels itself 'Spring Issue #3 Editorial'."
+  ]
+}

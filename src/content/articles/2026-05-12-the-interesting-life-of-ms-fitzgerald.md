@@ -1,0 +1,38 @@
+---
+title: "The Interesting Life of Ms. Fitzgerald"
+publishedAt: "2026-05-12T10:35:45-04:00"
+updatedAt: null
+section: "people"
+secondarySections: []
+kind: "article"
+tags: []
+authors: 
+  - "brodie-donovan"
+originalByline: "by Brodie Donovan ‘26"
+excerpt: null
+coverImage: null
+coverAlt: null
+coverCaption: null
+coverCredit: null
+featured: false
+published: true
+issueId: null
+legacyWpId: 224
+legacyUrl: "https://govsacademynews.wpcomstaging.com/2026/05/12/the-interesting-life-of-ms-fitzgerald/"
+legacyPath: "/2026/05/12/the-interesting-life-of-ms-fitzgerald/"
+sourceModifiedAt: "2026-05-12T10:35:45-04:00"
+authorNeedsReview: false
+migrationNeedsReview: false
+---
+
+If you have ever had Ms. Fitzgerald as a teacher, you know there’s something special about her. Ms. Fitz approaches teaching from a different perspective, with life experiences that most people only dream of living. As the longest tenured teacher and first woman administrator at The Governor’s Academy, Ms. Fitz has seen this school change over the past decades, but her passion for teaching and the outside world hasn’t changed.
+
+Ms. Fitz didn’t always know she wanted to be a teacher, but her ninth grade Latin teacher, Ms. Partridge, inspired her. “She was an amazing woman and I admired her,” Ms. Fitz said. She went on to study Latin, became a Latin teacher, and eventually ended up at The Governor’s Academy.
+
+Ms. Fitz’s early teaching career wasn’t easy. At just 22 years old, she got offered her first teaching job in Woodstock, Vermont with 6 classes and 128 students, while also having bathroom and lunchroom duty. Many of her students lived in trailers, worked at the mill, and came to school unmotivated to learn. Whenever Ms. Fitz would walk into the classroom, her students would “rock their chairs back and forth” just to mess with her. Through all this teaching adversity, she never backed down. Instead, she learned a valuable lesson, “I had to become interested in them as people.” This approach towards her students has shaped how she commands a classroom today.
+
+At Govs, she went from becoming the first woman administrator to the Dean of Students all the way to Assistant Head of School. While she was the Dean of Students many students called her “The White Witch” due to her pearly white hair and her confident air of authority.
+
+What really sets Ms. Fitz apart is her passion to see the world. She has traveled all over the globe to places like South Africa, Argentina, Vietnam, Cambodia, and Japan. Throughout all her adventures, her view of the world has shaped her life. In South Africa, Ms. Fitz visited townships where families lived in cardboard homes with sewage running out the back. She said: “Yet the children were joyful, they sang to us, we gave them pencils and bubbles. You’d think we’d given them a million dollars, they were so joyful even in the midst of poverty.” On the other hand, in Cambodia she visited killing fields, reminding her of the cruelty in the world. The main lesson she has learned is that “everyone has a story and it’s worth taking the time to hear it.”
+
+When I asked what she hoped students will take away from her class,” Ms. Fitz said, “I hope they can take a nugget from their experience and hold onto it. Whether it’s a book, a conversation, or just something I said once that stuck.”

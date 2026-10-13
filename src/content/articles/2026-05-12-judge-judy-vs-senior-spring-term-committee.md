@@ -1,0 +1,40 @@
+---
+title: "Judge Judy vs. Senior Spring Term Committee"
+publishedAt: "2026-05-12T10:23:41-04:00"
+updatedAt: null
+section: "humor-fun"
+secondarySections: []
+kind: "article"
+tags: []
+authors: 
+  - "andrew-melly"
+originalByline: "by Andrew Melly"
+excerpt: null
+coverImage: "/media/2026/05/wp-201.png"
+coverAlt: null
+coverCaption: null
+coverCredit: null
+featured: false
+published: true
+issueId: null
+legacyWpId: 200
+legacyUrl: "https://govsacademynews.wpcomstaging.com/2026/05/12/judge-judy-vs-senior-spring-term-committee/"
+legacyPath: "/2026/05/12/judge-judy-vs-senior-spring-term-committee/"
+sourceModifiedAt: "2026-05-12T10:23:53-04:00"
+authorNeedsReview: false
+migrationNeedsReview: false
+---
+
+Dropping a class senior spring sounds amazing. Six weeks of no tests, no nightly homework, just working on something you actually care about. That’s the promise of Senior Spring Term. After March break, seniors at Governor’s get the chance to design an independent project, drop one class, and spend the last stretch of the year creating something creative, ambitious, and student-driven. In theory, it’s the perfect way to end senior year.
+
+However, the committee that approves the projects is notoriously strict about the proposals. As a senior, you have to submit what feels like a college thesis explaining your goals, timeline, materials, impact, and why you, specifically, deserve to do this project. It’s less “share your idea” and more “defend your life choices.” Hence the Judge Judy comparison; both she and the SSTP committee are no-nonsense arbiters eager to shut down weak excuses and to assert their authority. Here are some student stories:
+
+**Student: Joe shmoe, ‘67. Proposal: an incredibly detailed engineering project.** The perhaps apocryphal story goes that this student’s proposal was labeled “too easy.” Legend holds that Mr. Hunt was dropped from the committee–and reassigned to the student parking committee–after approving this project. If that is true, it raises the obvious question: what exactly counts as challenging? The criteria sometimes feel mysterious, like Mr. Hunt himself.
+
+**Student: Andrew Melly ‘26. Proposal: to create 25 handmade ceramic mugs for the dining hall.** As an AP Ceramics student, I thought it made sense. The dining hall constantly runs out of mugs by PA block, and I figured new ones could brighten people’s mornings and actually serve a purpose. I was interrogated about my ceramics experience and required to present a signed court order to the dining hall staff to prove I was allowed to make mugs. To this day I spend two hours per night on my SSTP proposal instead of working on my college essays.
+
+**Student: Jack Couture, ‘26. Proposal: to write a cookbook and create a video cooking channel that combined ancient Chinese recipes with his experience in Chinese 1.** Jack was told it might not be rigorous enough. He then proposed a second project involving filming his daily hockey stick taping which was approved without much resistance. As the great philosopher once said, “Rigor is in the eye of the beholder.”
+
+Senior Spring Term is still a great opportunity. Most of us apply because we genuinely want to create something before we graduate. But the approval process can feel less like encouragement and more like an audition. Maybe that’s just part of the tradition. Or maybe next year we should invite Judge Judy to sit in on the committee meetings. At least judge Judy gives you a reason for your conviction…
+
+![](/media/2026/05/wp-202.png)

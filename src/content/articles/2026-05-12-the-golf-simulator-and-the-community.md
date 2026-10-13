@@ -1,0 +1,34 @@
+---
+title: "The Golf Simulator and the Community"
+publishedAt: "2026-05-12T10:41:39-04:00"
+updatedAt: null
+section: "sports"
+secondarySections: []
+kind: "article"
+tags: []
+authors: 
+  - "tyler-passero"
+originalByline: "by Tyler Passero ‘26"
+excerpt: null
+coverImage: null
+coverAlt: null
+coverCaption: null
+coverCredit: null
+featured: false
+published: true
+issueId: null
+legacyWpId: 239
+legacyUrl: "https://govsacademynews.wpcomstaging.com/2026/05/12/the-golf-simulator-and-the-community/"
+legacyPath: "/2026/05/12/the-golf-simulator-and-the-community/"
+sourceModifiedAt: "2026-05-12T10:41:39-04:00"
+authorNeedsReview: false
+migrationNeedsReview: false
+---
+
+The rink at Govs is a great space to host hockey games and other events on the ice. However, the ice is not the only place that provides entertainment in the rink. There is also the simulator room near the JV boys hockey locker room. This simulator is packed with content, including games, hundreds of courses, and multiple ways to practice and collect data on your golf shots. It is easy to sign up to use: just head to the google sheet and pick an available time and then you will be able to enjoy the simulator. This place has served as a special addition to life on Govs, providing a substantial amount of entertainment for students and a great place for members of the golf team to practice during off season.
+
+Having a golf team in the ISL is challenging; since our season is in the spring, the team has to endure the entire winter season finding ways to practice for the golf season. Before the simulator room existed, the golf team only had a hitting net and a few practice putting greens. Four-year varsity golf veteran Bobby Liu ‘26 said that the old practice room was “crowded and unuseful” in preparing for the season. However, during the summer of 2023, construction of the simulator room began. Varsity golf coach Mr. Ogden communicated with the athletic department as well as donors to begin the process of building the simulator. He said, “The hardest part of building the simulator was where we were going to build it. We originally thought of somewhere in the fieldhouse or even the Frost basement, but we eventually settled on what used to be the intro to hockey locker room.”
+
+Mr Ogden also stated, “It’s been great in terms of those who have been really interested in golf, it has been really helpful to expose many to golf and the Govs golf program, and it has helped the team have some of its best seasons in recent years.” Mr. Ogden believes that the simulator should not only be a tool for the golf team, but also the whole community as a way to introduce people to golf.
+
+The simulator provides many opportunities for fun and friendly competition. One of the best examples is the annual Links in the Rink tournament. This year, over 90 students and faculty signed up for the tournament, showing how the simulator exposes people to the sport of golf. Overall, the simulator is one of the best places on campus, and it helps our community unite and socialize more often.

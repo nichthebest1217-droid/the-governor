@@ -1,0 +1,38 @@
+---
+title: "Remembering Fafa"
+publishedAt: "2026-05-12T10:41:06-04:00"
+updatedAt: null
+section: "people"
+secondarySections: []
+kind: "article"
+tags: []
+authors: 
+  - "jayden-padilla"
+originalByline: "by Jayden Padila ‘26"
+excerpt: null
+coverImage: "/media/2026/05/wp-237.jpeg"
+coverAlt: null
+coverCaption: null
+coverCredit: null
+featured: false
+published: true
+issueId: null
+legacyWpId: 236
+legacyUrl: "https://govsacademynews.wpcomstaging.com/2026/05/12/remembering-fafa/"
+legacyPath: "/2026/05/12/remembering-fafa/"
+sourceModifiedAt: "2026-05-12T10:41:06-04:00"
+authorNeedsReview: false
+migrationNeedsReview: false
+---
+
+Some people are loud when they walk into a room. Fafa never had to be. He carried himself with a calm, nonchalant confidence that made you notice him. His shoes were always clean, his pants perfectly baggy, his dreads framing a face that never looked upset about anything. He looked like he had an album dropping at midnight. That was just his energy: cool, effortless, and real. But what really made Fafa stand out wasn’t his style. It was his heart.
+
+Sophomore year, during a Walmart trip, we saw a freshman from our school trying to pay for his items with his school ID. It obviously wasn’t working. The kid looked embarrassed and didn’t really know what to do. Fafa didn’t hesitate. He walked up, asked what was going on, and paid for the kid’s stuff without knowing him at all. He didn’t do it for attention. He didn’t tell people about it later. That was just who he was. He was the kindest soul you could ever meet, and he helped so many people when they were in need.
+
+As a friend, he was the type of person everyone needs in their life. He was a listener. He wasn’t the loudest in the group, but when you talked, he really heard you. Whenever I was stressed or overthinking, he’d remind me to only worry about what I could control. He’d say everything was going to be okay and not to stress. He always told me to believe in God’s plan. His faith was strong, and it showed in the way he carried himself and comforted others.
+
+Fafa also had his passions. He loved music, especially drill and artists like Sleepy Hollow. One football game, he hid his phone in his girdle and wore AirPods inside his helmet just so he could listen to music during the game; he then proceeded to run for four first downs. You could literally see the outline of the phone through his pants, but somehow no one noticed. That was Fafa: committed, a little bold, and completely himself.
+
+Fafa had a presence that made people feel safe. He was a “I got you no matter what” kind of friend. He made this school better just by being in it. When people think of him, I hope they remember the greatness he had, the kindness, the style, the strength, the faith, and the way he showed up for others.
+
+I encourage everyone to hold on to their best memories of Fafa: the laughs, the conversations, the moments that made him who he was to each of us. Let’s remember him through those memories, through the joy he brought, and through the impact he made on all of us.
