@@ -1,4 +1,3 @@
-@import '@fontsource/unifrakturmaguntia/latin-400.css';
 @import '@fontsource-variable/newsreader/opsz.css';
 @import '@fontsource-variable/newsreader/opsz-italic.css';
 @import '@fontsource-variable/inter/wght.css';
@@ -17,7 +16,7 @@ img { max-width: 100%; height: auto; display: block; }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
 a:hover { color: var(--accent-ink); }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
-h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 400; line-height: 1.12; letter-spacing: 0; margin: 0; text-wrap: balance; }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.1; letter-spacing: -0.014em; margin: 0; text-wrap: balance; }
 p, figure { margin: 0; }
 ul, ol { margin: 0; padding: 0; }
 hr { border: 0; border-top: 1px solid var(--rule); margin: 0; }
@@ -178,7 +177,7 @@ figcaption, .caption { font: 400 0.75rem/1.45 var(--font-ui); color: var(--ink-f
 
 .band { padding-block: 0 2rem; }
 .band-head { margin-bottom: 1.1rem; }
-.band-head h2 { font: 400 1.6rem/1 var(--font-heading); letter-spacing: 0; text-transform: none; }
+.band-head h2 { font: 600 1.375rem/1 var(--font-display); letter-spacing: -0.01em; text-transform: none; }
 .band-head h2 a:hover { color: var(--accent-ink); }
 .band-head { border-top: 3px double var(--rule-strong); padding-top: 0.6rem; }
 
@@ -224,7 +223,7 @@ figcaption, .caption { font: 400 0.75rem/1.45 var(--font-ui); color: var(--ink-f
 
 .join { background: var(--paper-deep); border-top: 1px solid var(--rule); }
 .join-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem 3rem; padding-block: 2.25rem; }
-.join h2 { font: 400 var(--step-3)/1.1 var(--font-heading); }
+.join h2 { font: italic 500 var(--step-3)/1.1 var(--font-display); }
 .join p { max-width: 36rem; margin-top: 0.4rem; color: var(--ink-soft); font-size: 1.0625rem; }
 
 @media (max-width: 1023px) {
@@ -272,7 +271,7 @@ figcaption, .caption { font: 400 0.75rem/1.45 var(--font-ui); color: var(--ink-f
 .article-body, .article-foot { max-width: var(--measure); margin-inline: auto; }
 .prose { font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem); line-height: 1.62; }
 .prose > * + * { margin-top: 1.15em; }
-.prose > p:first-of-type::first-letter { font: 400 3.7em/0.8 var(--font-heading); float: left; padding: 0.07em 0.1em 0 0; color: var(--accent); }
+.prose > p:first-of-type::first-letter { font: 500 3.7em/0.8 var(--font-display); float: left; padding: 0.07em 0.1em 0 0; color: var(--accent); }
 .prose a { color: var(--accent-ink); }
 .prose h2, .prose h3 { margin-top: 1.9em; font-size: 1.35em; }
 .prose h3 { font-size: 1.15em; }
@@ -351,7 +350,7 @@ figcaption, .caption { font: 400 0.75rem/1.45 var(--font-ui); color: var(--ink-f
 
 /* ================= search (Pagefind UI) ================= */
 .search-shell { max-width: 46rem; --pagefind-ui-primary: var(--accent-ink); --pagefind-ui-text: var(--ink); --pagefind-ui-background: #fff; --pagefind-ui-border: var(--ink-faint); --pagefind-ui-tag: var(--paper-deep); --pagefind-ui-border-width: 1px; --pagefind-ui-border-radius: 0; --pagefind-ui-font: var(--font-ui); }
-.search-shell .pagefind-ui__result-title { font-family: var(--font-heading); font-size: 1.5rem; }
+.search-shell .pagefind-ui__result-title { font-family: var(--font-display); font-size: 1.35rem; }
 .search-shell .pagefind-ui__result-link { color: var(--ink); }
 .search-shell mark { background: #f4e2a4; color: inherit; }
 
@@ -359,23 +358,4 @@ figcaption, .caption { font: 400 0.75rem/1.45 var(--font-ui); color: var(--ink-f
 @media print {
   .site-nav, .nav-toggle, .mobile-search, .utility, .site-footer, .article-foot .row, .related, .skip-link { display: none !important; }
   body { background: #fff; border-top: 0; }
-}
-
-/* ---------- blackletter headings ----------
-   UnifrakturMaguntia has one weight and no italic, and reads smaller than a text serif at the
-   same size, so headings drop weight/italic settings and run a little larger. */
-.story .hed, .article-head h1, .page-head h1, .print-text h2, .archive-row h3, .issue-card h3, .print-card h3 { font-weight: 400; font-style: normal; letter-spacing: 0; }
-.article-head.is-opinion h1, .editorial-box .story .hed, .picks .band-head h2 { font-style: normal; font-weight: 400; }
-.print-text h2 em { font-family: var(--font-body); font-style: italic; font-size: 0.6em; }
-.story .hed { font-size: 1.6rem; line-height: 1.14; }
-.story.size-small .hed, .row-4 .story .hed, .row-3 .story .hed { font-size: 1.4rem; }
-.story.size-large .hed, .feature .story.size-large .hed { font-size: 2.05rem; }
-.rail .story .hed, .feature-split .list .story .hed { font-size: 1.6rem; }
-.story.size-lead .hed { font-size: clamp(2.5rem, 1.4rem + 4vw, 4rem); line-height: 1.04; letter-spacing: 0; }
-.river .story .hed { font-size: 1.85rem; }
-.archive-row h3 { font-size: 1.4rem; }
-.prose h2, .prose h3 { font-family: var(--font-body); font-weight: 700; } /* subheads inside articles stay readable */
-@media (max-width: 599px) {
-  .story .hed, .rail .story .hed, .feature-split .list .story .hed { font-size: 1.45rem; }
-  .story.size-lead .hed { font-size: 2.4rem; }
 }
