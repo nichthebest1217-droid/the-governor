@@ -19,7 +19,8 @@ interface Props {
 const { title, description = SITE.description, image, type = 'website', noindex = false, canonicalPath, jsonLd, searchable = false } = Astro.props;
 const fullTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} | ${SITE.description.replace(/\.$/, '')}`;
 const canonical = canonicalPath ? absolute(canonicalPath) : new URL(Astro.url.pathname, Astro.site).toString();
-const ogImage = image ? absolute(image) : null;
+// Pages without their own picture share the paper's card.
+const ogImage = absolute(image ?? '/brand/social-card.png');
 const alert = (homepage as { alert: null | { text: string; href?: string | null } }).alert;
 ---
 <!doctype html>

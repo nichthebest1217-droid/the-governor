@@ -57,6 +57,8 @@ with blank space.
 - The lead is the editors' pick under **Homepage**, otherwise the first story with a landscape photo.
 - The wordmark is an image cut from the paper's print front page (`public/brand/wordmark.webp`); the site
   icon is its G in red (`public/favicon.png`).
+- Logo files are in `public/brand/`: `logo-seal.png` (crimson seal, 2048 px, with a 512 px copy),
+  `logo-seal-black.png`, `logo-mark.png` (square G for avatars) and `social-card.png` (link previews).
 - The look is set in two files: `src/styles/tokens.css` (colours, fonts, sizes) and `src/styles/global.css`.
 
 ## How publishing works
