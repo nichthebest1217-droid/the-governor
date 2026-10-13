@@ -1,0 +1,83 @@
+severity,type,item,detail,action
+error,category-count-mismatch,category news,"WordPress reports 12 posts in ""News"" but only 11 are publicly readable.","Ask the WordPress administrator to check Posts for a draft, private, scheduled or trashed item in this category, or supply the full export (Tools > Export > All content)."
+review,alt-text-missing,post 9,Cover image /media/2026/04/wp-14.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 49,Cover image /media/2026/05/wp-214.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 103,Cover image /media/2026/05/wp-313.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 105,Cover image /media/2026/05/wp-107.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 115,Cover image /media/2026/05/wp-117.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 151,Cover image /media/2026/05/wp-176.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 159,Cover image /media/2026/05/wp-177.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 163,Cover image /media/2026/05/wp-165.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 181,Cover image /media/2026/05/wp-189.jpeg has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 185,Cover image /media/2026/05/wp-187.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 194,Cover image /media/2026/05/wp-195.jpeg has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 197,Cover image /media/2026/05/wp-198.jpeg has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 200,Inline image /media/2026/05/wp-202.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 200,Cover image /media/2026/05/wp-201.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 204,Cover image /media/2026/05/wp-205.jpeg has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 211,Cover image /media/2026/05/wp-212.jpeg has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 236,Cover image /media/2026/05/wp-237.jpeg has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 248,Cover image /media/2026/05/wp-249.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 251,Cover image /media/2026/05/wp-296.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 261,Inline image /media/2026/05/wp-265.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 261,Cover image /media/2026/05/wp-270.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 284,Cover image /media/2026/05/wp-308.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 286,Cover image /media/2026/05/wp-288.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 292,Cover image /media/2026/05/wp-294.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 297,Cover image /media/2026/05/wp-298.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 301,Cover image /media/2026/05/wp-307.png has no alternative text on the source site.,Write alt text in the CMS.
+review,alt-text-missing,post 317,Cover image /media/2026/05/wp-320.png has no alternative text on the source site.,Write alt text in the CMS.
+review,attachment-unused,media 318,Uploaded to post 317 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/05/image-12.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,attachment-unused,media 306,Uploaded to post 301 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/05/image-8.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,attachment-unused,media 269,Uploaded to post 261 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/05/截屏2026-05-12-上午11.04.19.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,attachment-unused,media 267,Uploaded to post 261 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/05/截屏2026-05-12-上午11.01.21.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,attachment-unused,media 262,Uploaded to post 261 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/05/截屏2026-05-12-上午10.55.11.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,attachment-unused,media 118,Uploaded to post 115 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/05/image.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,attachment-unused,media 11,Uploaded to post 9 but not displayed there on the source site (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/image.png).,Kept in the backup only. Add it to the article if it was meant to appear.
+review,author-alias-inferred,author alex-hughey,"""Alexandra (Alex) Hughey"" (post 256) treated as alex-hughey: Post 256 prints 'Alexandra (Alex) Hughey ’27'; post 317 prints 'Alex Hughey ‘27'.","Confirm these are the same person, or remove the alias from migration/curation/author-aliases.json."
+review,author-alias-inferred,author jayden-padilla,"""Jayden Padila"" (post 236) treated as jayden-padilla: Post 236 prints 'Jayden Padila ‘26'; posts 301 and 151 print 'Jayden Padilla ’26'. Same class year, one-letter difference.","Confirm these are the same person, or remove the alias from migration/curation/author-aliases.json."
+review,class-year-conflict,author trent-digiovanni,"Bylines give different class years: 2027 (3x), 2025 (1x). Using 2027.",Confirm the class year.
+review,issue-pdf-missing,issue 2026-spring-issue-1,Spring Issue 1 is known only from an editorial's byline; no PDF or page images exist on the source site.,Upload the PDF if the staff still has it.
+review,issue-pdf-missing,issue 2026-spring-issue-2,Spring Issue 2 is known only from an editorial's byline; no PDF or page images exist on the source site.,Upload the PDF if the staff still has it.
+review,issue-pdf-missing,issue 2026-spring-issue-4,Spring Issue 4 is known only from an editorial's byline; no PDF or page images exist on the source site.,Upload the PDF if the staff still has it.
+review,photo-credit-missing,post 9,Cover image /media/2026/04/wp-14.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 49,Cover image /media/2026/05/wp-214.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 103,Cover image /media/2026/05/wp-313.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 105,Cover image /media/2026/05/wp-107.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 115,Cover image /media/2026/05/wp-117.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 151,Cover image /media/2026/05/wp-176.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 159,Cover image /media/2026/05/wp-177.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 163,Cover image /media/2026/05/wp-165.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 181,Cover image /media/2026/05/wp-189.jpeg has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 185,Cover image /media/2026/05/wp-187.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 194,Cover image /media/2026/05/wp-195.jpeg has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 197,Cover image /media/2026/05/wp-198.jpeg has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 200,Cover image /media/2026/05/wp-201.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 204,Cover image /media/2026/05/wp-205.jpeg has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 211,Cover image /media/2026/05/wp-212.jpeg has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 236,Cover image /media/2026/05/wp-237.jpeg has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 248,Cover image /media/2026/05/wp-249.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 251,Cover image /media/2026/05/wp-296.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 261,Cover image /media/2026/05/wp-270.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 284,Cover image /media/2026/05/wp-308.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 286,Cover image /media/2026/05/wp-288.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 292,Cover image /media/2026/05/wp-294.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 297,Cover image /media/2026/05/wp-298.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 301,Cover image /media/2026/05/wp-307.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+review,photo-credit-missing,post 317,Cover image /media/2026/05/wp-320.png has no photographer or source credit on the source site.,"Add the credit, or confirm none is needed."
+info,class-year-missing,post 169,"Byline ""by Alex Hughey"" gives no class year for Alex Hughey.",None needed unless the author page shows the wrong year.
+info,class-year-missing,post 181,"Byline ""by Henry Loughman"" gives no class year for Henry Loughman.",None needed unless the author page shows the wrong year.
+info,class-year-missing,post 200,"Byline ""by Andrew Melly"" gives no class year for Andrew Melly.",None needed unless the author page shows the wrong year.
+info,identity-asset,media 37,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/govslogo-4.webp). Not reused until the school approves logo use.,Get identity approval.
+info,identity-asset,media 28,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/govslogo-3.webp). Not reused until the school approves logo use.,Get identity approval.
+info,identity-asset,media 26,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/image-2.png). Not reused until the school approves logo use.,Get identity approval.
+info,identity-asset,media 25,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/govslogo-2.webp). Not reused until the school approves logo use.,Get identity approval.
+info,identity-asset,media 17,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/govslogo-1.webp). Not reused until the school approves logo use.,Get identity approval.
+info,identity-asset,media 7,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/cropped-govslogo.webp). Not reused until the school approves logo use.,Get identity approval.
+info,identity-asset,media 6,School logo / old site branding (https://govsacademynews.wpcomstaging.com/wp-content/uploads/2026/04/govslogo.webp). Not reused until the school approves logo use.,Get identity approval.
+info,issue-year-inferred,post 148,"""Spring Issue #3 Editorial by Maxwell Donahue ’26, Andrew Melly ’26, Trent DiGiovanni ’25"" gives no year; 2026 taken from the post date.",Confirm.
+info,media-duplicate,media 66,Byte-identical re-upload of media 65; published once.,None.
+info,media-duplicate,media 67,Byte-identical re-upload of media 65; published once.,None.
+info,media-duplicate,media 69,Byte-identical re-upload of media 65; published once.,None.
+info,name-variant,author trent-digiovanni,"Byline spellings: Trent DiGiovanni / Trent Digiovanni. Displaying ""Trent DiGiovanni"".",Confirm the spelling.
+info,page-not-migrated,page 1,"WordPress default sample page (boilerplate text, never edited). Not migrated.",None.

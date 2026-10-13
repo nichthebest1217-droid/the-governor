@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-10-13T13:22:46.495Z",
+  "basePath": "/",
+  "source": {
+    "posts": 55,
+    "pages": 6,
+    "categories": 8,
+    "attachments": 54,
+    "postsByCategory": {
+      "school-culture": 9,
+      "opinion": 15,
+      "news": 11,
+      "sports": 6,
+      "people": 8,
+      "arts": 2,
+      "humor-fun": 4
+    },
+    "categoryCountsFromApi": {
+      "arts": 2,
+      "humor-fun": 4,
+      "news": 12,
+      "opinion": 15,
+      "people": 8,
+      "school-culture": 9,
+      "sports": 6,
+      "uncategorized": 0
+    },
+    "sitemapUrls": 62
+  },
+  "imported": {
+    "articles": 55,
+    "articlesBySection": {
+      "news": 11,
+      "humor-fun": 4,
+      "people": 8,
+      "opinion": 15,
+      "school-culture": 9,
+      "sports": 6,
+      "arts": 2
+    },
+    "titleMatch": 55,
+    "dateMatch": 55,
+    "pathMatch": 55,
+    "bylineMatch": 55,
+    "coverMatch": 55,
+    "textMatch": 55,
+    "built": 55,
+    "renderedTextMatch": 55,
+    "authors": 19,
+    "issues": 4
+  },
+  "urlMap": {
+    "post:migrated": 55,
+    "home:rebuilt": 1,
+    "page:replaced": 4,
+    "page:redirect": 1,
+    "page:not-migrated": 1,
+    "category:redirect": 7,
+    "category:not-migrated": 1,
+    "attachment:backup-only": 18,
+    "attachment:migrated": 36
+  },
+  "reviewQueue": {
+    "error:category-count-mismatch": 1,
+    "review:alt-text-missing": 27,
+    "review:attachment-unused": 7,
+    "review:author-alias-inferred": 2,
+    "review:class-year-conflict": 1,
+    "review:issue-pdf-missing": 3,
+    "review:photo-credit-missing": 25,
+    "info:class-year-missing": 3,
+    "info:identity-asset": 7,
+    "info:issue-year-inferred": 1,
+    "info:media-duplicate": 3,
+    "info:name-variant": 1,
+    "info:page-not-migrated": 1
+  },
+  "openSourceDiscrepancies": [
+    "category news: WordPress reports 12 posts in \"News\" but only 11 are publicly readable."
+  ],
+  "errors": [],
+  "completeness": "every publicly readable item is migrated; source discrepancies remain open (see openSourceDiscrepancies). NOT yet verifiable as complete."
+}

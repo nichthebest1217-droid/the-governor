@@ -1,0 +1,385 @@
+{
+  "parity": [
+    {
+      "legacyWpId": 9,
+      "sourceWords": 451,
+      "importedWords": 451,
+      "match": true
+    },
+    {
+      "legacyWpId": 49,
+      "sourceWords": 460,
+      "importedWords": 460,
+      "match": true
+    },
+    {
+      "legacyWpId": 103,
+      "sourceWords": 309,
+      "importedWords": 309,
+      "match": true
+    },
+    {
+      "legacyWpId": 105,
+      "sourceWords": 492,
+      "importedWords": 492,
+      "match": true
+    },
+    {
+      "legacyWpId": 115,
+      "sourceWords": 354,
+      "importedWords": 354,
+      "match": true
+    },
+    {
+      "legacyWpId": 128,
+      "sourceWords": 452,
+      "importedWords": 452,
+      "match": true
+    },
+    {
+      "legacyWpId": 138,
+      "sourceWords": 466,
+      "importedWords": 466,
+      "match": true
+    },
+    {
+      "legacyWpId": 148,
+      "sourceWords": 501,
+      "importedWords": 501,
+      "match": true
+    },
+    {
+      "legacyWpId": 151,
+      "sourceWords": 395,
+      "importedWords": 395,
+      "match": true
+    },
+    {
+      "legacyWpId": 153,
+      "sourceWords": 502,
+      "importedWords": 502,
+      "match": true
+    },
+    {
+      "legacyWpId": 157,
+      "sourceWords": 500,
+      "importedWords": 500,
+      "match": true
+    },
+    {
+      "legacyWpId": 159,
+      "sourceWords": 407,
+      "importedWords": 407,
+      "match": true
+    },
+    {
+      "legacyWpId": 161,
+      "sourceWords": 451,
+      "importedWords": 451,
+      "match": true
+    },
+    {
+      "legacyWpId": 163,
+      "sourceWords": 508,
+      "importedWords": 508,
+      "match": true
+    },
+    {
+      "legacyWpId": 169,
+      "sourceWords": 371,
+      "importedWords": 371,
+      "match": true
+    },
+    {
+      "legacyWpId": 171,
+      "sourceWords": 431,
+      "importedWords": 431,
+      "match": true
+    },
+    {
+      "legacyWpId": 173,
+      "sourceWords": 493,
+      "importedWords": 493,
+      "match": true
+    },
+    {
+      "legacyWpId": 181,
+      "sourceWords": 404,
+      "importedWords": 404,
+      "match": true
+    },
+    {
+      "legacyWpId": 183,
+      "sourceWords": 451,
+      "importedWords": 451,
+      "match": true
+    },
+    {
+      "legacyWpId": 185,
+      "sourceWords": 409,
+      "importedWords": 409,
+      "match": true
+    },
+    {
+      "legacyWpId": 192,
+      "sourceWords": 445,
+      "importedWords": 445,
+      "match": true
+    },
+    {
+      "legacyWpId": 194,
+      "sourceWords": 501,
+      "importedWords": 501,
+      "match": true
+    },
+    {
+      "legacyWpId": 197,
+      "sourceWords": 507,
+      "importedWords": 507,
+      "match": true
+    },
+    {
+      "legacyWpId": 200,
+      "sourceWords": 465,
+      "importedWords": 465,
+      "match": true
+    },
+    {
+      "legacyWpId": 204,
+      "sourceWords": 494,
+      "importedWords": 494,
+      "match": true
+    },
+    {
+      "legacyWpId": 207,
+      "sourceWords": 473,
+      "importedWords": 473,
+      "match": true
+    },
+    {
+      "legacyWpId": 209,
+      "sourceWords": 496,
+      "importedWords": 496,
+      "match": true
+    },
+    {
+      "legacyWpId": 211,
+      "sourceWords": 507,
+      "importedWords": 507,
+      "match": true
+    },
+    {
+      "legacyWpId": 215,
+      "sourceWords": 486,
+      "importedWords": 486,
+      "match": true
+    },
+    {
+      "legacyWpId": 219,
+      "sourceWords": 469,
+      "importedWords": 469,
+      "match": true
+    },
+    {
+      "legacyWpId": 221,
+      "sourceWords": 421,
+      "importedWords": 421,
+      "match": true
+    },
+    {
+      "legacyWpId": 224,
+      "sourceWords": 473,
+      "importedWords": 473,
+      "match": true
+    },
+    {
+      "legacyWpId": 226,
+      "sourceWords": 489,
+      "importedWords": 489,
+      "match": true
+    },
+    {
+      "legacyWpId": 229,
+      "sourceWords": 380,
+      "importedWords": 380,
+      "match": true
+    },
+    {
+      "legacyWpId": 232,
+      "sourceWords": 478,
+      "importedWords": 478,
+      "match": true
+    },
+    {
+      "legacyWpId": 234,
+      "sourceWords": 503,
+      "importedWords": 503,
+      "match": true
+    },
+    {
+      "legacyWpId": 236,
+      "sourceWords": 465,
+      "importedWords": 465,
+      "match": true
+    },
+    {
+      "legacyWpId": 239,
+      "sourceWords": 431,
+      "importedWords": 431,
+      "match": true
+    },
+    {
+      "legacyWpId": 241,
+      "sourceWords": 426,
+      "importedWords": 426,
+      "match": true
+    },
+    {
+      "legacyWpId": 245,
+      "sourceWords": 520,
+      "importedWords": 520,
+      "match": true
+    },
+    {
+      "legacyWpId": 248,
+      "sourceWords": 442,
+      "importedWords": 442,
+      "match": true
+    },
+    {
+      "legacyWpId": 251,
+      "sourceWords": 497,
+      "importedWords": 497,
+      "match": true
+    },
+    {
+      "legacyWpId": 254,
+      "sourceWords": 471,
+      "importedWords": 471,
+      "match": true
+    },
+    {
+      "legacyWpId": 256,
+      "sourceWords": 464,
+      "importedWords": 464,
+      "match": true
+    },
+    {
+      "legacyWpId": 259,
+      "sourceWords": 402,
+      "importedWords": 402,
+      "match": true
+    },
+    {
+      "legacyWpId": 261,
+      "sourceWords": 421,
+      "importedWords": 421,
+      "match": true
+    },
+    {
+      "legacyWpId": 281,
+      "sourceWords": 438,
+      "importedWords": 438,
+      "match": true
+    },
+    {
+      "legacyWpId": 284,
+      "sourceWords": 468,
+      "importedWords": 468,
+      "match": true
+    },
+    {
+      "legacyWpId": 286,
+      "sourceWords": 425,
+      "importedWords": 425,
+      "match": true
+    },
+    {
+      "legacyWpId": 290,
+      "sourceWords": 460,
+      "importedWords": 460,
+      "match": true
+    },
+    {
+      "legacyWpId": 292,
+      "sourceWords": 491,
+      "importedWords": 491,
+      "match": true
+    },
+    {
+      "legacyWpId": 297,
+      "sourceWords": 442,
+      "importedWords": 442,
+      "match": true
+    },
+    {
+      "legacyWpId": 301,
+      "sourceWords": 490,
+      "importedWords": 490,
+      "match": true
+    },
+    {
+      "legacyWpId": 304,
+      "sourceWords": 458,
+      "importedWords": 458,
+      "match": true
+    },
+    {
+      "legacyWpId": 317,
+      "sourceWords": 382,
+      "importedWords": 382,
+      "match": true
+    }
+  ],
+  "unresolvedLinks": 0,
+  "unresolvedImages": 0,
+  "unsupportedEmbeds": 0,
+  "generatedAt": "2026-10-13T13:26:39.677Z",
+  "files": {
+    "created": 0,
+    "updated": 0,
+    "unchanged": 78,
+    "skippedEdited": 0
+  },
+  "articles": 55,
+  "articlesBySection": {
+    "news": 11,
+    "humor-fun": 4,
+    "people": 8,
+    "opinion": 15,
+    "school-culture": 9,
+    "sports": 6,
+    "arts": 2
+  },
+  "articlesByYear": {
+    "2026": 55
+  },
+  "authors": 19,
+  "issues": 4,
+  "issuesWithPdf": 1,
+  "mediaPublished": 36,
+  "mediaTotal": 54,
+  "parityMatches": 55,
+  "categoryCountSumFromWordPress": 56,
+  "reviewItems": 82,
+  "reviewBySeverity": {
+    "review": 65,
+    "info": 16,
+    "error": 1
+  },
+  "reviewByType": {
+    "alt-text-missing": 27,
+    "photo-credit-missing": 25,
+    "issue-year-inferred": 1,
+    "class-year-missing": 3,
+    "attachment-unused": 7,
+    "author-alias-inferred": 2,
+    "class-year-conflict": 1,
+    "name-variant": 1,
+    "media-duplicate": 3,
+    "issue-pdf-missing": 3,
+    "page-not-migrated": 1,
+    "category-count-mismatch": 1,
+    "identity-asset": 7
+  }
+}

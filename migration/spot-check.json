@@ -1,0 +1,162 @@
+{
+  "checkedAt": "2026-10-13T13:25:10.242Z",
+  "method": "live public HTML vs dist/",
+  "results": [
+    {
+      "legacyWpId": 317,
+      "path": "/2026/05/14/when-govs-comes-back-to-life/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 382,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by alex hughey 27",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 304,
+      "path": "/2026/05/14/do-we-have-a-cell-phone-policy/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 458,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by sophie kelly 26",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 297,
+      "path": "/2026/05/14/more-than-free-time-the-real-value-of-senior-spring-term-projects/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 442,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by maxwell donahue 26",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 292,
+      "path": "/2026/05/14/lacrosse-mid-season-report/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 491,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by toby grenier 26",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 261,
+      "path": "/2026/05/12/how-do-you-spend-your-pa-block/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 421,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by andrew melly 26",
+      "bylineShown": true,
+      "images": "1 inline on live, 1 inline on new"
+    },
+    {
+      "legacyWpId": 256,
+      "path": "/2026/05/12/reviving-the-weekends-bringing-energy-back-to-govs/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 464,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "2026 spring issue 4 editorial by adam krogmeier 27 tyler passero 26 alexandra alex hughey 27 rhoads kent 27",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 236,
+      "path": "/2026/05/12/remembering-fafa/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 465,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by jayden padila 26",
+      "bylineShown": "alias (see review queue)",
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 200,
+      "path": "/2026/05/12/judge-judy-vs-senior-spring-term-committee/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 465,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by andrew melly",
+      "bylineShown": true,
+      "images": "1 inline on live, 1 inline on new"
+    },
+    {
+      "legacyWpId": 181,
+      "path": "/2026/05/12/mamma-mia-behind-the-curtains/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 404,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by henry loughman",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 148,
+      "path": "/2026/05/08/a-new-dress-code-for-an-old-school/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 501,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "spring issue 3 editorial by maxwell donahue 26 andrew melly 26 trent digiovanni 25",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 115,
+      "path": "/2026/05/01/life-and-soule/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 354,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by henry loughman 26",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 49,
+      "path": "/2026/04/28/mice-on-campus-by-jason-li-26/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 460,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by jason li 26",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    },
+    {
+      "legacyWpId": 9,
+      "path": "/2026/04/16/tet2-tattoo-and-team-spirit/",
+      "httpStatus": 200,
+      "title": true,
+      "date": true,
+      "bodyWords": 451,
+      "bodyMatchesLivePage": true,
+      "leadingWordsOnLivePageOnly": "by amber ding 26",
+      "bylineShown": true,
+      "images": "0 inline on live, 0 inline on new"
+    }
+  ]
+}

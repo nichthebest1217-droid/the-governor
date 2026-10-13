@@ -1,0 +1,64 @@
+{
+  "_note": "Print-issue facts that come from documents, not guesses. Every entry cites its evidence. The importer never links an article to an issue unless it is listed here or its own byline line names the issue.",
+  "issues": [
+    {
+      "id": "2026-spring-issue-3",
+      "title": "Spring Issue 3",
+      "season": "Spring",
+      "year": 2026,
+      "number": 3,
+      "volume": null,
+      "dateLabel": "April 2026",
+      "pdfMediaId": 65,
+      "duplicatePdfMediaIds": [66, 67, 69],
+      "pageMediaIds": [70, 71, 77, 76, 75, 74, 73, 72],
+      "articleWpIds": [171, 157, 148, 163, 173, 153, 128, 138, 105, 115, 169, 151, 161, 159],
+      "evidence": [
+        "Front page nameplate reads 'BYFIELD, MASSACHUSETTS · NON SIBI SED ALIIS · SPRING ISSUE 3 - APRIL 2026' (media 70).",
+        "PDF media 65 is titled 'Governor Spring Issue 3' and has 8 pages; media 66, 67 and 69 are byte-identical re-uploads (same SHA-256).",
+        "Page order follows the screenshots' own timestamps (11.16.28 to 11.17.34). The old homepage slideshow showed pages 3-8 in reverse; media 77 carries the page-3 stories and media 72 the page-8 crossword, matching the front-page index.",
+        "Article list: the two front-page stories plus the front page 'What's Inside' index, matched to web posts by headline. Post 148 also labels itself 'Spring Issue #3 Editorial'."
+      ],
+      "notInWebArchive": ["Page 8 'Memes' and 'Crosswords' exist only in the PDF and page images."]
+    },
+    {
+      "id": "2026-spring-issue-1",
+      "title": "Spring Issue 1",
+      "season": "Spring",
+      "year": 2026,
+      "number": 1,
+      "volume": null,
+      "dateLabel": null,
+      "pdfMediaId": null,
+      "pageMediaIds": [],
+      "articleWpIds": [],
+      "evidence": ["Known only from post 215, whose byline line reads '2026 Spring Issue #1 Editorial'. No PDF or page images are on the source site."]
+    },
+    {
+      "id": "2026-spring-issue-2",
+      "title": "Spring Issue 2",
+      "season": "Spring",
+      "year": 2026,
+      "number": 2,
+      "volume": null,
+      "dateLabel": null,
+      "pdfMediaId": null,
+      "pageMediaIds": [],
+      "articleWpIds": [],
+      "evidence": ["Known only from post 245, whose byline line reads '2026 Spring Issue #2 Editorial'. No PDF or page images are on the source site."]
+    },
+    {
+      "id": "2026-spring-issue-4",
+      "title": "Spring Issue 4",
+      "season": "Spring",
+      "year": 2026,
+      "number": 4,
+      "volume": null,
+      "dateLabel": null,
+      "pdfMediaId": null,
+      "pageMediaIds": [],
+      "articleWpIds": [],
+      "evidence": ["Known only from post 256, whose byline line reads '2026 Spring Issue # 4 Editorial'. No PDF or page images are on the source site."]
+    }
+  ]
+}

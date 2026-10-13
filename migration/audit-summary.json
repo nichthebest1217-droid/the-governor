@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-10-13T13:25:00.353Z",
+  "source": "https://govsacademynews.wpcomstaging.com",
+  "mode": "offline (migration/raw)",
+  "endpoints": {
+    "posts": {
+      "status": 200,
+      "reportedTotal": 55,
+      "fetched": 55
+    },
+    "pages": {
+      "status": 200,
+      "reportedTotal": 6,
+      "fetched": 6
+    },
+    "categories": {
+      "status": 200,
+      "reportedTotal": 8,
+      "fetched": 8
+    },
+    "tags": {
+      "status": 200,
+      "reportedTotal": 0,
+      "fetched": 0
+    },
+    "media": {
+      "status": 200,
+      "reportedTotal": 54,
+      "fetched": 54
+    },
+    "users": {
+      "status": 200,
+      "reportedTotal": 1,
+      "fetched": 1
+    },
+    "comments": {
+      "status": 200,
+      "reportedTotal": 0,
+      "fetched": 0
+    }
+  },
+  "robots": {
+    "status": 200
+  },
+  "sitemap": {
+    "status": 200
+  },
+  "feed": {
+    "status": 200
+  },
+  "totals": {
+    "posts": 55,
+    "pages": 6,
+    "categories": 8,
+    "tags": 0,
+    "media": 54,
+    "mediaImages": 50,
+    "mediaPdfs": 4,
+    "mediaBackedUp": 54,
+    "mediaBytes": 191803459,
+    "wpAccounts": 1,
+    "comments": 0
+  },
+  "postsByYear": {
+    "2026": 55
+  },
+  "postsByCategory": {
+    "school-culture": 9,
+    "opinion": 15,
+    "news": 11,
+    "sports": 6,
+    "people": 8,
+    "arts": 2,
+    "humor-fun": 4
+  },
+  "categoryCountsFromApi": {
+    "arts": 2,
+    "humor-fun": 4,
+    "news": 12,
+    "opinion": 15,
+    "people": 8,
+    "school-culture": 9,
+    "sports": 6,
+    "uncategorized": 0
+  },
+  "postsWithParsedByline": 55,
+  "postsWithFeaturedImage": 25,
+  "reconciliation": {
+    "sitemapUrls": 62,
+    "sitemapUrlsMissingFromInventory": [],
+    "postsMissingFromSitemap": [],
+    "feedItems": 10,
+    "feedItemsMissingFromInventory": [],
+    "apiTotalsMatchFetched": true
+  }
+}

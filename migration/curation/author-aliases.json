@@ -1,0 +1,13 @@
+{
+  "_note": "Byline spellings that the importer treats as the same person. Each alias is an INFERENCE, listed in review-queue.csv until an editor confirms it. The byline exactly as printed is always kept in each article's `originalByline`.",
+  "aliases": {
+    "jayden-padila": {
+      "canonical": "jayden-padilla",
+      "evidence": "Post 236 prints 'Jayden Padila ‘26'; posts 301 and 151 print 'Jayden Padilla ’26'. Same class year, one-letter difference."
+    },
+    "alexandra-alex-hughey": {
+      "canonical": "alex-hughey",
+      "evidence": "Post 256 prints 'Alexandra (Alex) Hughey ’27'; post 317 prints 'Alex Hughey ‘27'."
+    }
+  }
+}
