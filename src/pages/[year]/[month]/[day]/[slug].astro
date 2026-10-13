@@ -76,7 +76,7 @@ const jsonLd: Record<string, unknown> = {
     </header>
 
     {cover && (
-      <figure class="article-cover" style="margin-inline:auto">
+      <figure class="article-cover" style={`margin-inline:auto;${cover.width ? `max-width:min(62rem, ${cover.width}px)` : ''}`}>
         <img src={cover.src} srcset={cover.srcset} sizes="(min-width: 1040px) 992px, 100vw" width={cover.width} height={cover.height} alt={data.coverAlt ?? ''} fetchpriority="high" decoding="async" data-pagefind-meta="image[src]" />
         {(data.coverCaption || data.coverCredit) && (
           <figcaption class="caption">
