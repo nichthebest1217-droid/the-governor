@@ -4,12 +4,18 @@
 //  - turns an image with a title into <figure><figcaption>,
 //  - marks external links.
 import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { visit } from 'unist-util-visit';
 
-const MANIFEST = new URL('../data/media-manifest.json', import.meta.url);
+// Resolved from the project root: when Astro bundles pages, import.meta.url no longer points
+// into src/, so a path relative to this file would silently find nothing.
+const MANIFEST = join(process.cwd(), 'src/data/media-manifest.json');
 let cache;
 export function mediaManifest() {
-  if (!cache) cache = existsSync(MANIFEST) ? JSON.parse(readFileSync(MANIFEST, 'utf8')) : {};
+  if (!cache) {
+    if (!existsSync(MANIFEST)) throw new Error(`Missing ${MANIFEST}. Run \`npm run media\` (npm run dev and npm run build do this for you).`);
+    cache = JSON.parse(readFileSync(MANIFEST, 'utf8'));
+  }
   return cache;
 }
 

@@ -1,0 +1,26 @@
+---
+// Lays stories out in full rows: no row ever ends with an empty cell, every card in a row is
+// the same height, and bylines sit on a common baseline.
+import StoryCard from './StoryCard.astro';
+import type { Article } from '../lib/site';
+
+interface Props { articles: Article[]; image?: boolean; max?: number; size?: 'medium' | 'small'; dek?: boolean }
+const { articles, image = false, max = 4, size = 'medium', dek = true } = Astro.props;
+
+/** Split n cards into rows of nearly equal size (never a lonely last card when avoidable). */
+function rowSizes(n: number): number[] {
+  if (n <= max) return n ? [n] : [];
+  const rows = Math.ceil(n / max);
+  const base = Math.floor(n / rows);
+  return Array.from({ length: rows }, (_, i) => base + (i < n % rows ? 1 : 0));
+}
+let cursor = 0;
+const rows = rowSizes(articles.length).map((count) => articles.slice(cursor, (cursor += count)));
+---
+{rows.map((row) => (
+  <div class="aligned-row" style={`--cols:${row.length}`}>
+    {row.map((a) => (
+      <StoryCard article={a} size={size} image={image} dek={dek} sizes={`(min-width: 1024px) ${Math.round(1240 / row.length)}px, (min-width: 768px) 50vw, 100vw`} />
+    ))}
+  </div>
+))}

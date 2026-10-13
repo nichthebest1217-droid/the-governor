@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-13T13:44:39.644Z",
+  "generatedAt": "2026-10-13T14:33:25.689Z",
   "basePath": "/",
   "source": {
     "posts": 55,
@@ -46,7 +46,7 @@
     "textMatch": 55,
     "built": 55,
     "renderedTextMatch": 55,
-    "authors": 19,
+    "authors": 35,
     "issues": 5
   },
   "urlMap": {

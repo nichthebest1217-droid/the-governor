@@ -1,4 +1,92 @@
 {
-  "academicYear": null,
-  "groups": []
+  "academicYear": "2026–27",
+  "groups": [
+    {
+      "title": "Editors",
+      "members": [
+        {
+          "name": "Nicholas Zhuo ’27",
+          "role": null
+        },
+        {
+          "name": "Lorelai Blume ’27",
+          "role": null
+        },
+        {
+          "name": "Ben Dahlstedt ’27",
+          "role": null
+        },
+        {
+          "name": "Lana Hardin ’27",
+          "role": null
+        }
+      ]
+    },
+    {
+      "title": "Writers",
+      "members": [
+        {
+          "name": "Parker Baker ’27",
+          "role": null
+        },
+        {
+          "name": "Gavin Anderson ’28",
+          "role": null
+        },
+        {
+          "name": "Marofa ’28",
+          "role": null
+        },
+        {
+          "name": "Owen Denio ’27",
+          "role": null
+        },
+        {
+          "name": "Viv Blake ’27",
+          "role": null
+        },
+        {
+          "name": "Chase Krusko ’27",
+          "role": null
+        },
+        {
+          "name": "Clara Steffen ’27",
+          "role": null
+        },
+        {
+          "name": "DK Rhee ’28",
+          "role": null
+        },
+        {
+          "name": "Porter Lalime ’27",
+          "role": null
+        },
+        {
+          "name": "Teddy Whipple ’27",
+          "role": null
+        },
+        {
+          "name": "Hannah Babo ’27",
+          "role": null
+        },
+        {
+          "name": "Emerson Byrne ’27",
+          "role": null
+        },
+        {
+          "name": "Dylan Potvin ’28",
+          "role": null
+        }
+      ]
+    },
+    {
+      "title": "Advisor",
+      "members": [
+        {
+          "name": "Tom Robertson",
+          "role": null
+        }
+      ]
+    }
+  ]
 }

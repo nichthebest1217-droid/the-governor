@@ -84,6 +84,17 @@ test('drafts never reach the site, the feed, the sitemap or the search index', {
   assert.ok(fragments >= articles, `search index has ${fragments} pages for ${articles} articles`);
 });
 
+test('card and cover images are served as sized, responsive WebP', { skip }, () => {
+  for (const path of ['/', '/news/', '/2026/05/14/when-govs-comes-back-to-life/', '/issues/2026-spring-issue-3/']) {
+    const imgs = page(path).match(/<img\b[^>]*>/g) ?? [];
+    assert.ok(imgs.length > 0, `${path}: has images`);
+    for (const img of imgs) {
+      assert.match(img, /srcset="[^"]*\/_img\/[^"]*\.webp/, `${path}: image without responsive sources: ${img.slice(0, 120)}`);
+      assert.match(img, /width="\d+" height="\d+"/, `${path}: image without dimensions: ${img.slice(0, 120)}`);
+    }
+  }
+});
+
 test('feed and robots behave', { skip }, () => {
   const rss = readFileSync(join(DIST, 'rss.xml'), 'utf8');
   assert.ok((rss.match(/<item>/g) ?? []).length >= 20);

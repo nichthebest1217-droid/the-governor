@@ -102,3 +102,28 @@ Wang ’27 exist only inside the PDF and page images, not as web articles.
 - No WordPress export (WXR) or admin access was available, so drafts, private posts, trashed posts and
   revision history are unknown.
 - Nothing on WordPress was changed, redirected or deleted. Keep it running until launch is approved.
+
+## Addendum, 13 October 2026: print edition 26-27 Issue I
+
+Not part of the WordPress migration. Nicholas Zhuo supplied the PDF of **26-27 Issue I (October 9, 2026)**.
+
+- The PDF (6 pages, 4.7 MB) and page images are published at `/issues/2026-27-issue-1/`.
+- Its **14 articles were transcribed into web articles** from the PDF's text layer, reading each column in
+  order by position, with headlines and bylines taken from the pages. Check: of the 5,886 body-size words
+  in the PDF, all are in the articles except the two photo/comic captions; the only difference is one word
+  the print hyphenates across columns ("view-" / "-ed", joined as "viewed").
+- Two italics visible in print were restored by hand (*Beverly Hills Ninja.*, *Governor*). Any other italics
+  would have been lost; none were seen on the pages.
+- Six photographs were cropped from the PDF pages. They are modest in resolution (about 600 to 800 pixels
+  wide); replace them with the original files when convenient. Captions are the printed ones. Alt text was
+  written during transcription and should be checked. No photo credits are printed, so none are shown.
+- **Section labels were assigned during transcription** because the print edition has none: Sports (weight
+  room, football, Brooks rivalry), Opinion (cellphones, three-activity rule, nametags), News (absences, door
+  locks), People (Mr. Adams, teachers' summers), Arts (staff art show), School Culture (Dummer Cup, animals,
+  From the Editors). Editors should correct any that are wrong.
+- The byline "MAROFA ’28" is a single name in print and is shown as "Marofa ’28".
+- "Porter Lalime" is spelled "LaLime" once inside another article; the body text is left as printed.
+- All 14 are marked `migrationNeedsReview: true` until an editor has proofread them against the PDF.
+- The masthead page now lists the Editors, Writers and Advisor from the issue's Contributors box.
+- Print-only items (word search, Mad Lib, the comic "Dumber & G-Dawg" by Lana Hardin ’27, memes) are not
+  web articles.

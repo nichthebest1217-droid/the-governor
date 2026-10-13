@@ -1,104 +1,111 @@
 ---
-import { getEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StoryCard from '../components/StoryCard.astro';
-import SectionBand from '../components/SectionBand.astro';
+import AlignedRows from '../components/AlignedRows.astro';
 import homepage from '../data/homepage.json';
-import { SECTIONS, SITE, type Article, fileSize, getArticles, href, picture, refId } from '../lib/site';
+import { SITE, type Article, type Issue, dayOf, fileSize, formatDate, getArticles, href, picture, refId } from '../lib/site';
 
+// The front page is a timeline. The newest edition sits at the top; scrolling down goes back
+// in time. Articles are grouped by print issue when the issue is documented, otherwise by the
+// day they were published.
 const all = await getArticles();
-const byId = new Map(all.map((a) => [a.id, a]));
-const pick = (refs: (string | null)[] | null | undefined) =>
-  (refs ?? []).map((r) => byId.get(refId(r))).filter((a): a is Article => Boolean(a));
+const issues = new Map((await getCollection('issues')).map((i) => [i.id, i]));
+const perIssue = new Map<string, number>();
+for (const a of all) if (a.data.issueId) perIssue.set(a.data.issueId, (perIssue.get(a.data.issueId) ?? 0) + 1);
 
-// Editors choose the lead and secondary stories in src/data/homepage.json (Pages CMS:
-// "Homepage"). Anything left blank falls back to the most recent stories.
-const used = new Set<Article>();
-const take = (list: Article[], n: number) => {
-  const out = list.filter((a) => !used.has(a)).slice(0, n);
-  out.forEach((a) => used.add(a));
-  return out;
-};
-const lead = pick([homepage.lead])[0] ?? all.find((a) => a.data.featured && a.data.coverImage) ?? all.find((a) => a.data.coverImage) ?? all[0];
-if (lead) used.add(lead);
-const chosen = pick(homepage.secondary).filter((a) => !used.has(a));
-const railRight = take([...chosen.filter((a) => a.data.coverImage), ...all.filter((a) => a.data.coverImage)], 2);
-const railLeft = take([...chosen, ...all], 3);
-const latest = take(all, 6);
-const picks = pick(homepage.editorsPicks).slice(0, 4);
-const issue = homepage.currentIssue ? await getEntry('issues', refId(homepage.currentIssue)) : undefined;
-const issueCover = issue ? picture(issue.data.pageImages[0]) : null;
-const bands = SECTIONS.map((s) => ({
-  ...s,
-  articles: all.filter((a) => a !== lead && (a.data.section === s.slug || a.data.secondarySections.includes(s.slug as never))).slice(0, 5),
-}));
+interface Group { key: string; issue?: Issue; day: string; articles: Article[] }
+const groups = new Map<string, Group>();
+for (const a of all) {
+  // An issue gets its own block once at least three of its articles are online.
+  const issue = a.data.issueId && (perIssue.get(a.data.issueId) ?? 0) >= 3 ? issues.get(a.data.issueId) : undefined;
+  const key = issue ? `issue:${issue.id}` : `day:${dayOf(a.data.publishedAt)}`;
+  const g = groups.get(key) ?? { key, issue, day: dayOf(a.data.publishedAt), articles: [] };
+  g.articles.push(a);
+  if (dayOf(a.data.publishedAt) > g.day) g.day = dayOf(a.data.publishedAt);
+  groups.set(key, g);
+}
+const timeline = [...groups.values()].sort((x, y) => y.day.localeCompare(x.day));
+for (const g of timeline) {
+  // Inside an issue, follow the paper's own running order (front page first).
+  if (g.issue) g.articles.sort((a, b) => (a.data.printOrder ?? 999) - (b.data.printOrder ?? 999));
+}
+
+const [newest, ...older] = timeline;
+const byId = new Map(all.map((a) => [a.id, a]));
+let lead: Article | undefined, railLeft: Article[] = [], railRight: Article[] = [], restPhotos: Article[] = [], restText: Article[] = [];
+if (newest) {
+  const pool = [...newest.articles];
+  const chosen = byId.get(refId(homepage.lead));
+  // Lead: the editors' pick, else a story marked "featured", else the first story (in the
+  // paper's running order) whose photo is wide enough to carry the top of the page.
+  const wide = (a: Article) => { const p = picture(a.data.coverImage); return Boolean(p?.width && p.height && p.width / p.height >= 1.4); };
+  lead = (chosen && pool.includes(chosen) ? chosen : undefined) ?? pool.find((a) => a.data.featured && a.data.coverImage) ?? pool.find(wide) ?? pool.find((a) => a.data.coverImage) ?? pool[0];
+  const rest = pool.filter((a) => a !== lead);
+  railRight = rest.filter((a) => a.data.coverImage).slice(0, 2);
+  railLeft = rest.filter((a) => !railRight.includes(a) && !a.data.coverImage).slice(0, 3);
+  if (railLeft.length < 2) railLeft = rest.filter((a) => !railRight.includes(a)).slice(0, 3);
+  const remaining = rest.filter((a) => !railRight.includes(a) && !railLeft.includes(a));
+  restPhotos = remaining.filter((a) => a.data.coverImage);
+  restText = remaining.filter((a) => !a.data.coverImage);
+}
+const heading = (g: Group) => (g.issue ? g.issue.data.title : formatDate(g.day));
+const subheading = (g: Group) => (g.issue ? g.issue.data.dateLabel ?? `${g.issue.data.season ?? ''} ${g.issue.data.year}`.trim() : null);
 ---
 <BaseLayout>
   <h1 class="visually-hidden">{SITE.name}</h1>
-  {lead ? (
-    <div class="wrap">
-      <section class="lead-package" aria-label="Top stories">
-        <div class="rail-left stack">
-          {railLeft.map((a) => <StoryCard article={a} size="medium" image={false} heading="h2" />)}
+  {!newest && <div class="wrap band"><p>No articles have been published yet.</p></div>}
+
+  {newest && lead && (
+    <section class="wrap edition is-newest" aria-labelledby="edition-0">
+      <header class="edition-head">
+        <div>
+          <span class="kicker">{newest.issue ? 'Latest issue' : 'Latest'}</span>
+          <h2 id="edition-0">{heading(newest)}{subheading(newest) && <span class="when">{subheading(newest)}</span>}</h2>
+        </div>
+        {newest.issue && (
+          <p class="edition-links">
+            <a href={href(`/issues/${newest.issue.id}/`)}>Read the print edition</a>
+            {newest.issue.data.pdf && <a href={href(newest.issue.data.pdf)}>PDF{newest.issue.data.pdfBytes ? ` (${fileSize(newest.issue.data.pdfBytes)})` : ''}</a>}
+          </p>
+        )}
+      </header>
+      <div class="lead-package">
+        <div class="rail-left rail">
+          {railLeft.map((a) => <StoryCard article={a} size="medium" image={false} heading="h3" dekLength={300} />)}
         </div>
         <div class="lead">
-          <StoryCard article={lead} size="lead" heading="h2" eager sizes="(min-width: 1024px) 620px, 100vw" />
+          <StoryCard article={lead} size="lead" heading="h3" eager sizes="(min-width: 1024px) 620px, 100vw" />
         </div>
-        <div class="rail-right stack">
-          {railRight.map((a) => <StoryCard article={a} size="medium" dek={false} heading="h2" sizes="(min-width: 1024px) 300px, (min-width: 768px) 50vw, 100vw" />)}
+        <div class="rail-right rail">
+          {railRight.map((a) => <StoryCard article={a} size="medium" heading="h3" sizes="(min-width: 1024px) 300px, (min-width: 768px) 50vw, 100vw" />)}
         </div>
-      </section>
-    </div>
-  ) : (
-    <div class="wrap band"><p>No articles have been published yet.</p></div>
-  )}
-
-  {latest.length > 0 && (
-    <section class="band wrap" aria-labelledby="latest-head" style="padding-top:0">
-      <div class="band-head">
-        <h2 id="latest-head">Latest</h2>
-        <a class="more-link" href={href('/archives/')}>All articles</a>
       </div>
-      <div class="grid cols-3 ruled collapse-rules">
-        {latest.map((a) => <StoryCard article={a} size="small" image={false} />)}
-      </div>
+      <AlignedRows articles={restPhotos} image max={4} />
+      <AlignedRows articles={restText} max={4} />
     </section>
   )}
 
-  {picks.length > 0 && (
-    <section class="picks band" aria-labelledby="picks-head">
-      <div class="wrap">
-        <div class="band-head"><h2 id="picks-head">Editors’ Picks</h2></div>
-        <div class="grid cols-4 collapse-rules">
-          {picks.map((a) => <StoryCard article={a} size="small" sizes="(min-width: 1024px) 300px, 50vw" />)}
-        </div>
-      </div>
-    </section>
-  )}
-
-  {bands.map((b, i) => <SectionBand slug={b.slug} label={b.label} articles={b.articles} reverse={i % 2 === 1} />)}
-
-  {issue && (issue.data.pdf || issueCover) && (
-    <section class="wrap band" aria-labelledby="issue-head">
-      <div class="issue-callout">
-        {issueCover && (
-          <a href={href(`/issues/${issue.id}/`)} tabindex="-1" aria-hidden="true">
-            <img class="page" src={issueCover.src} srcset={issueCover.srcset} sizes="220px" width={issueCover.width} height={issueCover.height} alt="" loading="lazy" decoding="async" />
-          </a>
-        )}
-        <div>
-          <span class="kicker">In print</span>
-          <h2 id="issue-head">{issue.data.title}{issue.data.dateLabel && <span style="font-weight:400;font-style:italic">, {issue.data.dateLabel}</span>}</h2>
-          <p>Read the paper as it was laid out for campus, page by page, or download the full edition.</p>
-          <div class="actions">
-            <a class="button" href={href(`/issues/${issue.id}/`)}>Read the issue</a>
-            {issue.data.pdf && <a class="button ghost" href={href(issue.data.pdf)}>Download PDF{issue.data.pdfBytes ? ` (${fileSize(issue.data.pdfBytes)})` : ''}</a>}
-            <a class="button ghost" href={href('/issues/')}>Browse print issues</a>
+  {older.map((g, i) => {
+    const photos = g.articles.filter((a) => a.data.coverImage);
+    const text = g.articles.filter((a) => !a.data.coverImage);
+    return (
+      <section class="wrap edition" aria-labelledby={`edition-${i + 1}`}>
+        <header class="edition-head">
+          <div>
+            <span class="kicker">{g.issue ? 'Print issue' : 'Published'}</span>
+            <h2 id={`edition-${i + 1}`}>{heading(g)}{subheading(g) && <span class="when">{subheading(g)}</span>}</h2>
           </div>
-        </div>
-      </div>
-    </section>
-  )}
+          <p class="edition-links">
+            {g.issue && <a href={href(`/issues/${g.issue.id}/`)}>Read the print edition</a>}
+            <span>{g.articles.length} {g.articles.length === 1 ? 'article' : 'articles'}</span>
+          </p>
+        </header>
+        <AlignedRows articles={photos} image max={4} dek={false} />
+        <AlignedRows articles={text} max={4} />
+      </section>
+    );
+  })}
 
   <section class="wrap join" aria-labelledby="join-head">
     <h2 id="join-head">Write for The Governor</h2>
@@ -106,6 +113,7 @@ const bands = SECTIONS.map((s) => ({
     <div class="actions">
       <a class="button" href={href('/join/')}>Join the staff</a>
       <a class="button ghost" href={href('/contact/')}>Submit a tip or letter</a>
+      <a class="button ghost" href={href('/archives/')}>Browse the full archive</a>
     </div>
   </section>
 </BaseLayout>

@@ -32,6 +32,9 @@ const articles = defineCollection({
     published: z.boolean().default(false),
     issueId: optionalText,
     correction: optionalText,
+    // Position in the print edition (page, then order on the front-to-back read). Optional.
+    printPage: z.number().int().nullish(),
+    printOrder: z.number().nullish(),
     legacyWpId: z.number().int().nullish(),
     legacyUrl: z.url().nullish(),
     legacyPath: z.string().regex(/^\/\d{4}\/\d{2}\/\d{2}\/[^/]+\/$/).nullish(),

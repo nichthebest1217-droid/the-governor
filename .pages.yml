@@ -95,6 +95,8 @@ content:
         type: reference
         description: Only if this article ran in that printed issue.
         options: { collection: issues, search: "title", value: "{fields.slug}", label: "{fields.title} ({fields.year})" }
+      - { name: printPage, label: Page in the print issue (optional), type: number }
+      - { name: printOrder, label: "Order within the issue (1 = front-page lead)", type: number }
       - name: featured
         label: Prefer as front-page lead
         type: boolean

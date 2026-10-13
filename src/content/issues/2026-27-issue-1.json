@@ -1,6 +1,6 @@
 {
   "slug": "2026-27-issue-1",
-  "title": "Issue I, 2026–27",
+  "title": "Issue I, 2026⁠–⁠27",
   "season": "Fall",
   "year": 2026,
   "number": 1,
@@ -19,11 +19,12 @@
     "/issues/2026-27-issue-1/page-6.jpg"
   ],
   "notes": [
-    "The articles in this issue have not been added to the website as individual articles yet. Read them in the pages below or in the PDF."
+    "The crossword-style word search, Mad Lib, comic strip \"Dumber & G-Dawg\" by Lana Hardin ’27 and the memes appear only in the PDF and page images."
   ],
   "sourceEvidence": [
     "Front-page nameplate reads '26-27 Issue I'.",
     "Pages 2 to 6 carry the running header '26-27 Issue I' and 'October 9, 2026'.",
-    "PDF supplied by Nicholas Zhuo on 13 October 2026 ('The Governors Issue 1.pdf', 6 pages, SHA-256 bcbbdd0f1ab1e75d2acf517b55e7ef4c47f6e6749c462bba8daac86689bfc947). Page images were rendered from that PDF."
+    "PDF supplied by Nicholas Zhuo on 13 October 2026 ('The Governors Issue 1.pdf', 6 pages, SHA-256 bcbbdd0f1ab1e75d2acf517b55e7ef4c47f6e6749c462bba8daac86689bfc947). Page images were rendered from that PDF.",
+    "The 14 web articles for this issue were transcribed from the PDF text layer (column by column, with headlines and bylines read from the pages) on 13 October 2026; photographs were cropped from the PDF pages. Section labels were assigned at transcription because the print edition has none."
   ]
 }
