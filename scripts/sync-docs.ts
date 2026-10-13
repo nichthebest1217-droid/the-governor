@@ -89,7 +89,15 @@ if (settings.homepage && typeof settings.homepage === 'object') {
 }
 if (settings.site && typeof settings.site === 'object') {
   const current = readJson<any>(p('src/data/site.json'));
-  const email = (v: unknown, label: string) => { const e = str(v, 120); if (e && !/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(e)) { skipped.push(`Site tab: ${label} "${e}" is not an email address`); return null; } return e; };
+  // One address, or several separated by commas.
+  const email = (v: unknown, label: string) => {
+    const raw = str(v, 300);
+    if (!raw) return null;
+    const list = raw.split(/[,;\s]+/).filter(Boolean);
+    const bad = list.filter((e) => !/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(e));
+    if (bad.length || list.length > 5) { skipped.push(`Site tab: ${label} "${raw}" is not a list of email addresses`); return null; }
+    return list.join(', ');
+  };
   writeJsonIfChanged('src/data/site.json', { ...current, contactEmail: email(settings.site.contactEmail, 'contact email'), tipsEmail: email(settings.site.tipsEmail, 'tips email') });
 }
 if (Array.isArray(settings.masthead) && settings.masthead.length > 0) {

@@ -9,7 +9,7 @@ and publishes. No coding, no cost, no Google Cloud project, and **no access toke
 Set up and running in the school account `nicholas.zhuo@govsacademy.org`:
 
 - Sheet: "The Governor: Publication" (with the script attached; menu **The Governor**).
-- The script's web address is deployed (version 2) and recorded in `endpoint.json`.
+- The script's web address is deployed (version 3) and recorded in `endpoint.json`.
 - **Tested end to end on 13 October 2026:** a test Doc listed in the Sheet and marked Approved was collected
   by the GitHub workflow, passed the checks, was committed and went live with the right headline, byline and
   text. The test article was then removed.
@@ -47,6 +47,21 @@ a folder it can open).
 What the script ignores on purpose: fonts, sizes, colours and spacing in the Doc, pictures pasted into the
 Doc (add photos through the Sheet so they get a description and a credit), and a title or "by ..." line at
 the top of the Doc (those come from the Sheet).
+
+## Editing the front page, masthead and contact details
+
+The same Sheet has three more tabs, collected on the same half-hourly schedule. They take effect as soon as
+they are typed in; there is no Approved step for these.
+
+- **Homepage:** lead story, the stories beside it, Editors' Picks, the print issue to promote, and an optional
+  banner. Paste an article's web address into the Value column. Leave a row empty for the automatic choice.
+- **Masthead:** one person per row (Group, Name, optional Role). Groups appear in the order they first occur.
+  Leaving the tab empty changes nothing.
+- **Site:** contact email (several addresses may be separated by commas), tips email, and the masthead's
+  school year.
+
+A value that does not fit (an address that is not an article, a malformed email) is ignored and noted in the
+GitHub run's log; the current setting stays.
 
 ## How it is safe
 
