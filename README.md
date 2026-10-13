@@ -46,9 +46,10 @@ tests/                  unit tests and built-site smoke tests
 
 ## The front page
 
-Top to bottom: the newest edition (lead story with its photo, three top stories, then the rest of the issue
-as a list beside a column holding the print edition, the editorial and the section index), a look back at
-earlier articles, the shelf of print editions, and the call for writers.
+Top to bottom, in the order the masterplan sets out: lead package (hero story plus a rail of four), Latest,
+Editors' Picks, one band per section, the print issue, and the call for writers. Columns in a block share a
+top and a bottom edge: the hero and feature photos stretch or crop to absorb any difference, so no block ends
+with blank space.
 
 - An "edition" is a print issue once three of its articles are online (set **Print issue** on each article;
   **Order within the issue** sets their sequence). Until then it is the most recent publication day.

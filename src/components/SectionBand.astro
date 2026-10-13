@@ -1,30 +1,31 @@
 ---
+// A section band: heading with "View all", then a photo story beside a list of three. When the
+// section has no photo story, the stories run as a row of text columns instead.
 import StoryCard from './StoryCard.astro';
 import { type Article, href } from '../lib/site';
 
 interface Props { slug: string; label: string; articles: Article[]; reverse?: boolean }
 const { slug, label, articles, reverse = false } = Astro.props;
-// Lead with the newest story that has a photograph; if none has one, run a text grid.
 const feature = articles.find((a) => a.data.coverImage);
 const rest = articles.filter((a) => a !== feature).slice(0, feature ? 3 : 4);
 ---
-{articles.length > 0 && (
-  <section class="band wrap" aria-labelledby={`band-${slug}`}>
-    <div class="band-head">
-      <h2 id={`band-${slug}`}><a href={href(`/${slug}/`)}>{label}</a></h2>
-      <a class="more-link" href={href(`/${slug}/`)} aria-label={`View all ${label}`}>View all</a>
-    </div>
-    {feature ? (
-      <div class:list={['feature-split', { reverse }]}>
-        <StoryCard article={feature} size="large" kicker={false} sizes="(min-width: 768px) 55vw, 100vw" />
-        <div class="stack">
-          {rest.map((a) => <StoryCard article={a} size="medium" layout="side" kicker={false} sizes="110px" />)}
+<section class="wrap band" aria-labelledby={`band-${slug}`}>
+  <div class="band-head">
+    <h2 id={`band-${slug}`}><a href={href(`/${slug}/`)}>{label}</a></h2>
+    <a class="more-link" href={href(`/${slug}/`)} aria-label={`View all ${label}`}>View all</a>
+  </div>
+  {feature ? (
+    <div class:list={['feature-split', { reverse, solo: rest.length === 0 }]}>
+      <div class="feature"><StoryCard article={feature} size="large" kicker={false} heading="h3" dekLength={260} sizes="(min-width: 768px) 520px, 100vw" /></div>
+      {rest.length > 0 && (
+        <div class="list">
+          {rest.map((a) => <StoryCard article={a} size="medium" layout="row" kicker={a.data.kind === 'editorial'} heading="h3" dekLength={230} sizes="(min-width: 700px) 150px, 100px" />)}
         </div>
-      </div>
-    ) : (
-      <div class:list={['grid', 'ruled', 'collapse-rules', rest.length >= 4 ? 'cols-4' : rest.length === 3 ? 'cols-3' : 'cols-2']}>
-        {rest.map((a) => <StoryCard article={a} size="medium" image={false} kicker={a.data.kind === 'editorial'} />)}
-      </div>
-    )}
-  </section>
-)}
+      )}
+    </div>
+  ) : (
+    <div class:list={[`row-${Math.min(4, Math.max(2, rest.length))}`]}>
+      {rest.map((a) => <StoryCard article={a} size="small" image={false} kicker={a.data.kind === 'editorial'} heading="h3" dekLength={200} />)}
+    </div>
+  )}
+</section>
