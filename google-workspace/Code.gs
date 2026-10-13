@@ -2,16 +2,15 @@
  * The Governor: publish from Google Docs.
  *
  * Lives in a Google Sheet (Extensions > Apps Script). Editors list articles in the Sheet, one
- * per row, each pointing at a Google Doc. "Publish approved rows" copies every row marked
- * Approved to the website's repository on GitHub; the site rebuilds itself a minute later.
+ * per row, each pointing at a Google Doc. Rows marked Approved are offered to the website
+ * through this script's web address; the website's repository collects them every half hour
+ * (or at once from GitHub's "Run workflow" button), checks them, and publishes.
+ *
+ * No access token is stored anywhere: the Sheet never writes to GitHub. The web address only
+ * ever returns articles an editor has marked Approved, which are about to be public anyway.
  *
  * Nothing here costs money and no Google Cloud project is needed. The Doc's fonts, sizes and
  * colours are ignored on purpose: the website applies its own typography.
- *
- * Setup is in SETUP.md. Three Script Properties are required:
- *   GITHUB_TOKEN   a fine-grained token with "Contents: read and write" on the repository
- *   GITHUB_REPO    e.g. nichthebest1217-droid/the-governor
- *   GITHUB_BRANCH  e.g. main
  */
 
 const SECTIONS = { 'news': 'news', 'opinion': 'opinion', 'arts': 'arts', 'sports': 'sports', 'humor & fun': 'humor-fun', 'humor': 'humor-fun', 'people': 'people', 'school culture': 'school-culture' };
@@ -19,8 +18,8 @@ const COLUMNS = ['Status', 'Google Doc link', 'Headline', 'Section', 'Writers', 
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('The Governor')
-    .addItem('Publish approved rows', 'publishApproved')
-    .addItem('Check approved rows (no changes)', 'checkApproved')
+    .addItem('Check approved rows', 'checkApproved')
+    .addItem('Mark live articles as Published', 'markLive')
     .addSeparator()
     .addItem('Set up this sheet', 'setUpSheet')
     .addToUi();
@@ -38,36 +37,59 @@ function setUpSheet() {
   sheet.getRange(2, 6, 500, 1).setNumberFormat('yyyy-mm-dd');
 }
 
-function checkApproved() { run_(true); }
-function publishApproved() { run_(false); }
-
-function run_(dryRun) {
+/** Reads every Approved row and writes what would be published into the Result column. */
+function checkApproved() {
   const sheet = SpreadsheetApp.getActiveSheet();
+  const out = collect_(sheet);
+  for (const a of out.articles) sheet.getRange(a.row, a.resultCol).setValue('Ready: ' + a.words + ' words. Will appear at ' + a.url + ' within about 30 minutes.');
+  for (const p of out.problems) sheet.getRange(p.row, p.resultCol).setValue('NOT READY: ' + p.message);
+  SpreadsheetApp.getActive().toast(out.articles.length + ' ready, ' + out.problems.length + ' with problems', 'The Governor', 8);
+}
+
+/** Sets Approved rows to Published once their page is really on the website. */
+function markLive() {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const out = collect_(sheet);
+  let n = 0;
+  for (const a of out.articles) {
+    const res = UrlFetchApp.fetch(a.url, { muteHttpExceptions: true, followRedirects: true });
+    if (res.getResponseCode() !== 200) continue;
+    sheet.getRange(a.row, a.statusCol).setValue('Published');
+    sheet.getRange(a.row, a.urlCol).setValue(a.url);
+    sheet.getRange(a.row, a.resultCol).setValue('Live since ' + new Date().toISOString().slice(0, 10));
+    n++;
+  }
+  SpreadsheetApp.getActive().toast(n + ' article(s) marked Published', 'The Governor', 8);
+}
+
+/** The website calls this address. It answers with every Approved row, ready to publish. Read-only. */
+function doGet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const out = collect_(sheet);
+  const body = {
+    generatedAt: new Date().toISOString(),
+    articles: out.articles.map((a) => ({ row: a.row, title: a.title, path: a.path, url: a.url, files: a.files })),
+    problems: out.problems.map((p) => ({ row: p.row, headline: p.headline, message: p.message })),
+  };
+  return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function collect_(sheet) {
   const rows = sheet.getDataRange().getValues();
   const col = (name) => rows[0].indexOf(name);
   for (const name of COLUMNS) if (col(name) < 0) throw new Error('Missing column "' + name + '". Run The Governor > Set up this sheet.');
-  let done = 0;
+  const at = { resultCol: col('Result') + 1, statusCol: col('Status') + 1, urlCol: col('Web address') + 1 };
+  const articles = [];
+  const problems = [];
   for (let r = 1; r < rows.length; r++) {
-    const get = (name) => String(rows[r][col(name)] == null ? '' : rows[r][col(name)]).trim();
-    if (get('Status') !== 'Approved') continue;
-    const cell = (name) => sheet.getRange(r + 1, col(name) + 1);
+    if (String(rows[r][col('Status')]).trim() !== 'Approved') continue;
     try {
-      const article = buildArticle_(rows[r], col);
-      if (dryRun) {
-        cell('Result').setValue('OK to publish: ' + article.path + ' (' + article.words + ' words)');
-      } else {
-        for (const file of article.files) putFile_(file.path, file.content, file.isBase64, file.onlyIfMissing, 'content: ' + article.title);
-        cell('Status').setValue('Published');
-        cell('Web address').setValue(article.url);
-        cell('Result').setValue('Published ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC');
-      }
-      done++;
+      articles.push(Object.assign({ row: r + 1 }, at, buildArticle_(rows[r], col)));
     } catch (err) {
-      cell('Result').setValue('NOT PUBLISHED: ' + err.message);
+      problems.push(Object.assign({ row: r + 1, headline: String(rows[r][col('Headline')]), message: err.message }, at));
     }
-    SpreadsheetApp.flush();
   }
-  SpreadsheetApp.getActive().toast(done + (dryRun ? ' row(s) checked' : ' row(s) published. The site updates in about two minutes.'), 'The Governor', 8);
+  return { articles: articles, problems: problems };
 }
 
 /** Turns one sheet row into the files the website needs. Throws a plain-English error if anything is missing. */
@@ -165,32 +187,6 @@ function cleanMarkdown_(md, title) {
 }
 
 function siteUrl_() {
-  const props = PropertiesService.getScriptProperties();
-  const custom = props.getProperty('SITE_URL');
-  if (custom) return custom.replace(/\/?$/, '/');
-  const parts = (props.getProperty('GITHUB_REPO') || '/').split('/');
-  return 'https://' + parts[0] + '.github.io/' + parts[1] + '/';
-}
-
-/** Creates or updates one file in the repository through GitHub's API. */
-function putFile_(path, content, isBase64, onlyIfMissing, message) {
-  const props = PropertiesService.getScriptProperties();
-  const token = props.getProperty('GITHUB_TOKEN');
-  const repo = props.getProperty('GITHUB_REPO');
-  const branch = props.getProperty('GITHUB_BRANCH') || 'main';
-  if (!token || !repo) throw new Error('Script Properties GITHUB_TOKEN and GITHUB_REPO are not set (see SETUP.md).');
-  const url = 'https://api.github.com/repos/' + repo + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
-  const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
-  const existing = UrlFetchApp.fetch(url + '?ref=' + encodeURIComponent(branch), { headers: headers, muteHttpExceptions: true });
-  let sha;
-  if (existing.getResponseCode() === 200) {
-    if (onlyIfMissing) return;
-    sha = JSON.parse(existing.getContentText()).sha;
-  } else if (existing.getResponseCode() !== 404) {
-    throw new Error('GitHub said ' + existing.getResponseCode() + ' when checking ' + path + '. Is the token still valid?');
-  }
-  const payload = { message: message, branch: branch, content: isBase64 ? content : Utilities.base64Encode(content, Utilities.Charset.UTF_8) };
-  if (sha) payload.sha = sha;
-  const res = UrlFetchApp.fetch(url, { method: 'put', headers: headers, contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true });
-  if (res.getResponseCode() >= 300) throw new Error('GitHub refused ' + path + ' (HTTP ' + res.getResponseCode() + ').');
+  const custom = PropertiesService.getScriptProperties().getProperty('SITE_URL');
+  return (custom || 'https://nichthebest1217-droid.github.io/the-governor/').replace(/\/?$/, '/');
 }

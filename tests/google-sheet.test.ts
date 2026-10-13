@@ -33,7 +33,7 @@ function load(fetch: (url: string) => { code: number; text?: string }) {
       base64Encode: (v: unknown) => Buffer.from(v as any).toString('base64'),
       Charset: { UTF_8: 'utf8' },
     },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: (k: string) => ({ GITHUB_REPO: 'org/the-governor' } as Record<string, string>)[k] ?? null }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k: string) => ({ SITE_URL: 'https://org.github.io/the-governor' } as Record<string, string>)[k] ?? null }) },
     UrlFetchApp: { fetch: (url: string) => { const r = fetch(url); return { getResponseCode: () => r.code, getContentText: () => r.text ?? '', getBlob: () => ({ getBytes: () => [1, 2, 3] }) }; } },
     SpreadsheetApp: {},
   };
