@@ -6,5 +6,11 @@
   "motto": "Non Sibi Sed Aliis",
   "contactEmail": null,
   "tipsEmail": null,
-  "social": []
+  "social": [
+    {
+      "label": "Instagram",
+      "handle": "@the.governor.2026",
+      "href": "https://www.instagram.com/the.governor.2026/"
+    }
+  ]
 }

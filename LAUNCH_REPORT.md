@@ -1,16 +1,24 @@
 # Launch Report
 
-Status as of 13 October 2026. **Deployed, not announced.** The site is live at
+Status as of 13 October 2026. **Launched.** The site is live at
 <https://nichthebest1217-droid.github.io/the-governor/> from the public repository
-`nichthebest1217-droid/the-governor` (Nicholas Zhuo's personal GitHub account, by his choice, for now).
-Search engines are told not to index it (`SITE_INDEXABLE` is unset). The WordPress site is untouched.
+`nichthebest1217-droid/the-governor` (Nicholas Zhuo's personal GitHub account, by his choice, for now), and
+search engines may index it (`SITE_INDEXABLE=true`, set on his instruction to take it to publication). The
+WordPress site is untouched.
 
-First deploy: GitHub Actions run 38415514585 passed type check, build, tests, link and media checks, then
-published. Live checks: front page, a new and an archive article, a section, the issue page and PDF, search
-assets, RSS and an old `/category/news/` link all return 200; an unknown address returns the 404 page.
+Publishing runs from Google Docs: editors mark rows Approved in the Sheet "The Governor: Publication" (school
+account), and `sync-docs.yml` collects, checks, commits and publishes them every half hour. That chain was
+tested end to end on launch day; see [google-workspace/SETUP.md](google-workspace/SETUP.md).
 
-Still to do on GitHub: protect `main` (pull request + one approval + checks), transfer the repository to a
-school-owned organization when one exists, and have an editor sign in to Pages CMS and make a test edit.
+Still open after launch, none of which a developer can settle alone:
+
+- Editors proofread the 14 Issue I articles against the PDF and confirm the section labels.
+- Replace the low-resolution Issue I photos with originals; add photo credits and alt text to archive photos.
+- Replace the placeholder Editors' Picks; approve the About, Corrections, Contact, Join and Privacy text.
+- Post a staff email address (the site currently points readers to the paper's Instagram).
+- The unexplained twelfth News post on WordPress (see MIGRATION_REPORT.md).
+- A school web address, and a school-owned home for the repository and the Sheet before Nicholas graduates.
+- `main` is not a protected branch, because the publishing workflow commits to it directly.
 
 ## Where each phase stands
 

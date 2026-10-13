@@ -34,6 +34,7 @@ const year = new Date().getFullYear();
           <li><a href={href('/contact/')}>Contact &amp; tips</a></li>
           <li><a href={href('/corrections/')}>Corrections</a></li>
           <li><a href={href('/privacy/')}>Privacy</a></li>
+          {SITE.social.map((x) => <li><a href={x.href} rel="noopener">{x.label}</a></li>)}
         </ul>
       </nav>
     </div>

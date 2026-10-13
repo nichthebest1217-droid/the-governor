@@ -9,4 +9,9 @@ const link = email ? `mailto:${email}${subject ? `?subject=${encodeURIComponent(
 ---
 {link
   ? <p><a class="button" href={link}>{label ?? `Email ${email}`}</a> <span class="meta" style="margin-left:.5rem">Opens your email app ({email}).</span></p>
-  : <p class="note">The staff’s public email address has not been posted here yet. Until it is, speak to any editor or the paper’s faculty adviser on campus.</p>}
+  : <p class="note">
+      The staff’s public email address has not been posted here yet.
+      {SITE.social.length > 0
+        ? <>Message the paper on {SITE.social.map((x, i) => <>{i > 0 && ' or '}<a href={x.href} rel="noopener">{x.label} ({x.handle})</a></>)}, or speak to any editor or the faculty adviser on campus.</>
+        : <>Until it is, speak to any editor or the paper’s faculty adviser on campus.</>}
+    </p>}

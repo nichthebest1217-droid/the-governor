@@ -6,6 +6,7 @@
 // The Sheet's answer is treated as untrusted data: only article, writer and photo files in
 // their expected folders are accepted, and files this sync did not create are never replaced.
 import { readFileSync } from 'node:fs';
+import sharp from 'sharp';
 import { p, exists, readJson, writeFile, readFrontmatter } from './lib/util.ts';
 
 const DRY = process.argv.includes('--dry-run');
@@ -32,9 +33,14 @@ for (const article of data.articles ?? []) {
     const path = String(file.path);
     const kind = ARTICLE.test(path) ? 'article' : AUTHOR.test(path) ? 'author' : PHOTO.test(path) ? 'photo' : null;
     if (!kind || path.includes('..')) { skipped.push(`row ${article.row}: refused unexpected path ${path}`); continue; }
-    const bytes = file.isBase64 ? Buffer.from(String(file.content), 'base64') : Buffer.from(String(file.content), 'utf8');
+    let bytes = file.isBase64 ? Buffer.from(String(file.content), 'base64') : Buffer.from(String(file.content), 'utf8');
     if ((kind === 'photo') !== Boolean(file.isBase64) || bytes.length > (kind === 'photo' ? MAX_PHOTO : MAX_TEXT) || bytes.length === 0) { skipped.push(`row ${article.row}: refused ${path} (wrong type or size)`); continue; }
-    if (kind === 'photo' && !(bytes[0] === 0xff && bytes[1] === 0xd8)) { skipped.push(`row ${article.row}: ${path} is not a JPEG`); continue; }
+    if (kind === 'photo') {
+      // Whatever Drive sent (JPEG, PNG, WebP...), re-encode it as a plain JPEG no wider than
+      // 2000 pixels. This proves it is a real image and drops camera metadata such as GPS location.
+      try { bytes = await sharp(bytes).rotate().resize({ width: 2000, withoutEnlargement: true }).jpeg({ quality: 86 }).toBuffer(); }
+      catch { skipped.push(`row ${article.row}: ${path} is not a readable image`); continue; }
+    }
     const target = p(path);
     if (exists(target)) {
       if (kind === 'author') continue; // writer records are created once, then edited by hand
