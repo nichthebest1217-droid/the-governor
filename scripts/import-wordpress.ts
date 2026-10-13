@@ -72,6 +72,8 @@ const normUrl = (u: string) => {
 };
 const mediaByPath = new Map<string, any>(media.map((m) => [normUrl(m.source_url), m]));
 const published = new Map<number, { path: string; usedBy: Set<string>; role: Set<string> }>();
+// Images an editor has deliberately changed since the import (for example a crop) are never re-copied.
+const mediaEdits: Record<string, string> = exists(p('migration/curation/media-edits.json')) ? readJson(p('migration/curation/media-edits.json')).edited : {};
 
 function publishMedia(id: number, usedBy: string, role: string, target?: string): string | null {
   const m = mediaById.get(id);
@@ -85,7 +87,7 @@ function publishMedia(id: number, usedBy: string, role: string, target?: string)
   entry.role.add(role);
   published.set(id, entry);
   const dest = p('public' + entry.path);
-  if (!DRY && (!exists(dest) || sha256(readFileSync(dest)) !== sha256(readFileSync(rawFileOf(m))))) {
+  if (!DRY && !mediaEdits[entry.path] && (!exists(dest) || sha256(readFileSync(dest)) !== sha256(readFileSync(rawFileOf(m))))) {
     writeFile(dest, '');
     copyFileSync(rawFileOf(m), dest);
   }

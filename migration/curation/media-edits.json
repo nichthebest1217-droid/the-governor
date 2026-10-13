@@ -1,0 +1,6 @@
+{
+  "_note": "Published images an editor asked to be changed from the WordPress original. The importer never overwrites these. The untouched originals stay in migration/raw/media.",
+  "edited": {
+    "/media/2026/05/wp-195.jpeg": "Cropped on 13 October 2026 at Nicholas Zhuo's request: the upload was a phone screenshot with blank bars above and below the photograph; the bars were removed (1152x2048 -> 1152x860). Nothing inside the photograph was changed."
+  }
+}
