@@ -7,7 +7,10 @@ const year = new Date().getFullYear();
   <div class="wrap">
     <div class="cols">
       <div>
-        <a class="name" href={href('/')}><img src={href('/brand/wordmark.webp')} width="1600" height="222" alt={SITE.name} loading="lazy" decoding="async" /></a>
+        <a class="name" href={href('/')}>
+          <img class="seal" src={href('/brand/logo-seal-512.png')} width="512" height="512" alt="" loading="lazy" decoding="async" />
+          <img class="word" src={href('/brand/wordmark.webp')} width="1600" height="222" alt={SITE.name} loading="lazy" decoding="async" />
+        </a>
         <p class="blurb">{SITE.description} Written, edited and produced by students in {SITE.location}.</p>
         <p class="motto">{SITE.motto}</p>
       </div>

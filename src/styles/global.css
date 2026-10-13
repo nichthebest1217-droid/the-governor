@@ -335,8 +335,9 @@ figcaption, .caption { font: 400 0.75rem/1.45 var(--font-ui); color: var(--ink-f
 /* ================= footer ================= */
 .site-footer { background: var(--ink); color: #b9b3a9; padding-block: clamp(2.75rem, 5vw, 4rem) 2rem; font: 400 0.8125rem/1.65 var(--font-ui); }
 .site-footer .cols { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: var(--gap); }
-.site-footer .name { display: inline-block; }
-.site-footer .name img { width: 15rem; height: auto; filter: invert(1); mix-blend-mode: screen; opacity: 0.94; }
+.site-footer .name { display: inline-flex; align-items: center; gap: 1rem; }
+.site-footer .name .seal { width: 4.5rem; height: 4.5rem; }
+.site-footer .name .word { width: 13.5rem; height: auto; filter: invert(1); mix-blend-mode: screen; opacity: 0.94; }
 .site-footer .blurb { margin-top: 1rem; max-width: 24rem; }
 .site-footer .motto { margin-top: 0.7rem; font: italic 400 1rem var(--font-display); color: #e9e4da; }
 .site-footer h2 { font: 600 0.625rem/1 var(--font-ui); letter-spacing: 0.18em; text-transform: uppercase; color: #fff; margin-bottom: 1rem; }
