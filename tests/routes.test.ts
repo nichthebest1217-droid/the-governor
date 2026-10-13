@@ -64,7 +64,7 @@ test('navigation, skip link and landmarks are on every full page', { skip }, () 
     assert.match(html, /<main id="main"/);
     assert.match(html, /<nav class="site-nav" aria-label="Sections">/);
     assert.match(html, /<html lang="en">/);
-    assert.match(html, /<span class="title">The Governor<\/span>/, `${path}: nameplate`);
+    assert.match(html, /<img class="np"[^>]*alt="The Governor"/, `${path}: nameplate with alt text`);
     assert.equal((html.match(/<h1/g) ?? []).length, 1, `${path}: exactly one h1`);
     for (const s of ['news', 'opinion', 'arts', 'sports', 'humor-fun', 'people', 'school-culture']) assert.ok(html.includes(`href="${BASE}${s}/"`), `${path}: nav link ${s}`);
   }
