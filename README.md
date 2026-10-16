@@ -2,15 +2,16 @@
 
 Website of *The Governor*, the student newspaper of The Governor's Academy (Byfield, Massachusetts).
 
-A static site: [Astro](https://astro.build) builds plain HTML from Markdown files in this repository,
-[Pagefind](https://pagefind.app) adds full-text search, and GitHub Actions deploys to GitHub Pages. There is no
-database and no server to maintain.
+**Since 16 October 2026 the paper runs entirely in the school's Google account.** Readers use the Google Site,
+<https://sites.google.com/govsacademy.org/thegovernor>, which shows the newspaper served by an Apps Script
+project ("The Governor publisher") from a Google Sheet, Google Docs and a Drive folder. Writers write in Docs;
+editors set a Status of Draft, Ready for Review or Published in the Sheet, and about a minute later the article is
+live. Nothing is hosted on GitHub any more: the old GitHub Pages address only forwards to the Google Site. See
+[google-workspace/SETUP.md](google-workspace/SETUP.md).
 
-Editors publish from Google: articles are written in Google Docs and listed in a Google Sheet with a Status of
-Draft, Ready for Review or Published. A few minutes after a row is marked Published the article is live; edits
-to the Doc or the row follow, and unpublishing takes it down. See
-[google-workspace/SETUP.md](google-workspace/SETUP.md). [Pages CMS](https://pagescms.org) remains for the web
-editor's occasional work on print issues and the archive.
+This repository holds the code: the publisher and the Sheet's scripts (`google-workspace/`), the pages' design
+(`google-workspace/site/app.js` and `src/styles/`), the tools that build them (`scripts/`), and the Astro site that
+served the paper from 13 to 16 October 2026, kept as the source of the archive and as a fallback.
 
 | If you are...                    | Read                                                       |
 | -------------------------------- | ---------------------------------------------------------- |

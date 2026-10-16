@@ -1,14 +1,16 @@
 # The Governor: Web Editor's Handbook
 
-For editors-in-chief, section editors and the web editor. No coding needed. Everything day-to-day happens in
-Google Docs and one Google Sheet, "The Governor: Publication"; its **How to publish** tab has the short
-version of this page. How the pieces fit together: [google-workspace/SETUP.md](google-workspace/SETUP.md).
+For editors-in-chief, section editors and the web editor. No coding needed. Everything happens in Google:
+articles in Google Docs, one Google Sheet ("The Governor: Publication") whose **How to publish** tab has the
+short version of this page, and the website itself, which the school's Google account runs and the Google Site
+shows (<https://sites.google.com/govsacademy.org/thegovernor>). How the pieces fit together:
+[google-workspace/SETUP.md](google-workspace/SETUP.md).
 
 ## The one rule
 
 **Nothing is marked Published until the editor-in-chief has approved it.** Marking a row Published puts the
-article on the public website within minutes, and the website is built from a public GitHub repository, so treat
-anything published as public for good even after it is taken down. Unfinished, sensitive or unapproved stories
+article on the public website within about a minute; treat anything published as public for good, even after it
+is taken down. Unfinished, sensitive or unapproved stories
 stay Draft or Ready for Review: those never leave Google.
 
 ## From draft to published
@@ -17,7 +19,7 @@ stay Draft or Ready for Review: those never leave Google.
 | --- | --- | --- |
 | **Draft** | Writer, section editor | Being written or edited. Not public. |
 | **Ready for Review** | Section editor | Edited and fact-checked: names spelled right, quotes confirmed, photo permission and photographer known. Waiting for the editor-in-chief. Not public. |
-| **Published** | Editor-in-chief | Approved: text, headline, byline, photo and credit. On the website a few minutes later. |
+| **Published** | Editor-in-chief | Approved: text, headline, byline, photo and credit. On the website about a minute later. |
 
 Anyone who can edit the Sheet can choose Published, so share the Sheet only with editors and the adviser.
 Writers need only their Doc.
@@ -53,7 +55,7 @@ address the same.
 
 ## Fixing, updating and taking down
 
-- **Fix a typo or update a story:** edit the Google Doc, or the row. The website follows within minutes.
+- **Fix a typo or update a story:** edit the Google Doc, or the row. The website follows within a minute or two.
   (Writers who can still edit the Doc can change the live article too; make the Doc view-only for them once it
   is published if that matters.)
 - **Take a story down:** set its Status to Draft or Ready for Review. Publishing it again later keeps the same
@@ -76,23 +78,15 @@ tab, which lists everything on the site) into the Value column:
 > The Editors' Picks currently on the site were chosen as placeholders when the site was built. Replace them.
 
 The **Masthead** tab (one person per row: group, name, optional role) and the **Site** tab (contact emails,
-masthead school year) work the same way and update the site within minutes.
+masthead school year) work the same way and update the site within a minute.
 
 ## Adding a print issue (web editor)
 
-Print issues and the WordPress archive are edited through Pages CMS, which saves straight to the repository:
-
-1. Export the PDF as small as is still readable (aim under 30 MB; a file over 100 MB cannot be uploaded).
-2. Go to **app.pagescms.org**, sign in with GitHub, choose the repository, and choose the **drafts** branch.
-3. **Print issues > Add an entry**: title ("Fall Issue 1"), web ID (`2026-fall-issue-1`), season, year,
-   number, the date **as printed on the front page**, the PDF, and page images in page order. Fill in **How we
-   know these facts** ("Front page reads FALL ISSUE 1 - OCTOBER 2026"). Leave **Volume** empty unless a volume
-   number is printed on the issue.
-4. Open a pull request from `drafts` to `main`; a second person approves and merges.
-5. In the Sheet, put the issue's web ID in **Print issue** on each article that ran in it.
-
-Articles that came from the Sheet are managed by the Sheet: change them there, not in Pages CMS, or the next
-update from the Sheet overwrites the change.
+Print issues are part of the archive the publisher copied into Drive. Adding one is a job for the web editor:
+put the PDF and page images in the repository's `public/issues/`, describe the issue in `src/content/issues/`,
+rebuild the archive bundle (`node scripts/build-archive.ts`) and run `importArchive` again with the new commit
+(see [google-workspace/SETUP.md](google-workspace/SETUP.md)). Then put the issue's ID in **Print issue** on each
+Sheet article that ran in it, and in the Homepage tab's **Print issue to promote**.
 
 ## Photos and privacy
 
@@ -122,11 +116,11 @@ Google Sheets. In rough priority:
 Each spring the outgoing editor-in-chief and adviser:
 
 - [ ] Share the Sheet with the incoming editors; remove graduating students.
-- [ ] Move the Sheet to the adviser or a school shared drive, then follow "Handing over" in
-      [google-workspace/SETUP.md](google-workspace/SETUP.md): the new owner sets up their own publisher, its web
-      address and a GitHub key.
-- [ ] Add the incoming web editor to the GitHub repository (ideally owned by a school-controlled organization,
-      never a student's personal account); keep the adviser as owner.
+- [ ] Move the Sheet and the "The Governor website" Drive folder to the adviser or a school shared drive, then
+      follow "Handing over" in [google-workspace/SETUP.md](google-workspace/SETUP.md): the new owner copies the
+      publisher, deploys it and points the Google Site at it.
+- [ ] Give the incoming web editor the code repository (ideally owned by a school-controlled organization, never a
+      student's personal account).
 - [ ] Walk the new editors through publishing one real article start to finish.
 - [ ] Update the **Masthead** and **Site** tabs.
 - [ ] Download a copy of the repository (green **Code** button > Download ZIP) to the school's shared drive.
@@ -136,11 +130,11 @@ Each spring the outgoing editor-in-chief and adviser:
 | Problem | What to do |
 | --- | --- |
 | **On the website** shows ⚠ | Do what it says: the row or the Doc is missing something. If the article was already live, the earlier version stays up meanwhile. |
-| It says Publishing… for a long time | The **How to publish** tab says whether instant publishing is on. If it is off or stopped, the website only checks every few hours: the Sheet's owner adds or renews the GitHub key in the publisher ([SETUP.md](google-workspace/SETUP.md), step 4). After 30 minutes the row says so; then look at GitHub > Actions for a red run. |
+| It says Publishing… for more than a few minutes | The top of the **How to publish** tab should say "Publishing is ON". If it does not, the publisher's minute-by-minute check has stopped: the Sheet's owner opens the publisher and runs `setUpPublisher` ([SETUP.md](google-workspace/SETUP.md)). Its Executions page shows any error. |
 | "The Sheet can't open this Doc" | Share the Doc with `nicholas.zhuo@govsacademy.org`. |
 | A picture is missing | Pictures inside the Doc must be ordinary inline pictures (not drawings "in front of text"). The cover picture must be a Drive link the owner account can open, with an Image description. |
-| I published something by mistake | Set the Status back to Draft. It disappears within minutes, but treat it as having been public. Tell the editor-in-chief. |
+| I published something by mistake | Set the Status back to Draft. It disappears within a minute, but treat it as having been public. Tell the editor-in-chief. |
 | The Sheet looks broken (columns moved, dropdowns gone) | **The Governor > Set up or repair this Sheet**. It keeps what was typed. |
 | Many articles vanished from the Sheet but are still online | On purpose: when several rows disappear at once, nothing is taken down. Put the rows back; to take articles down, set them to Draft. |
-| The site is down | Check githubstatus.com. If GitHub is fine, open the **Actions** tab and re-run the last deploy. |
-| We lost something | Every version of every file is in the repository history. A developer or the adviser can restore it; see CONTRIBUTING.md. |
+| The site is down | Check the Google Workspace status page (google.com/appsstatus). If Google is fine, the publisher's Executions page shows what failed. |
+| We lost something | Docs keep their version history (File > Version history). Pictures of taken-down articles stay in the Drive trash for 30 days. The archive's original files are in the code repository. |

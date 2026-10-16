@@ -1,17 +1,19 @@
 # Launch Report
 
-Status as of 13 October 2026. **Launched.** The site is live at
-<https://nichthebest1217-droid.github.io/the-governor/> from the public repository
-`nichthebest1217-droid/the-governor` (Nicholas Zhuo's personal GitHub account, by his choice, for now), and
-search engines may index it (`SITE_INDEXABLE=true`, set on his instruction to take it to publication). The
-WordPress site is untouched.
+Status as of 16 October 2026. **Moved to Google.** The paper is served from the school's Google account and read
+at <https://sites.google.com/govsacademy.org/thegovernor> (a Google Site showing the publisher's web app
+full-screen). The publisher, an Apps Script project owned by `nicholas.zhuo@govsacademy.org`, builds articles from
+the Sheet "The Governor: Publication" and its Google Docs every minute, and holds the archive (69 articles, 35
+writers, 5 print issues, 52 pictures and PDFs) in the Drive folder "The Governor website". The old GitHub Pages
+address (<https://nichthebest1217-droid.github.io/the-governor/>) only forwards readers there. The WordPress site
+is untouched. Details: [google-workspace/SETUP.md](google-workspace/SETUP.md).
 
-Publishing runs from Google Docs: editors mark rows Approved in the Sheet "The Governor: Publication" (school
-account), and `sync-docs.yml` collects, checks, commits and publishes them every half hour. That chain was
-tested end to end on launch day; see [google-workspace/SETUP.md](google-workspace/SETUP.md).
+Between 13 and 16 October the same design was served as a static Astro site from GitHub Pages; that code stays in
+this repository as the source of the archive and as a fallback.
 
-A Google Site in the school account, <https://sites.google.com/govsacademy.org/thegovernor>, shows the
-newspaper as a full-page embed. It is visible to the school's Google accounts only until someone widens it.
+Known limits of hosting on Google: inside the Google Site the address bar does not change from page to page
+(each article's Copy link gives its own address, on script.google.com); search engines index the Google Site page,
+not each article; a page takes about a second to load.
 
 Still open after launch, none of which a developer can settle alone:
 
@@ -21,7 +23,7 @@ Still open after launch, none of which a developer can settle alone:
 - Post a staff email address (the site currently points readers to the paper's Instagram).
 - The unexplained twelfth News post on WordPress (see MIGRATION_REPORT.md).
 - A school web address, and a school-owned home for the repository and the Sheet before Nicholas graduates.
-- `main` is not a protected branch, because the publishing workflow commits to it directly.
+- Hand the Sheet, the Drive folder and the publisher to a school-owned account before graduation (google-workspace/SETUP.md, "Handing over").
 
 ## Where each phase stands
 

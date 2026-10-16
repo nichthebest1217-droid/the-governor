@@ -11,7 +11,7 @@
   // The front page goes to the Google Site; an old article address goes straight to that article.
   (function () {
     var site = 'https://sites.google.com/govsacademy.org/thegovernor';
-    var app = '__WEB_APP_URL__';
+    var app = 'https://script.google.com/macros/s/AKfycbz6aWo3uxapORx22AE7f7sfBz2LDMrWj68pORVSGdKlh_SK0z2O660Kk54b1Smummk8/exec';
     var base = '/the-governor';
     var path = location.pathname.indexOf(base) === 0 ? location.pathname.slice(base.length) : location.pathname;
     if (!path || path === '/' || path === '/index.html' || path === '/404.html') location.replace(site);
