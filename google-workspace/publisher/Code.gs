@@ -23,7 +23,7 @@ const SETTINGS = {
   SITE_URL: 'https://sites.google.com/govsacademy.org/thegovernor', // the Google Site that shows this
 };
 // Where the archive was copied from, once (a fixed version of the website's old repository).
-const IMPORT_FROM = 'https://raw.githubusercontent.com/nichthebest1217-droid/the-governor/IMPORT_COMMIT/';
+const IMPORT_FROM = 'https://raw.githubusercontent.com/nichthebest1217-droid/the-governor/d57ac83c71e7c3617ebc6ddc709f0acfad9fcba2/';
 // Raise to rebuild every article from the Sheet at the next check (after changing Doc.gs).
 const PROCESSOR = 1;
 const FOLDER_TYPE = 'application/vnd.google-apps.folder';
