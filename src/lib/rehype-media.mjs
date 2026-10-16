@@ -2,7 +2,8 @@
 //  - prefixes root-relative links and images with the deploy base path,
 //  - gives images dimensions, lazy loading and a responsive srcset (from `npm run media`),
 //  - turns an image with a title into <figure><figcaption>,
-//  - marks external links, and drops links that would run code (javascript: and the like).
+//  - marks external links, and drops links that would run code (javascript: and the like),
+//  - shows any HTML inside articles from the Google Sheet as text.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { visit } from 'unist-util-visit';
@@ -25,8 +26,16 @@ export function withBase(base, path) {
 }
 
 export default function rehypeMedia({ base = '/' } = {}) {
-  return (tree) => {
+  return (tree, file) => {
     const manifest = mediaManifest();
+    // Articles from the Google Sheet (they have a cmsId) may not contain HTML: any that a Doc or
+    // a Sheet cell smuggles in is shown as plain text. Astro turns "raw" nodes into real HTML only
+    // after this plugin, so this catches it however the Markdown around it is written.
+    if (file?.data?.astro?.frontmatter?.cmsId) {
+      visit(tree, 'raw', (node, index, parent) => {
+        if (parent && typeof index === 'number') parent.children[index] = { type: 'text', value: String(node.value) };
+      });
+    }
     visit(tree, 'element', (node, index, parent) => {
       if (node.tagName === 'a' && typeof node.properties?.href === 'string') {
         const href = node.properties.href;

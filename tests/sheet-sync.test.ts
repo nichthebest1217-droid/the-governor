@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import { readFrontmatter } from '../scripts/lib/util.ts';
 import { cleanDocMarkdown, makeSafe, parseWriter, splitWriters, textToMarkdown } from '../scripts/lib/doc-markdown.ts';
-import { PROCESSOR, TryAgain, checkSheet, readIndex, syncSheet } from '../scripts/lib/sheet-sync.ts';
+import { PROCESSOR, TryAgain, checkSheet, hashId, readIndex, syncSheet } from '../scripts/lib/sheet-sync.ts';
 
 // ---- the Doc's text -------------------------------------------------------------------------
 test('headline and byline lines from the Doc are dropped; the opening sentence is not', () => {
@@ -71,15 +71,15 @@ const B = { id: '2026-10-16-letter', revision: 'q1', title: 'Letter', authors: '
 
 function sheet(articles: any[], extra: Record<string, unknown> = {}) {
   const calls: string[] = [];
-  const state = { articles, held: [] as string[], settings: {} as any, fingerprint: 'f1', docs: { [A.id]: DOC } as Record<string, string>, changed: new Set<string>(), ...extra };
+  const state = { articles, held: [] as string[], unpublished: [] as string[], settings: {} as any, fingerprint: 'f1', docs: { [A.id]: DOC } as Record<string, string>, changed: new Set<string>(), ...extra };
   const getJson = async (url: string) => {
     const q = new URL(url).searchParams;
     calls.push(q.toString());
-    if (!q.get('article')) return { version: 2, fingerprint: state.fingerprint, articles: state.articles, held: state.held, problems: [], settings: state.settings };
+    if (!q.get('article')) return { version: 2, fingerprint: state.fingerprint, articles: state.articles, held: state.held.map(hashId), unpublished: state.unpublished.map(hashId), settings: state.settings };
     const id = q.get('article')!;
     const a = state.articles.find((x: any) => x.id === id);
     if (!a) return { ok: false, error: 'not-published' };
-    if (state.changed.has(id)) return { ok: false, error: 'changed' };
+    if (state.changed.has(id)) return { ok: false, retry: true, error: 'changed' };
     const image = q.get('image');
     if (image) return { ok: true, ref: image, mime: 'image/png', base64: (image === 'image2' ? pngAlpha : png).toString('base64') };
     return a.source === 'text' ? { ok: true, source: 'text', markdown: 'Dear readers,\n' + 'We have thoughts about the weekend schedule. '.repeat(8) } : { ok: true, source: 'doc', markdown: state.docs[id], images: ['image1', 'image2'] };
@@ -127,7 +127,7 @@ test('publishing: articles, pictures, writers and the record are written', async
   const again = await syncSheet({ root: s.root, endpoint: E, getJson: g.getJson, log: quiet });
   assert.equal(again.changed, false);
   assert.deepEqual(g.calls, [''], 'only the list was read');
-  assert.deepEqual(await checkSheet({ root: s.root, endpoint: E, getJson: g.getJson }), { changed: false, reason: 'nothing changed in the Sheet' });
+  assert.deepEqual(await checkSheet({ root: s.root, endpoint: E, getJson: g.getJson }), { changed: false, redeploy: false, reason: 'nothing changed in the Sheet' });
 
   // An edited Doc: the article is rewritten and pictures it no longer uses are removed.
   g.state.docs[A.id] = '# Big Win\n\nA corrected report. ' + 'Words about the game. '.repeat(14);
@@ -141,6 +141,7 @@ test('publishing: articles, pictures, writers and the record are written', async
 
   // Unpublished: taken down, pictures and all. The archive is untouched.
   g.state.articles = [B];
+  g.state.unpublished = [A.id];
   g.state.fingerprint = 'f3';
   const down = await syncSheet({ root: s.root, endpoint: E, getJson: g.getJson, log: quiet });
   assert.deepEqual(down.summary, ['Taken down: Big Win']);
@@ -178,16 +179,37 @@ test('safety: no archive article is overwritten, no mass take-down, odd answers 
   assert.equal(r.errors[clash.id].revision, 'z');
   assert.match(s.read('src/content/articles/2026-05-01-archive-story.md'), /Old\./);
 
-  const many = [1, 2, 3, 4, 5].map((n) => ({ ...B, id: `2026-10-1${n}-story-${n}`, date: `2026-10-1${n}`, title: `Story ${n}` }));
-  const g2 = sheet(many);
+  // Rows set to Draft are taken down even when there are many; rows that vanish all at once are not.
+  const six = [1, 2, 3, 4, 5, 6].map((n) => ({ ...B, id: `2026-10-1${n}-story-${n}`, date: `2026-10-1${n}`, title: `Story ${n}` }));
+  const file = (m: any) => `src/content/articles/${m.date}-story-${m.id.slice(-1)}.md`;
+  const g2 = sheet(six);
   await syncSheet({ root: s.root, endpoint: E, getJson: g2.getJson, log: quiet });
-  g2.state.articles = [];
-  g2.state.fingerprint = 'empty';
-  const after = await syncSheet({ root: s.root, endpoint: E, getJson: g2.getJson, log: quiet });
-  assert.match(after.warnings.join(' '), /Nothing was taken down/);
-  assert.equal(many.filter((m) => s.has(`src/content/articles/${m.date}-story-${m.id.slice(-1)}.md`)).length, 5);
+  g2.state.articles = six.slice(4);
+  g2.state.unpublished = six.slice(0, 4).map((m) => m.id);
+  g2.state.fingerprint = 'four-drafts';
+  const drafts = await syncSheet({ root: s.root, endpoint: E, getJson: g2.getJson, log: quiet });
+  assert.equal(drafts.summary.filter((l) => l.startsWith('Taken down')).length, 4);
+  assert.deepEqual(six.map((m) => s.has(file(m))), [false, false, false, false, true, true]);
+  g2.state.articles = six.slice(5);
+  g2.state.unpublished = six.slice(0, 5).map((m) => m.id);
+  g2.state.fingerprint = 'one-more';
+  await syncSheet({ root: s.root, endpoint: E, getJson: g2.getJson, log: quiet });
+  assert.ok(!s.has(file(six[4])), 'a later single take-down still works');
 
-  assert.throws(() => readIndex({ articles: [] }), /unexpected format/);
+  const g3 = sheet(six);
+  const s3 = site();
+  await syncSheet({ root: s3.root, endpoint: E, getJson: g3.getJson, log: quiet });
+  g3.state.articles = [];
+  g3.state.fingerprint = 'tab-emptied';
+  const after = await syncSheet({ root: s3.root, endpoint: E, getJson: g3.getJson, log: quiet });
+  assert.match(after.warnings.join(' '), /disappeared from the Sheet/);
+  assert.equal(six.filter((m) => s3.has(file(m))).length, 6, 'nothing taken down when every row vanishes at once');
+  g3.state.unpublished = [six[0].id];
+  g3.state.fingerprint = 'one-draft';
+  await syncSheet({ root: s3.root, endpoint: E, getJson: g3.getJson, log: quiet });
+  assert.ok(!s3.has(file(six[0])) && s3.has(file(six[1])), 'a row set to Draft is still taken down meanwhile');
+
+  assert.throws(() => readIndex({ version: 2, fingerprint: 'x', articles: [], held: [] }), /unexpected format/);
   assert.throws(() => readIndex({ ok: false, error: 'The Articles tab has no "ID" column.' }), TryAgain);
   const bad = sheet([{ ...A, section: 'gossip' }, { ...B, image: { alt: '', caption: '', credit: '' } }]);
   const r3 = await syncSheet({ root: site().root, endpoint: E, getJson: bad.getJson, log: quiet });
@@ -196,11 +218,30 @@ test('safety: no archive article is overwritten, no mass take-down, odd answers 
 
 test('settings from the Homepage tab may point at an article published in the same run', async () => {
   const s = site();
-  const g = sheet([A], { settings: { homepage: { lead: A.id, secondary: ['2026-01-01-nope'], editorsPicks: [], currentIssue: '2026-27-issue-1', alert: { text: 'Hi', href: 'javascript:x' } } } });
+  const g = sheet([A], { settings: { homepage: { lead: A.id, secondary: ['2026-01-01-nope'], editorsPicks: [], currentIssue: '2026-27-issue-1', alert: { text: 'Hi', href: '//evil.example/' } }, site: { contactEmail: '', tipsEmail: 'tips@b.org' } } });
   const r = await syncSheet({ root: s.root, endpoint: E, getJson: g.getJson, log: quiet });
   const home = JSON.parse(s.read('src/data/homepage.json'));
   assert.equal(home.lead, A.id);
   assert.deepEqual(home.secondary, []);
   assert.deepEqual(home.alert, { text: 'Hi', href: null });
   assert.match(r.warnings.join(' '), /2026-01-01-nope/);
+  const siteData = JSON.parse(s.read('src/data/site.json'));
+  assert.equal(siteData.contactEmail, 'a@b.org', 'an empty contact email keeps the current one');
+  assert.equal(siteData.tipsEmail, 'tips@b.org');
+});
+
+test('a run that finds the website behind the repository publishes again', async () => {
+  const s = site();
+  const g = sheet([A]);
+  await syncSheet({ root: s.root, endpoint: E, getJson: g.getJson, log: quiet });
+  const real = globalThis.fetch;
+  try {
+    let live: any = { sheet: {} };
+    globalThis.fetch = (async () => ({ ok: true, json: async () => live })) as any;
+    assert.deepEqual(await checkSheet({ root: s.root, endpoint: E, site: 'https://org.github.io/x', getJson: g.getJson }), { changed: true, redeploy: true, reason: 'the website is behind the repository (an earlier publish did not finish)' });
+    live = { sheet: { [A.id]: { revision: 'r1', url: 'u' } } };
+    assert.equal((await checkSheet({ root: s.root, endpoint: E, site: 'https://org.github.io/x', getJson: g.getJson })).changed, false);
+  } finally {
+    globalThis.fetch = real;
+  }
 });

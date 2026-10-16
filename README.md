@@ -49,7 +49,7 @@ migration/              inventories, URL map, review queue, and the evidence beh
 tests/                  unit tests and built-site smoke tests
 .pages.yml              what editors can edit in Pages CMS
 .github/workflows/      ci.yml (checks pull requests), deploy.yml (publishes main), sync-docs.yml (publishes from the Sheet)
-google-workspace/       the Google Sheet's script (Code.gs) and its setup guide
+google-workspace/       the Sheet's own script (sheet/), the publisher script (publisher/), setup guide
 ```
 
 ## The front page

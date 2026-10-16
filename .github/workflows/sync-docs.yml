@@ -25,7 +25,7 @@ jobs:
       contents: write
       pages: read
     outputs:
-      publish: ${{ steps.diff.outputs.changed }}
+      publish: ${{ steps.build.outputs.publish }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Anything new in the Sheet?
+      - name: Anything new in the Sheet? Is the website up to date?
         id: check
         run: node scripts/sync-docs.ts --check
       - name: Install
@@ -50,39 +50,35 @@ jobs:
           git add -A src/content public/media src/data
           if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; git diff --cached --stat; fi
       - id: pages
-        if: steps.diff.outputs.changed == 'true'
+        if: steps.diff.outputs.changed == 'true' || steps.check.outputs.redeploy == 'true'
         uses: actions/configure-pages@v6
-      - name: Check and build (if anything fails, nothing is published)
-        if: steps.diff.outputs.changed == 'true'
-        run: npm run check && npm run build && npm test && npm run check:links && npm run check:media
+      - name: Check, build and commit (if anything fails, nothing is committed or published)
+        id: build
+        if: steps.diff.outputs.changed == 'true' || steps.check.outputs.redeploy == 'true'
         env:
           SITE_URL: ${{ steps.pages.outputs.origin }}
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
           SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
-      - name: Commit
-        id: commit
-        if: steps.diff.outputs.changed == 'true'
         run: |
-          git config user.name "The Governor publishing sheet"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          { echo "content: publish changes from the Google Sheet"; echo; cat "$RUNNER_TEMP/sync-summary.txt" 2>/dev/null || true; } > "$RUNNER_TEMP/message.txt"
-          git commit -q -F "$RUNNER_TEMP/message.txt"
-          for attempt in 1 2 3; do
-            if git push -q origin HEAD:main; then exit 0; fi
-            # Someone pushed to main meanwhile: put this commit on top of theirs and build again.
-            git pull -q --rebase origin main
-            echo "rebuilt=true" >> "$GITHUB_OUTPUT"
-          done
-          exit 1
-      - name: Build again on top of the newer main
-        if: steps.commit.outputs.rebuilt == 'true'
-        run: npm run build
-        env:
-          SITE_URL: ${{ steps.pages.outputs.origin }}
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
+          verify() { npm run check && npm run build && npm test && npm run check:links && npm run check:media; }
+          verify
+          if [ "${{ steps.diff.outputs.changed }}" = "true" ]; then
+            git config user.name "The Governor publishing sheet"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            { echo "content: publish changes from the Google Sheet"; echo; cat "$RUNNER_TEMP/sync-summary.txt" 2>/dev/null || true; } > "$RUNNER_TEMP/message.txt"
+            git commit -q -F "$RUNNER_TEMP/message.txt"
+            pushed=false
+            for attempt in 1 2 3; do
+              if git push -q origin HEAD:main; then pushed=true; break; fi
+              # Someone pushed to main meanwhile: put this commit on top of theirs and check everything again.
+              git pull -q --rebase origin main
+              verify
+            done
+            [ "$pushed" = true ]
+          fi
+          echo "publish=true" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v5
-        if: steps.diff.outputs.changed == 'true'
+        if: steps.build.outputs.publish == 'true'
         with:
           path: dist
 

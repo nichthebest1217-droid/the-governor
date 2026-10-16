@@ -36,6 +36,8 @@ export interface Manifest {
 export interface SyncOptions {
   root: string;
   endpoint: string;
+  /** The website's address, to check that what is live matches the repository (optional). */
+  site?: string;
   dryRun?: boolean;
   getJson?: (url: string) => Promise<any>;
   log?: (line: string) => void;
@@ -81,24 +83,42 @@ interface IndexArticle {
   kind: string; description: string; image: { alt: string; caption: string; credit: string } | null;
   issue: string; order: string | number; correction: string; source: 'doc' | 'text';
 }
-interface Index { fingerprint: string; articles: IndexArticle[]; held: string[]; problems: unknown[]; settings: any }
+/** `held` and `unpublished` are scrambled IDs (see hashId), so the list never reveals unpublished headlines. */
+interface Index { fingerprint: string; articles: IndexArticle[]; held: Set<string>; unpublished: Set<string>; settings: any }
+
+/** The same scrambling as hash_() in the publisher script: the first 16 hex digits of SHA-256. */
+export const hashId = (id: string) => createHash('sha256').update(id, 'utf8').digest('hex').slice(0, 16);
 
 /** The Sheet's list of Published articles. Anything unexpected stops the sync before it changes anything. */
 export function readIndex(raw: any): Index {
   if (raw && raw.ok === false) throw new TryAgain(`the Sheet reported a problem: ${String(raw.error).slice(0, 300)}`);
-  if (!raw || raw.version !== 2 || typeof raw.fingerprint !== 'string' || !Array.isArray(raw.articles) || !Array.isArray(raw.held)) {
-    throw new Error('the Sheet answered in an unexpected format. Is the newest Code.gs deployed? (google-workspace/SETUP.md)');
+  if (!raw || raw.version !== 2 || typeof raw.fingerprint !== 'string' || !Array.isArray(raw.articles) || !Array.isArray(raw.held) || !Array.isArray(raw.unpublished)) {
+    throw new Error('the Sheet answered in an unexpected format. Is the newest publisher script deployed? (google-workspace/SETUP.md)');
   }
-  return { fingerprint: raw.fingerprint, articles: raw.articles, held: raw.held.map(String), problems: raw.problems ?? [], settings: raw.settings ?? {} };
+  return { fingerprint: raw.fingerprint, articles: raw.articles, held: new Set(raw.held.map(String)), unpublished: new Set(raw.unpublished.map(String)), settings: raw.settings ?? {} };
 }
 
-/** Cheap check before any work: has anything in the Sheet changed since the last sync? */
-export async function checkSheet(opts: SyncOptions): Promise<{ changed: boolean; reason: string }> {
+/**
+ * Cheap check before any work: has the Sheet changed since the last sync, and is the website
+ * showing what the repository holds? (A failed publish is retried by the next run this way.)
+ */
+export async function checkSheet(opts: SyncOptions): Promise<{ changed: boolean; redeploy: boolean; reason: string }> {
   const index = readIndex(await (opts.getJson ?? fetchJson)(opts.endpoint));
   const manifest = readManifest(opts.root);
-  if (manifest.processor !== PROCESSOR) return { changed: true, reason: 'the conversion was updated' };
-  if (manifest.fingerprint !== index.fingerprint) return { changed: true, reason: 'the Sheet changed' };
-  return { changed: false, reason: 'nothing changed in the Sheet' };
+  if (manifest.processor !== PROCESSOR) return { changed: true, redeploy: false, reason: 'the conversion was updated' };
+  if (manifest.fingerprint !== index.fingerprint) return { changed: true, redeploy: false, reason: 'the Sheet changed' };
+  if (opts.site) {
+    try {
+      const res = await fetch(`${opts.site.replace(/\/?$/, '/')}publishing-status.json?t=${Date.now()}`, { signal: AbortSignal.timeout(30_000) });
+      if (res.ok) {
+        const live = (await res.json()).sheet ?? {};
+        const want = manifest.articles;
+        const same = Object.keys(live).length === Object.keys(want).length && Object.entries(want).every(([id, e]) => live[id]?.revision === e.revision);
+        if (!same) return { changed: true, redeploy: true, reason: 'the website is behind the repository (an earlier publish did not finish)' };
+      }
+    } catch { /* the site could not be reached; nothing to compare */ }
+  }
+  return { changed: false, redeploy: false, reason: 'nothing changed in the Sheet' };
 }
 
 const str = (v: unknown, max: number) => (typeof v === 'string' || typeof v === 'number' ? String(v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, max) : '');
@@ -147,7 +167,8 @@ export async function syncSheet(opts: SyncOptions): Promise<SyncResult> {
   const fileOwner = (rel: string) => (existsSync(at(rel)) ? readFrontmatter(readFileSync(at(rel), 'utf8')).data.cmsId ?? null : null);
 
   // Articles marked Published -------------------------------------------------------------
-  const keep = new Set<string>([...index.articles.map((a) => String(a.id)), ...index.held]);
+  const listed = new Set<string>(index.articles.map((a) => String(a.id)));
+  const isHeld = (id: string) => index.held.has(hashId(id));
   const claimed = new Map<string, string>(); // file -> id, so two rows never share an address
   for (const a of index.articles) {
     const id = String(a.id);
@@ -167,13 +188,13 @@ export async function syncSheet(opts: SyncOptions): Promise<SyncResult> {
     const fileId = `${date}-${id.replace(/^\d{4}-\d{2}-\d{2}-/, '')}`;
     const file = `src/content/articles/${fileId}.md`;
     const owner = fileOwner(file);
-    if (claimed.has(file) || (existsSync(at(file)) && owner !== id)) { fail('another article already has this web address; change the title a little and publish again'); continue; }
+    if (claimed.has(file) || (existsSync(at(file)) && owner !== id)) { fail('another article already has this web address. Change the Title a little and clear the ID cell, and the row gets a new address'); continue; }
     if (prev && prev.revision === revision && prev.file === file && before.processor === PROCESSOR && existsSync(at(file))) { keepPrevious(); continue; }
 
     try {
       const content = await ask(id, revision);
       if (!content || content.ok !== true) {
-        if (content?.error === 'changed') { retryLater = true; keepPrevious(); continue; }
+        if (content?.retry) throw new TryAgain(str(content.error, 200) || 'the Sheet was busy');
         fail(str(content?.error, 300) || 'the Sheet could not send the article');
         continue;
       }
@@ -182,7 +203,7 @@ export async function syncSheet(opts: SyncOptions): Promise<SyncResult> {
       const save = async (ref: string, stem: string) => {
         const img = await ask(id, revision, ref);
         if (!img || img.ok !== true || typeof img.base64 !== 'string') {
-          if (img?.error === 'changed') throw new TryAgain('the row changed during the update');
+          if (img?.retry) throw new TryAgain(str(img.error, 200) || 'the Sheet was busy');
           throw new Error(str(img?.error, 200) || 'a picture could not be downloaded');
         }
         const out = await reencode(Buffer.from(img.base64, 'base64'));
@@ -210,7 +231,7 @@ export async function syncSheet(opts: SyncOptions): Promise<SyncResult> {
       }
       // A photo story may be short; a text article that is nearly empty is probably the wrong Doc.
       const words = body.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').split(/\s+/).filter(Boolean).length;
-      if (body.length < 200 && !/!\[/.test(body) && !cover && !lead) throw new Error(`the article has only ${words} words; is the Doc link right, and is it the finished Doc?`);
+      if (body.length <= 200 && !/!\[/.test(body) && !cover && !lead) throw new Error(`the article has only ${words} words; is the Doc link right, and is it the finished Doc?`);
 
       // Writers: an existing writer file is never changed; a new name gets a new file.
       for (const w of writers) {
@@ -254,22 +275,24 @@ export async function syncSheet(opts: SyncOptions): Promise<SyncResult> {
     }
   }
   // Rows marked Published that have a problem: the version already on the site stays.
-  for (const id of index.held) if (before.articles[id] && !next.articles[id]) { next.articles[id] = before.articles[id]; claimed.set(before.articles[id].file, id); }
+  for (const id of Object.keys(before.articles)) if (!listed.has(id) && isHeld(id) && !next.articles[id]) { next.articles[id] = before.articles[id]; claimed.set(before.articles[id].file, id); }
 
   // Articles no longer marked Published ---------------------------------------------------
-  const gone = Object.keys(before.articles).filter((id) => !keep.has(id));
+  // A row set to Draft or Ready for Review (or scheduled for later) is taken down. A row that has
+  // disappeared from the Sheet is taken down too, unless many disappeared at once: a deleted tab,
+  // a filter or a bad paste should not empty the website.
+  const gone = Object.keys(before.articles).filter((id) => !listed.has(id) && !isHeld(id));
+  const vanished = gone.filter((id) => !index.unpublished.has(hashId(id)));
   const managed = Object.keys(before.articles).length;
-  if (gone.length > MASS_REMOVAL && gone.length > managed / 2) {
-    next.warnings.push(`The Sheet no longer lists ${gone.length} of the ${managed} articles it published. Nothing was taken down, in case this is a mistake. To take them down, set their rows to Draft one at a time.`);
-    for (const id of gone) next.articles[id] = before.articles[id];
-  } else {
-    for (const id of gone) {
-      const entry = before.articles[id];
-      if (fileOwner(entry.file) === id) remove(entry.file);
-      remove(`public/media/sheet/${id}`);
-      summary.push(`Taken down: ${entry.title || entry.file}`);
-      log(`  took down ${entry.file}`);
-    }
+  const holdVanished = vanished.length > MASS_REMOVAL && vanished.length > managed / 2;
+  if (holdVanished) next.warnings.push(`${vanished.length} published articles have disappeared from the Sheet, so they were left on the website in case this is a mistake. To take them down, put their rows back and set them to Draft.`);
+  for (const id of gone) {
+    const entry = before.articles[id];
+    if (holdVanished && vanished.includes(id)) { next.articles[id] = entry; continue; }
+    if (fileOwner(entry.file) === id) remove(entry.file);
+    remove(`public/media/sheet/${id}`);
+    summary.push(`Taken down: ${entry.title || entry.file}`);
+    log(`  took down ${entry.file}`);
   }
 
   // Front page, masthead and contact details (the Homepage, Site and Masthead tabs) -------
@@ -310,7 +333,7 @@ export function applySettings(settings: any, io: SettingsIO) {
       secondary: ids(h.secondary, 5),
       editorsPicks: ids(h.editorsPicks, 4),
       currentIssue: issueOk ? issue : current.currentIssue ?? null,
-      alert: bannerText ? { text: bannerText, href: bannerLink && /^(https:\/\/|\/)/.test(bannerLink) ? bannerLink : null } : null,
+      alert: bannerText ? { text: bannerText, href: bannerLink && /^(https:\/\/|\/(?!\/))/.test(bannerLink) ? bannerLink : null } : null,
     });
   }
   if (s.site && typeof s.site === 'object') {
@@ -323,7 +346,8 @@ export function applySettings(settings: any, io: SettingsIO) {
       if (list.length > 5 || list.some((e) => !/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(e))) { io.warn(`Site tab: ${label} "${raw}" is not a list of email addresses.`); return null; }
       return list.join(', ');
     };
-    io.write('src/data/site.json', { ...current, contactEmail: email(s.site.contactEmail, 'contact email'), tipsEmail: email(s.site.tipsEmail, 'tips email') });
+    // An empty (or unusable) contact email keeps the current one, so the Contact page is never left without one.
+    io.write('src/data/site.json', { ...current, contactEmail: email(s.site.contactEmail, 'contact email') ?? current.contactEmail ?? null, tipsEmail: email(s.site.tipsEmail, 'tips email') });
   }
   if (Array.isArray(s.masthead) && s.masthead.length > 0) {
     // An empty Masthead tab changes nothing, so the page is never wiped by accident.

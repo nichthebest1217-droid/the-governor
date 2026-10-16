@@ -15,14 +15,15 @@ const report = (lines: string[]) => { if (process.env.GITHUB_STEP_SUMMARY) appen
 
 const configFile = p('google-workspace/endpoint.json');
 if (!exists(configFile)) { console.log('sync-docs: google-workspace/endpoint.json not found; nothing to do.'); output('changed=false'); process.exit(0); }
-const { url } = readJson<{ url: string }>(configFile);
+const { url, site } = readJson<{ url: string; site?: string }>(configFile);
 if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url ?? '')) { console.error('sync-docs: endpoint.json does not hold a Google Apps Script web address.'); process.exit(1); }
 
 try {
   if (CHECK) {
-    const { changed, reason } = await checkSheet({ root: ROOT, endpoint: url });
+    const { changed, redeploy, reason } = await checkSheet({ root: ROOT, endpoint: url, site });
     console.log(`sync-docs: ${reason}.`);
     output(`changed=${changed}`);
+    output(`redeploy=${redeploy}`);
     process.exit(0);
   }
   const result = await syncSheet({ root: ROOT, endpoint: url, dryRun: DRY });
@@ -39,6 +40,7 @@ try {
     // Google was busy or a row changed mid-run. Nothing was changed; the next run tries again.
     console.warn(`sync-docs: ${err.message}. Nothing was changed; the next run will try again.`);
     output('changed=false');
+    output('redeploy=false');
     report([`Google did not answer this time (${err.message}). Nothing was changed.`]);
     process.exit(0);
   }

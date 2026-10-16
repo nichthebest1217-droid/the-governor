@@ -122,9 +122,9 @@ Google Sheets. In rough priority:
 Each spring the outgoing editor-in-chief and adviser:
 
 - [ ] Share the Sheet with the incoming editors; remove graduating students.
-- [ ] Move the Sheet (and with it its script) to the adviser or a school shared drive, then follow
-      "Handing over" in [google-workspace/SETUP.md](google-workspace/SETUP.md): new web address, new GitHub
-      key, new owner email.
+- [ ] Move the Sheet to the adviser or a school shared drive, then follow "Handing over" in
+      [google-workspace/SETUP.md](google-workspace/SETUP.md): the new owner sets up their own publisher, its web
+      address and a GitHub key.
 - [ ] Add the incoming web editor to the GitHub repository (ideally owned by a school-controlled organization,
       never a student's personal account); keep the adviser as owner.
 - [ ] Walk the new editors through publishing one real article start to finish.
@@ -136,10 +136,11 @@ Each spring the outgoing editor-in-chief and adviser:
 | Problem | What to do |
 | --- | --- |
 | **On the website** shows ⚠ | Do what it says: the row or the Doc is missing something. If the article was already live, the earlier version stays up meanwhile. |
-| It says Publishing… for a long time | The **How to publish** tab says whether instant publishing is on. If it is off or stopped, the website only checks every few hours: the Sheet's owner uses **The Governor > Turn on instant publishing…**. After 30 minutes the row says so; then look at GitHub > Actions for a red run. |
+| It says Publishing… for a long time | The **How to publish** tab says whether instant publishing is on. If it is off or stopped, the website only checks every few hours: the Sheet's owner adds or renews the GitHub key in the publisher ([SETUP.md](google-workspace/SETUP.md), step 4). After 30 minutes the row says so; then look at GitHub > Actions for a red run. |
 | "The Sheet can't open this Doc" | Share the Doc with `nicholas.zhuo@govsacademy.org`. |
 | A picture is missing | Pictures inside the Doc must be ordinary inline pictures (not drawings "in front of text"). The cover picture must be a Drive link the owner account can open, with an Image description. |
 | I published something by mistake | Set the Status back to Draft. It disappears within minutes, but treat it as having been public. Tell the editor-in-chief. |
 | The Sheet looks broken (columns moved, dropdowns gone) | **The Governor > Set up or repair this Sheet**. It keeps what was typed. |
+| Many articles vanished from the Sheet but are still online | On purpose: when several rows disappear at once, nothing is taken down. Put the rows back; to take articles down, set them to Draft. |
 | The site is down | Check githubstatus.com. If GitHub is fine, open the **Actions** tab and re-run the last deploy. |
 | We lost something | Every version of every file is in the repository history. A developer or the adviser can restore it; see CONTRIBUTING.md. |

@@ -1,12 +1,11 @@
 name: Deploy to GitHub Pages
 
-# Publishes the site. Only `main` deploys, and `main` should be a protected branch that
-# accepts changes only through an approved pull request (see EDITORIAL_HANDBOOK.md).
+# Publishes the site whenever `main` changes. (Articles from the Google Sheet are published by
+# sync-docs.yml, which builds and deploys in one go.)
 on:
   push:
     branches: [main]
   workflow_dispatch:
-  workflow_call:
 
 permissions:
   contents: read
