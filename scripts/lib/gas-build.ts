@@ -5,7 +5,11 @@
 //                                         Doc cleaner (scripts/lib/doc-markdown.ts) and a safe renderer
 import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
+import ts from 'typescript';
 import { p } from './util.ts';
+
+/** Apps Script reads JavaScript up to ES2019 (no class fields, no ?. or ??), so newer code is rewritten. */
+export const toES2019 = (code: string) => ts.transpileModule(code, { fileName: 'doc.js', compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.ESNext, allowJs: true } }).outputText;
 
 export function buildGas(): { page: string; doc: string } {
 
@@ -112,5 +116,5 @@ const DocRender = (function () {
   return { render: render };
 })();
 `;
-return { page: pageFile, doc: doc };
+return { page: pageFile, doc: toES2019(doc) };
 }

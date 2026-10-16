@@ -34,6 +34,7 @@
     "@astrojs/check": "^0.9.10",
     "@types/node": "^26.6.5",
     "@types/turndown": "^5.0.6",
+    "acorn": "^8.19.0",
     "marked": "^18.1.1",
     "pagefind": "^1.5.2",
     "turndown": "^7.2.4",
