@@ -126,7 +126,8 @@ function outsideCode(md: string, fn: (s: string) => string): string {
   return out.join('\n');
 }
 
-const SAFE_URL = /^(https?:\/\/|mailto:|\/(?!\/)|#)/i;
+// gdrive:<id> is a picture the publisher has copied into Drive from the Doc.
+const SAFE_URL = /^(https?:\/\/|mailto:|\/(?!\/)|#|gdrive:[A-Za-z0-9_-]+$)/i;
 
 /** HTML becomes visible text; links and pictures may only point somewhere harmless. */
 export function makeSafe(md: string): string {

@@ -6,9 +6,9 @@
  * Drive, reach GitHub or publish anything.
  *
  * Publishing is done by a separate script, "The Governor publisher"
- * (google-workspace/publisher/Code.gs in the website's repository), which only the Sheet's owner
- * can open or change. Anyone who can edit this Sheet can edit this script, so nothing in it runs
- * with the owner's access. Setup and maintenance: google-workspace/SETUP.md.
+ * (google-workspace/publisher/ in the website's repository), which runs the website itself and
+ * which only the Sheet's owner can open or change. Anyone who can edit this Sheet can edit this
+ * script, so nothing in it runs with the owner's access. Setup: google-workspace/SETUP.md.
  */
 
 // ===== Shared with publisher/Code.gs: keep this block identical in both files (a test checks). =====
@@ -17,7 +17,7 @@ const GUIDE = 'How to publish';
 const ALL = 'All articles';
 const AUTO = 'Filled in automatically by the Sheet';
 const GUIDE_STATUS_ROW = 3;
-const INSTANT_ON = 'Instant publishing is ON';
+const INSTANT_ON = 'Publishing is ON';
 const OWNER_EMAIL = 'nicholas.zhuo@govsacademy.org'; // the account that owns the Sheet; Docs are shared with it
 const STATUSES = ['Draft', 'Ready for Review', 'Published'];
 const CATEGORIES = { 'News': 'news', 'Opinion': 'opinion', 'Arts': 'arts', 'Sports': 'sports', 'Humor & Fun': 'humor-fun', 'People': 'people', 'School Culture': 'school-culture' };
@@ -146,7 +146,7 @@ function offNote_(status) {
 }
 
 function waitNote_(instant) {
-  return instant ? ' (usually live within 5 minutes)' : ' (the website checks the Sheet every few hours)';
+  return instant ? ' (usually live within a minute)' : ' (the publisher is not running: tell the web editor)';
 }
 
 function idFromLink_(link) {
@@ -186,7 +186,7 @@ function showGuide() {
   if (tab) SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(tab);
 }
 
-/** As soon as a row is edited, say what will happen. The publisher's minute-by-minute check confirms it. */
+/** As soon as a row is edited, say what will happen. The publisher's minute-by-minute check does it. */
 function onEdit(e) {
   try {
     const range = e && e.range;
