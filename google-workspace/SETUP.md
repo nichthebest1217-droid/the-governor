@@ -125,15 +125,27 @@ and PDFs (about 90 MB today) within the owner's storage.
 
 ## Handing over
 
-Everything belongs to a student account, which closes after graduation. Before then:
+Everything belongs to a student account, which closes after graduation. Before then, hand it to the adviser or
+another `@govsacademy.org` account (Google does not let school files be given to an address outside the school).
+It takes about half an hour, most of it waiting for the archive to copy.
 
-1. Move the Sheet and the "The Governor website" folder to the adviser or a school shared drive (Share > Transfer
-   ownership).
-2. The new owner makes their own copy of the publisher (on its Overview page: **Make a copy**), sets the script
-   properties `SHEET_ID` (if the Sheet's address changed) and `OWNER_EMAIL` (in both scripts), runs
-   `importArchive` again only if the folder was not transferred, runs `setUpPublisher`, deploys the web app, sets
-   `WEB_APP_URL`, and points the Google Site's embed at the new address.
-3. The old owner deletes the old trigger (or the old project).
+1. **The Sheet and the Google Site:** Share > Transfer ownership to the new owner. The Sheet keeps its address.
+2. **The publisher:** share the project with the new owner. They open it, choose **Overview > Make a copy**, and
+   in their copy:
+   - Project Settings > Script properties: delete any properties that came along, then add `OWNER_EMAIL` with
+     their address. The copy is a new app, so it cannot write to the old copy's files; it makes its own folder.
+   - Run `importArchive` until it says the archive is in Drive (each run copies for about four and a half
+     minutes), then run `setUpPublisher`.
+   - **Deploy > New deployment > Web app**, *Execute as: Me*, *Who has access: Anyone*, and put the new address in
+     Script properties as `WEB_APP_URL`.
+
+   At its first check it rebuilds every Published row of the Sheet.
+3. **Point readers at it:** in the Google Site's editor, change the embed to the new address and **Publish**. Put
+   the new address in `redirect/index.html` and `redirect/404.html` too, so old links keep forwarding.
+4. **The Sheet's own script:** in the Sheet, Extensions > Apps Script > Project Settings > Script properties, add
+   `OWNER_EMAIL` with the new address, so its messages name the right account. Writers share their Docs with it.
+5. **The old owner** deletes the old publisher project, which stops its check and its old address. Its "The
+   Governor website" folder can then go to the trash.
 
 ## Where the old site went
 

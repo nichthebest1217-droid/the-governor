@@ -40,7 +40,7 @@ Still open after launch, none of which a developer can settle alone:
 - Post a staff email address (the site currently points readers to the paper's Instagram).
 - The unexplained twelfth News post on WordPress (see MIGRATION_REPORT.md).
 - A school web address, and a school-owned home for the repository and the Sheet before Nicholas graduates.
-- Hand the Sheet, the Drive folder and the publisher to a school-owned account before graduation (google-workspace/SETUP.md, "Handing over").
+- Hand the Sheet, the Google Site and the publisher to a school account before graduation (google-workspace/SETUP.md, "Handing over").
 
 ## Where each phase stands
 

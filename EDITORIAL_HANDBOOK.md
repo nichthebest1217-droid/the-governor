@@ -116,9 +116,9 @@ Google Sheets. In rough priority:
 Each spring the outgoing editor-in-chief and adviser:
 
 - [ ] Share the Sheet with the incoming editors; remove graduating students.
-- [ ] Move the Sheet and the "The Governor website" Drive folder to the adviser or a school shared drive, then
-      follow "Handing over" in [google-workspace/SETUP.md](google-workspace/SETUP.md): the new owner copies the
-      publisher, deploys it and points the Google Site at it.
+- [ ] If the account that owns the Sheet is graduating, follow "Handing over" in
+      [google-workspace/SETUP.md](google-workspace/SETUP.md): the Sheet and the Google Site go to a school account,
+      which copies the publisher, deploys it and points the Google Site at it.
 - [ ] Give the incoming web editor the code repository (ideally owned by a school-controlled organization, never a
       student's personal account).
 - [ ] Walk the new editors through publishing one real article start to finish.
