@@ -393,7 +393,8 @@ function uploadPublic_(blob, name) {
   });
   if (start.getResponseCode() !== 200) throw retry_('Drive did not accept the upload (' + start.getResponseCode() + ').', true);
   const headers = start.getHeaders();
-  const put = UrlFetchApp.fetch(headers.Location || headers.location, { method: 'put', contentType: type, payload: blob.getBytes(), muteHttpExceptions: true });
+  // The blob itself, not blob.getBytes(): a 30 MB PDF as a JavaScript array would not fit in memory.
+  const put = UrlFetchApp.fetch(headers.Location || headers.location, { method: 'put', contentType: type, payload: blob, muteHttpExceptions: true });
   if (put.getResponseCode() !== 200 && put.getResponseCode() !== 201) throw retry_('Drive did not finish the upload (' + put.getResponseCode() + ').', true);
   const id = JSON.parse(put.getContentText()).id;
   Drive.Permissions.create({ role: 'reader', type: 'anyone' }, id);

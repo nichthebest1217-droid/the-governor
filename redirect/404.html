@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Governor has moved</title>
+<link rel="canonical" href="https://sites.google.com/govsacademy.org/thegovernor">
+<script>
+  // The paper's website is now run from the school's Google account (google-workspace/SETUP.md).
+  // The front page goes to the Google Site; an old article address goes straight to that article.
+  (function () {
+    var site = 'https://sites.google.com/govsacademy.org/thegovernor';
+    var app = '__WEB_APP_URL__';
+    var base = '/the-governor';
+    var path = location.pathname.indexOf(base) === 0 ? location.pathname.slice(base.length) : location.pathname;
+    if (!path || path === '/' || path === '/index.html' || path === '/404.html') location.replace(site);
+    else location.replace(app + '?p=' + encodeURIComponent(path));
+  })();
+</script>
+<style>body { font: 18px/1.5 Georgia, serif; max-width: 34rem; margin: 18vh auto; padding: 0 1.25rem; color: #141312; } a { color: #9b1b30; }</style>
+</head>
+<body>
+<p><em>The Governor</em> has moved to <a href="https://sites.google.com/govsacademy.org/thegovernor">sites.google.com/govsacademy.org/thegovernor</a>.</p>
+</body>
+</html>

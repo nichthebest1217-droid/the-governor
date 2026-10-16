@@ -57,14 +57,6 @@ test('sections, archives, authors, issues and info pages exist', { skip }, () =>
   assert.match(page('/category/news/'), new RegExp(`url=${BASE}news/`));
 });
 
-test('the publishing status the Google Sheet reads is published', { skip }, () => {
-  const status = JSON.parse(readFileSync(join(DIST, 'publishing-status.json'), 'utf8'));
-  assert.equal(typeof status.builtAt, 'string');
-  assert.equal(typeof status.sheet, 'object');
-  assert.ok(status.all.length >= 60, 'every published article is listed');
-  assert.ok(status.all.every((a: any) => a.url.startsWith('http') && a.title && /^\d{4}-\d{2}-\d{2}$/.test(a.date)));
-});
-
 test('navigation, skip link and landmarks are on every full page', { skip }, () => {
   for (const path of ['/', '/news/', '/about/', '/2026/05/12/remembering-fafa/']) {
     const html = page(path);

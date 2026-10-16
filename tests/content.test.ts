@@ -67,14 +67,3 @@ test('homepage and CMS configuration reference real things', () => {
   for (const s of SECTIONS) assert.ok(cms.includes(`value: ${s},`), `.pages.yml is missing section ${s}`);
   for (const path of ['src/content/articles', 'src/content/authors', 'src/content/issues', 'src/data/homepage.json', 'public/media']) assert.ok(cms.includes(path), `.pages.yml: ${path}`);
 });
-
-test('articles published from the Google Sheet match the sync record', () => {
-  const record = JSON.parse(readFileSync(p('src/data/cms-sync.json'), 'utf8'));
-  for (const [id, entry] of Object.entries<any>(record.articles)) {
-    assert.ok(exists(p(entry.file)), `cms-sync.json: ${entry.file} is missing`);
-    const { data } = readFrontmatter(readFileSync(p(entry.file), 'utf8'));
-    assert.equal(data.cmsId, id, `${entry.file}: cmsId`);
-    for (const m of entry.media) assert.ok(exists(p(m)), `cms-sync.json: ${m} is missing`);
-  }
-  for (const { f, data } of articles) if (data.cmsId) assert.ok(record.articles[data.cmsId], `${f} says it came from the Sheet, but the sync record does not list it`);
-});

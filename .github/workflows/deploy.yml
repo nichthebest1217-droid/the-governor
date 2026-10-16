@@ -1,10 +1,12 @@
-name: Deploy to GitHub Pages
+name: Forward the old GitHub Pages address
 
-# Publishes the site whenever `main` changes. (Articles from the Google Sheet are published by
-# sync-docs.yml, which builds and deploys in one go.)
+# The newspaper is now hosted in the school's Google account (google-workspace/SETUP.md). The old
+# GitHub Pages address only forwards readers: the front page to the Google Site, an old article
+# address to that article. This publishes the two small pages in redirect/ and nothing else.
 on:
   push:
     branches: [main]
+    paths: ['redirect/**', '.github/workflows/deploy.yml']
   workflow_dispatch:
 
 permissions:
@@ -21,32 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: main # always publish the newest main, including a commit made moments ago
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-      - id: pages
-        uses: actions/configure-pages@v6
-      - run: npm ci
-      - run: npm run check
-      - name: Build
-        run: npm run build
-        env:
-          # configure-pages reports the right values for both ORG.github.io/REPO and a custom domain.
-          SITE_URL: ${{ steps.pages.outputs.origin }}
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          # Repository variable. Leave unset until launch day; then set it to "true".
-          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
-      - name: Tests and checks (a failure stops the deploy)
-        run: npm test && npm run check:links && npm run check:media
-        env:
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
+      - name: The forwarding pages name the publisher's web address
+        run: "! grep -l '__WEB_APP_URL__' redirect/*.html"
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: redirect
 
   deploy:
     needs: build
