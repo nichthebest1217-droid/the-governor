@@ -1,5 +1,10 @@
 # Contributing (developers)
 
+The live website is the publisher in `google-workspace/`: change it as described in
+[google-workspace/SETUP.md](google-workspace/SETUP.md), "Maintenance", and run `npm test` before pasting anything
+into Apps Script. The commands below build and check the Astro site that served the paper until 16 October 2026
+and remains the source of the archive.
+
 ## Ground rules
 
 - Never edit the text of an archive article to "improve" it. Corrections go through the editors and are noted
