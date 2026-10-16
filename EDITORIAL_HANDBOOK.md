@@ -1,84 +1,104 @@
 # The Governor: Web Editor's Handbook
 
-For editors-in-chief, section editors and the web editor. No coding needed.
+For editors-in-chief, section editors and the web editor. No coding needed. Everything day-to-day happens in
+Google Docs and one Google Sheet, "The Governor: Publication"; its **How to publish** tab has the short
+version of this page. How the pieces fit together: [google-workspace/SETUP.md](google-workspace/SETUP.md).
 
 ## The one rule
 
-**Nothing goes on the public site until the editor-in-chief has approved it.** The website is built from a
-public GitHub repository, so anything saved there can be read by anyone who looks, even with "Published"
-switched off. Stories that are unfinished, sensitive, or not yet approved stay in the staff's shared Google
-Docs until they are ready.
+**Nothing is marked Published until the editor-in-chief has approved it.** Marking a row Published puts the
+article on the public website within minutes, and the website is built from a public GitHub repository, so treat
+anything published as public for good even after it is taken down. Unfinished, sensitive or unapproved stories
+stay Draft or Ready for Review: those never leave Google.
 
 ## From draft to published
 
-1. **Writer** drafts in the school-approved shared doc.
-2. **Section editor** edits and fact-checks: names spelled right, quotes confirmed, photo permission and
-   photographer known.
-3. **Editor-in-chief** approves the final text, headline, byline and photo credit.
-4. **Web editor** enters the story in Pages CMS (below), on the `drafts` branch, with **Published** on.
-5. **Web editor** opens a pull request from `drafts` to `main` on GitHub. The automatic checks run.
-6. **A second person** (editor-in-chief or adviser) approves and merges. The site updates in about two
-   minutes.
+| Status | Who | What it means |
+| --- | --- | --- |
+| **Draft** | Writer, section editor | Being written or edited. Not public. |
+| **Ready for Review** | Section editor | Edited and fact-checked: names spelled right, quotes confirmed, photo permission and photographer known. Waiting for the editor-in-chief. Not public. |
+| **Published** | Editor-in-chief | Approved: text, headline, byline, photo and credit. On the website a few minutes later. |
 
-Step 6 is the safeguard: one person cannot publish alone.
+Anyone who can edit the Sheet can choose Published, so share the Sheet only with editors and the adviser.
+Writers need only their Doc.
 
-## Adding an article in Pages CMS
+## Publishing an article
 
-1. Go to **app.pagescms.org**, sign in with GitHub, choose the newspaper's repository.
-2. In the branch menu at the top, choose **drafts**. Check this every time.
-3. **Articles > Add an entry**, then fill in:
-   - **Headline.**
-   - **Deck** (optional): one or two sentences under the headline. If empty, cards show the opening words.
-   - **Publication date.** This becomes part of the web address. Do not change it after publishing.
-   - **Section**, and **Type** (choose *Editorial* only for the editors' shared position).
-   - **Writers.** Pick from the list. New writer? Add them under **Writers** first: name as printed, web ID
-     `first-last`, class year.
-   - **Cover photo**, **description (alt text)**, **caption**, **photo credit**. Alt text says what is in the
-     picture for readers using a screen reader ("Seniors in white dresses toss confetti outside the chapel").
-     A caption adds context. Every photo needs a credit unless the editor-in-chief says otherwise.
-   - **Print issue**, only if the story ran in that printed issue.
-   - **Article**: paste the text. Use the toolbar for bold, italics, quotes, lists, links and extra photos.
-     Do not type the byline into the article; that is what the Writers field is for.
-   - **Published**: on.
-4. **Save.** Then open the pull request (step 5 above).
+1. **Write in Google Docs.** Bold, italics, links, headings, lists, tables and pictures carry over; fonts,
+   sizes and colours do not (the website uses its own). For a caption, type it in italics on the line right
+   under the picture. Give each picture a description for readers who cannot see it: right-click > Alt text.
+2. **Share the Doc** with `nicholas.zhuo@govsacademy.org` (Viewer is enough), or keep it in a shared folder
+   that account can open.
+3. **Add a row** in the Articles tab:
+   - **Title**: the headline, as it should appear.
+   - **Author(s)**: names as printed, with class years, separated by commas: `Jane Doe '27, Sam Lee '28`.
+     A new name gets a writer page automatically.
+   - **Category**: the section of the website.
+   - **Google Doc link**: the Doc's address. (No Doc? Paste the text into **Article text (if no Doc)**; every
+     line becomes a paragraph.)
+   - **Description** (optional): one or two sentences under the headline and on the front page. Empty = the
+     opening words.
+   - **Image link** (optional): the photo for the top of the article, as a Google Drive link, with its
+     **Image description** (what is in the picture, for screen readers: "Seniors in white dresses toss confetti
+     outside the chapel"), **caption** and **credit**. Every photo needs a credit unless the editor-in-chief
+     says otherwise. Empty = a picture at the very top of the Doc is used.
+   - **Publication date** (optional): empty = the day it is published. A future date schedules it.
+   - **Type**: *Editorial* only for the editors' shared position. **Print issue** and **Order in issue** only
+     if it ran in print.
+4. **Set the Status** as above. When it says Published, watch **On the website**: Publishing…, then
+   **✓ Live** with the link. Anything missing appears there in plain words, starting with ⚠.
 
-Fonts and sizes from Google Docs are ignored on purpose. The website applies one typographic style to
-every article.
+Do not type in **On the website** or **ID**: the Sheet fills them in, and the ID keeps the article's web
+address the same.
+
+## Fixing, updating and taking down
+
+- **Fix a typo or update a story:** edit the Google Doc, or the row. The website follows within minutes.
+  (Writers who can still edit the Doc can change the live article too; make the Doc view-only for them once it
+  is published if that matters.)
+- **Take a story down:** set its Status to Draft or Ready for Review. Publishing it again later keeps the same
+  web address. Tell the editor-in-chief, and treat it as having been public.
+- **Corrections:** fix the text, then fill in **Correction** ("An earlier version misstated the score. It was
+  3-1."). The note appears at the top of the article and on the Corrections page.
+
+Do not take an article down because someone dislikes it. Talk to the adviser.
 
 ## Choosing the front page
 
-**Homepage** in Pages CMS:
+The Sheet's **Homepage** tab. Paste an article's web address (from **On the website**, or the **All articles**
+tab, which lists everything on the site) into the Value column:
 
-- **Lead story**: the big one. Empty = the newest article with a photo.
-- **Top stories beside the lead**: up to five. Empty = the newest ones.
-- **Editors' Picks**: up to four. Empty = the block disappears.
-- **Print issue to promote**, and an optional **banner** across the top of every page.
+- **Lead story**: the big one. Empty = the newest article with a wide photo.
+- **Top story 2–5**: beside the lead. Empty = the newest ones.
+- **Editors' pick 1–4**: Empty = the block disappears.
+- **Print issue to promote**, and an optional **Banner text** and **Banner link** across the top of every page.
 
 > The Editors' Picks currently on the site were chosen as placeholders when the site was built. Replace them.
 
-## Corrections
+The **Masthead** tab (one person per row: group, name, optional role) and the **Site** tab (contact emails,
+masthead school year) work the same way and update the site within minutes.
 
-1. Fix the text in the article.
-2. Fill in **Correction note** ("An earlier version misstated the score. It was 3-1.") and **Updated on**.
-3. Publish through the normal pull request. The note appears at the top of the article and on the
-   Corrections page. The earlier wording stays in the repository's history.
+## Adding a print issue (web editor)
 
-Do not delete an article because someone dislikes it. Talk to the adviser.
-
-## Adding a print issue
+Print issues and the WordPress archive are edited through Pages CMS, which saves straight to the repository:
 
 1. Export the PDF as small as is still readable (aim under 30 MB; a file over 100 MB cannot be uploaded).
-2. **Print issues > Add an entry**: title ("Fall Issue 1"), web ID (`2026-fall-issue-1`), season, year,
-   number, the date **as printed on the front page**, the PDF, and page images in page order.
-3. Fill in **How we know these facts** ("Front page reads FALL ISSUE 1 - OCTOBER 2026").
-4. On each article that ran in it, set **Print issue**.
+2. Go to **app.pagescms.org**, sign in with GitHub, choose the repository, and choose the **drafts** branch.
+3. **Print issues > Add an entry**: title ("Fall Issue 1"), web ID (`2026-fall-issue-1`), season, year,
+   number, the date **as printed on the front page**, the PDF, and page images in page order. Fill in **How we
+   know these facts** ("Front page reads FALL ISSUE 1 - OCTOBER 2026"). Leave **Volume** empty unless a volume
+   number is printed on the issue.
+4. Open a pull request from `drafts` to `main`; a second person approves and merges.
+5. In the Sheet, put the issue's web ID in **Print issue** on each article that ran in it.
 
-Leave **Volume** empty unless a volume number is printed on the issue.
+Articles that came from the Sheet are managed by the Sheet: change them there, not in Pages CMS, or the next
+update from the Sheet overwrites the change.
 
 ## Photos and privacy
 
 - Use only photos the staff took or has permission to use. Credit the photographer.
-- Resize before upload if you can (2000 pixels wide is plenty). The site makes smaller copies itself.
+- Keep originals in Drive. The website saves its own copy at most 2,000 pixels wide and removes camera data
+  such as GPS location.
 - No screenshots of private messages, no home addresses or phone numbers, nothing from a draft the writer
   has not agreed to publish.
 - A student who asks for their photo or name to be reviewed: tell the editor-in-chief and adviser the same day.
@@ -101,22 +121,25 @@ Google Sheets. In rough priority:
 
 Each spring the outgoing editor-in-chief and adviser:
 
-- [ ] Add the incoming web editor and editor-in-chief to the GitHub organization with *Write* access; keep
-      the adviser as *Owner*. Remove graduating students.
-- [ ] Confirm `main` is still protected (pull request + one approval + checks).
-- [ ] Walk the new web editor through publishing one real article start to finish.
-- [ ] Update **Masthead** and the contact email under **Site details**.
+- [ ] Share the Sheet with the incoming editors; remove graduating students.
+- [ ] Move the Sheet (and with it its script) to the adviser or a school shared drive, then follow
+      "Handing over" in [google-workspace/SETUP.md](google-workspace/SETUP.md): new web address, new GitHub
+      key, new owner email.
+- [ ] Add the incoming web editor to the GitHub repository (ideally owned by a school-controlled organization,
+      never a student's personal account); keep the adviser as owner.
+- [ ] Walk the new editors through publishing one real article start to finish.
+- [ ] Update the **Masthead** and **Site** tabs.
 - [ ] Download a copy of the repository (green **Code** button > Download ZIP) to the school's shared drive.
-
-The repository should belong to a school-controlled GitHub organization, never a student's personal account.
 
 ## When something goes wrong
 
 | Problem | What to do |
 | --- | --- |
-| My article is not on the site | Is **Published** on? Was the pull request merged? Check the **Actions** tab on GitHub for a red X and read the failed step. |
-| The checks failed on my pull request | Click **Details**. The usual causes: a writer who has no entry under Writers, a missing photo, a link typed without `https://`. |
-| I published something by mistake | Switch **Published** off and merge that change. Tell the editor-in-chief. It disappears in about two minutes, but treat it as having been public. |
-| A photo looks wrong or huge | Re-upload a resized copy with a new file name and select it. |
+| **On the website** shows ⚠ | Do what it says: the row or the Doc is missing something. If the article was already live, the earlier version stays up meanwhile. |
+| It says Publishing… for a long time | The **How to publish** tab says whether instant publishing is on. If it is off or stopped, the website only checks every few hours: the Sheet's owner uses **The Governor > Turn on instant publishing…**. After 30 minutes the row says so; then look at GitHub > Actions for a red run. |
+| "The Sheet can't open this Doc" | Share the Doc with `nicholas.zhuo@govsacademy.org`. |
+| A picture is missing | Pictures inside the Doc must be ordinary inline pictures (not drawings "in front of text"). The cover picture must be a Drive link the owner account can open, with an Image description. |
+| I published something by mistake | Set the Status back to Draft. It disappears within minutes, but treat it as having been public. Tell the editor-in-chief. |
+| The Sheet looks broken (columns moved, dropdowns gone) | **The Governor > Set up or repair this Sheet**. It keeps what was typed. |
 | The site is down | Check githubstatus.com. If GitHub is fine, open the **Actions** tab and re-run the last deploy. |
 | We lost something | Every version of every file is in the repository history. A developer or the adviser can restore it; see CONTRIBUTING.md. |

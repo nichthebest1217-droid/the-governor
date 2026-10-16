@@ -3,8 +3,14 @@
 Website of *The Governor*, the student newspaper of The Governor's Academy (Byfield, Massachusetts).
 
 A static site: [Astro](https://astro.build) builds plain HTML from Markdown files in this repository,
-[Pagefind](https://pagefind.app) adds full-text search, [Pages CMS](https://pagescms.org) gives editors a
-form-based editor, and GitHub Actions deploys to GitHub Pages. There is no database and no server to maintain.
+[Pagefind](https://pagefind.app) adds full-text search, and GitHub Actions deploys to GitHub Pages. There is no
+database and no server to maintain.
+
+Editors publish from Google: articles are written in Google Docs and listed in a Google Sheet with a Status of
+Draft, Ready for Review or Published. A few minutes after a row is marked Published the article is live; edits
+to the Doc or the row follow, and unpublishing takes it down. See
+[google-workspace/SETUP.md](google-workspace/SETUP.md). [Pages CMS](https://pagescms.org) remains for the web
+editor's occasional work on print issues and the archive.
 
 | If you are...                    | Read                                                       |
 | -------------------------------- | ---------------------------------------------------------- |
@@ -12,7 +18,7 @@ form-based editor, and GitHub Actions deploys to GitHub Pages. There is no datab
 | Changing code or design          | [CONTRIBUTING.md](CONTRIBUTING.md)                         |
 | Checking what came from WordPress | [MIGRATION_REPORT.md](MIGRATION_REPORT.md)                 |
 | Getting ready to launch          | [LAUNCH_REPORT.md](LAUNCH_REPORT.md)                       |
-| Publishing straight from Google Docs | [google-workspace/SETUP.md](google-workspace/SETUP.md)  |
+| Setting up or maintaining the Google Sheet publishing | [google-workspace/SETUP.md](google-workspace/SETUP.md) |
 | Looking for the original brief   | [The_Governor_Claude_Code_Masterplan.md](The_Governor_Claude_Code_Masterplan.md) |
 
 ## Run it on your computer
@@ -33,16 +39,17 @@ npm run verify     # type check + build + tests + link check + media check
 src/content/articles/   one Markdown file per article (frontmatter + body)
 src/content/authors/    one JSON file per writer
 src/content/issues/     one JSON file per print issue
-src/data/               homepage picks, masthead, navigation, site details
+src/data/               homepage picks, masthead, navigation, site details, cms-sync.json (what the Sheet published)
 src/pages/              routes; src/components/ and src/layouts/ are the building blocks
 src/styles/tokens.css   colours, fonts, sizes. Change the look here.
 public/media/           article photographs (originals; web sizes are generated at build)
 public/issues/          print-issue PDFs and page images
-scripts/                migration and QA tools (TypeScript, run directly by Node)
+scripts/                Sheet sync, migration and QA tools (TypeScript, run directly by Node)
 migration/              inventories, URL map, review queue, and the evidence behind them
 tests/                  unit tests and built-site smoke tests
 .pages.yml              what editors can edit in Pages CMS
-.github/workflows/      ci.yml (checks every pull request), deploy.yml (publishes main)
+.github/workflows/      ci.yml (checks pull requests), deploy.yml (publishes main), sync-docs.yml (publishes from the Sheet)
+google-workspace/       the Google Sheet's script (Code.gs) and its setup guide
 ```
 
 ## The front page

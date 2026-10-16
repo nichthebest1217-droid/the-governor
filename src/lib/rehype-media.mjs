@@ -2,7 +2,7 @@
 //  - prefixes root-relative links and images with the deploy base path,
 //  - gives images dimensions, lazy loading and a responsive srcset (from `npm run media`),
 //  - turns an image with a title into <figure><figcaption>,
-//  - marks external links.
+//  - marks external links, and drops links that would run code (javascript: and the like).
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { visit } from 'unist-util-visit';
@@ -30,7 +30,9 @@ export default function rehypeMedia({ base = '/' } = {}) {
     visit(tree, 'element', (node, index, parent) => {
       if (node.tagName === 'a' && typeof node.properties?.href === 'string') {
         const href = node.properties.href;
-        if (/^https?:\/\//.test(href)) node.properties.rel = ['noopener'];
+        // A link that would run code instead of opening a page is dropped (the words stay).
+        if (/^\s*(javascript|vbscript|data|file):/i.test(href)) delete node.properties.href;
+        else if (/^https?:\/\//.test(href)) node.properties.rel = ['noopener'];
         else node.properties.href = withBase(base, href);
       }
       if (node.tagName === 'img' && typeof node.properties?.src === 'string') {

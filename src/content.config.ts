@@ -35,7 +35,10 @@ const articles = defineCollection({
     // Position in the print edition (page, then order on the front-to-back read). Optional.
     printPage: z.number().int().nullish(),
     printOrder: z.number().nullish(),
-    // Set by the Google Docs publishing sheet: the Doc this article was published from.
+    // Set by the Google Sheet sync: the row's ID. Articles with one are managed from the Sheet
+    // (scripts/lib/sheet-sync.ts) and are updated or taken down from there, not edited here.
+    cmsId: z.string().regex(/^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/).nullish(),
+    // Older Sheet articles recorded their Google Doc; new ones do not, because the repository is public.
     sourceDoc: z.url().nullish(),
     legacyWpId: z.number().int().nullish(),
     legacyUrl: z.url().nullish(),

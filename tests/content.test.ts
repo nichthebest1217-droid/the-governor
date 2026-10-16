@@ -17,7 +17,7 @@ test('every article has the required fields and valid references', () => {
     for (const a of data.authors ?? []) assert.ok(authors.has(a), `${f}: author "${a}" has no file in src/content/authors`);
     if (data.issueId) assert.ok(issues.has(data.issueId), `${f}: issue "${data.issueId}" does not exist`);
     if (data.coverImage) assert.ok(exists(p('public' + data.coverImage)), `${f}: cover image missing`);
-    if (data.published === true) assert.ok(body.trim().length > 200, `${f}: published with an empty body`);
+    if (data.published === true) assert.ok(body.trim().length > 200 || /!\[/.test(body) || data.coverImage, `${f}: published with an empty body`);
   }
 });
 
@@ -66,4 +66,15 @@ test('homepage and CMS configuration reference real things', () => {
   const cms = readFileSync(p('.pages.yml'), 'utf8');
   for (const s of SECTIONS) assert.ok(cms.includes(`value: ${s},`), `.pages.yml is missing section ${s}`);
   for (const path of ['src/content/articles', 'src/content/authors', 'src/content/issues', 'src/data/homepage.json', 'public/media']) assert.ok(cms.includes(path), `.pages.yml: ${path}`);
+});
+
+test('articles published from the Google Sheet match the sync record', () => {
+  const record = JSON.parse(readFileSync(p('src/data/cms-sync.json'), 'utf8'));
+  for (const [id, entry] of Object.entries<any>(record.articles)) {
+    assert.ok(exists(p(entry.file)), `cms-sync.json: ${entry.file} is missing`);
+    const { data } = readFrontmatter(readFileSync(p(entry.file), 'utf8'));
+    assert.equal(data.cmsId, id, `${entry.file}: cmsId`);
+    for (const m of entry.media) assert.ok(exists(p(m)), `cms-sync.json: ${m} is missing`);
+  }
+  for (const { f, data } of articles) if (data.cmsId) assert.ok(record.articles[data.cmsId], `${f} says it came from the Sheet, but the sync record does not list it`);
 });

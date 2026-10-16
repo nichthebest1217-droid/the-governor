@@ -1,64 +1,104 @@
-name: Collect approved articles from the Google Sheet
+name: Publish from the Google Sheet
 
-# Every half hour (and on demand) this asks the staff's Google Sheet for articles marked
-# Approved, checks them like any other change, commits them and publishes the site.
-# No personal access token is involved: the commit uses this workflow's own built-in access.
+# The staff's Google Sheet starts this about a minute after an editor changes something (see
+# google-workspace/SETUP.md). It asks the Sheet what changed, brings the articles in line (adds,
+# updates, takes down), checks the result like any other change, commits it and publishes the
+# site. The commit uses this workflow's own built-in access: no personal token is stored here.
 on:
-  schedule:
-    - cron: '7,37 * * * *'
   workflow_dispatch:
+  schedule:
+    # Backup for when the Sheet cannot reach GitHub. GitHub runs schedules late, or skips them
+    # when it is busy, so in practice this may run only every few hours.
+    - cron: '4,19,34,49 * * * *'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: sync-docs
   cancel-in-progress: false
 
 jobs:
-  collect:
+  sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: read
     outputs:
-      changed: ${{ steps.commit.outputs.changed }}
+      publish: ${{ steps.diff.outputs.changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - name: Collect approved rows
+      - name: Anything new in the Sheet?
+        id: check
+        run: node scripts/sync-docs.ts --check
+      - name: Install
+        if: steps.check.outputs.changed == 'true'
+        run: npm ci
+      - name: Bring the articles in line with the Sheet
+        if: steps.check.outputs.changed == 'true'
         run: node scripts/sync-docs.ts
-      - name: Anything new?
+      - name: What changed
         id: diff
+        if: steps.check.outputs.changed == 'true'
         run: |
           git add -A src/content public/media src/data
-          if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
-      - name: Check the new content before it is committed
+          if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; git diff --cached --stat; fi
+      - id: pages
+        if: steps.diff.outputs.changed == 'true'
+        uses: actions/configure-pages@v6
+      - name: Check and build (if anything fails, nothing is published)
         if: steps.diff.outputs.changed == 'true'
         run: npm run check && npm run build && npm test && npm run check:links && npm run check:media
         env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
           SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
       - name: Commit
         id: commit
+        if: steps.diff.outputs.changed == 'true'
         run: |
-          if [ "${{ steps.diff.outputs.changed }}" = "true" ]; then
-            git config user.name "The Governor publishing sheet"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "content: articles approved in the publication sheet"
-            git push origin HEAD:main
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
+          git config user.name "The Governor publishing sheet"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          { echo "content: publish changes from the Google Sheet"; echo; cat "$RUNNER_TEMP/sync-summary.txt" 2>/dev/null || true; } > "$RUNNER_TEMP/message.txt"
+          git commit -q -F "$RUNNER_TEMP/message.txt"
+          for attempt in 1 2 3; do
+            if git push -q origin HEAD:main; then exit 0; fi
+            # Someone pushed to main meanwhile: put this commit on top of theirs and build again.
+            git pull -q --rebase origin main
+            echo "rebuilt=true" >> "$GITHUB_OUTPUT"
+          done
+          exit 1
+      - name: Build again on top of the newer main
+        if: steps.commit.outputs.rebuilt == 'true'
+        run: npm run build
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
+      - uses: actions/upload-pages-artifact@v5
+        if: steps.diff.outputs.changed == 'true'
+        with:
+          path: dist
 
   publish:
-    needs: collect
-    if: needs.collect.outputs.changed == 'true'
+    needs: sync
+    if: needs.sync.outputs.publish == 'true'
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
       pages: write
       id-token: write
-    uses: ./.github/workflows/deploy.yml
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
