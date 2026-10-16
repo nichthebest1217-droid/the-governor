@@ -28,6 +28,26 @@ test('Doc headings sit below the headline; line breaks become paragraphs', () =>
   assert.equal(out, 'Intro\n\nsecond line\n\n## Part one\n\n### Detail\n\n###### Deep');
 });
 
+test('a real export: hard line breaks, a bold heading and an indented list', () => {
+  // What Google exported for the 16 October 2026 test Doc (picture data removed).
+  const md = "# **Publishing test: please ignore**\n\nBy Test Writer '27  \n![A red test card][image1]  \n*Test caption for the cover picture.*  \n"
+    + 'This is a **test**, with *formatting* and [links](https://www.govsacademy.org/).\n\n## **A subheading from the Doc**\n\n'
+    + '> * A first point in plain text.  \n> * A second point with **bold words**.\n\n![A blue test card][image2]  \n'
+    + '*Test caption for a picture inside the article.*  \nIf you can read this on the website, the test is still running.';
+  const out = cleanDocMarkdown(md, { title: 'Publishing test: please ignore', images: { image1: 'gdrive:id1', image2: 'gdrive:id2' }, leadImage: true });
+  assert.deepEqual(out.lead, { src: 'gdrive:id1', alt: 'A red test card', caption: 'Test caption for the cover picture.' });
+  assert.equal(out.body, 'This is a **test**, with *formatting* and [links](https://www.govsacademy.org/).\n\n## A subheading from the Doc\n\n'
+    + '* A first point in plain text.\n* A second point with **bold words**.\n\n![A blue test card](gdrive:id2 "Test caption for a picture inside the article.")\n\n'
+    + 'If you can read this on the website, the test is still running.');
+});
+
+test('lists stay lists, a quote stays one quote, and other headings keep their words', () => {
+  assert.equal(cleanDocMarkdown('* One  \n* Two  \n1. Three  \nAfter the list.', { title: 'T' }).body, '* One\n* Two\n1. Three\n\nAfter the list.');
+  assert.equal(cleanDocMarkdown('> A quoted line.\n\n> Its second paragraph.\n\nAfter.', { title: 'T' }).body, '> A quoted line.\n>\n> Its second paragraph.\n\nAfter.');
+  assert.equal(cleanDocMarkdown('> “We won,” she said.  \n> * and a list\n\nAfter.', { title: 'T' }).body, '> “We won,” she said.\n> * and a list\n\nAfter.');
+  assert.equal(cleanDocMarkdown('## **Bold** and **more**\n\n## *Whole*', { title: 'T' }).body, '## **Bold** and **more**\n\n## Whole');
+});
+
 test('HTML typed into a Doc shows as text; links may not run code', () => {
   assert.equal(makeSafe('Hi <script>alert(1)</script> and <b>bold</b>'), 'Hi &lt;script>alert(1)&lt;/script> and &lt;b>bold&lt;/b>');
   assert.equal(makeSafe('[click](javascript:alert(1)) and ![x](data:image/png;base64,AA)'), 'click) and ');

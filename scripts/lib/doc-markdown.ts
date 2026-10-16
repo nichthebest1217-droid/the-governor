@@ -6,6 +6,7 @@
 //   - turns an italic line right under a picture into that picture's caption,
 //   - can take a picture at the very top of the Doc as the cover photo,
 //   - keeps headings below the article's own headline (a Doc "Heading 1" becomes a subheading),
+//   - tidies the export's habits: line breaks become paragraphs, an indented list stays a list,
 //   - makes the result safe: HTML typed into a Doc is shown as text, and links may only point
 //     to web pages, email addresses or this site.
 import { slugify } from './util.ts';
@@ -43,6 +44,8 @@ const NAME = String.raw`[A-Z][A-Za-z’'.\-]*(?:\s+[A-Z][A-Za-z’'.\-]*){0,3}(?
 const BYLINE = new RegExp(String.raw`^(?:[Ww]ritten\s+)?[Bb][Yy]:?\s+${NAME}(?:\s*(?:,|&|\band\b)\s*${NAME})*\.?$`);
 const IMAGE_BLOCK = /^!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]$/;
 const ITALIC_LINE = /^(?:\*(?!\*)([^\n]+?)\*|_(?!_)([^\n]+?)_)$/;
+const LIST_OR_QUOTE = /^[ \t]*(?:>|[-*+][ \t]|\d+[.)][ \t])/;
+const LIST_IN_QUOTE = /^>[ \t]*(?:$|[-*+][ \t]|\d+[.)][ \t]|[ \t]{2,}\S)/;
 const unescape = (s: string) => s.replace(/\\(.)/g, '$1').trim();
 const titleAttr = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
@@ -52,9 +55,25 @@ export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
   let text = md.replace(/\r\n?/g, '\n');
   // Leftover picture data, if any (the Sheet's script normally strips it out).
   text = text.replace(/^\[[^\]\n]+\]:\s*<?data:[^\n]*$/gm, '');
-  // A line break typed with Shift+Enter becomes a new paragraph.
-  text = text.replace(/[ \t]{2,}\n/g, '\n\n').replace(/\\\n/g, '\n\n').replace(/<br\s*\/?>/gi, '\n\n');
+  // Google ends many lines with a hard line break ("  " or "\"): a line break typed with Shift+Enter,
+  // and paragraphs with no space between them. Between two lines of a list or a quote it only
+  // continues the list or quote; anywhere else it starts a new paragraph.
+  const lines = text.replace(/<br\s*\/?>/gi, '  \n').split('\n');
+  text = lines.map((line, i) => {
+    const hard = /^(.*?)(?:[ \t]{2,}|\\)$/.exec(line);
+    if (!hard) return line;
+    return hard[1] + (LIST_OR_QUOTE.test(line) && LIST_OR_QUOTE.test(lines[i + 1] ?? '') ? '' : '\n');
+  }).join('\n');
   let blocks = text.split(/\n[ \t]*\n+/).map((b) => b.replace(/\s+$/, '')).filter((b) => b.trim());
+
+  // Google exports an indented paragraph as a quote. Indented paragraphs in a row are one quote,
+  // and an indented list (a list pasted from elsewhere often is) is a plain list.
+  blocks = blocks.reduce<string[]>((kept, b) => {
+    const prev = kept[kept.length - 1];
+    if (prev !== undefined && prev.startsWith('>') && b.startsWith('>')) kept[kept.length - 1] = `${prev}\n>\n${b}`;
+    else kept.push(b);
+    return kept;
+  }, []).map((b) => (b.startsWith('>') && b.split('\n').every((l) => LIST_IN_QUOTE.test(l)) ? b.replace(/^>[ \t]?/gm, '') : b));
 
   // The headline and the byline come from the Sheet.
   const title = plain(opts.title);
@@ -94,6 +113,9 @@ export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
     });
     if (replaced.trim()) out.push(replaced);
   }
+
+  // A heading made bold or italic in the Doc: the website's heading style is enough.
+  for (let i = 0; i < out.length; i++) out[i] = out[i].replace(/^(#{1,6}[ \t]+)(\*\*|__|\*|_)(?=\S)((?:(?!\2).)+?)\2[ \t]*$/, '$1$3');
 
   // The article's headline is the page's only top-level heading.
   const levels = out.map((b) => /^(#{1,6})\s/.exec(b)?.[1].length ?? 7);
