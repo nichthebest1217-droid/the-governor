@@ -107,6 +107,15 @@ test('text from the Sheet is escaped everywhere', () => {
   }
 });
 
+test('a print issue from the Sheet: Drive draws its cover from the PDF, and its page shows the PDF', () => {
+  const issue = { id: '2026-27-issue-2', title: 'Issue II, 2026–27', season: 'Fall', year: 2026, number: 2, volume: null, dateLabel: 'October 30, 2026', notes: [], pdf: { id: 'pdfcopy' }, pages: [], cover: { id: 'pdfcopy', w: 1200, h: 1855 } };
+  const small = A.createApp({ articles: [], authors: {}, issues: [issue], settings: {}, brand: {} }, { appUrl: APP });
+  const page = small.render('/issues/2026-27-issue-2/', {}).html;
+  assert.match(page, /<iframe class="issue-viewer" src="https:\/\/drive\.google\.com\/file\/d\/pdfcopy\/preview" title="Issue II, 2026–27, the printed edition"/);
+  assert.ok(page.includes('https://drive.google.com/file/d/pdfcopy/view'), 'with a download link');
+  assert.match(small.render('/issues/', {}).html, /<span class="cover"><img src="https:\/\/lh3\.googleusercontent\.com\/d\/pdfcopy=w960"/);
+});
+
 test('pictures: Drive sizes never exceed the original', () => {
   const pic = A.picture({ id: 'abc', w: 1200, h: 800 });
   assert.equal(pic.srcset, 'https://lh3.googleusercontent.com/d/abc=w480 480w, https://lh3.googleusercontent.com/d/abc=w960 960w, https://lh3.googleusercontent.com/d/abc=w1200 1200w');
@@ -114,8 +123,9 @@ test('pictures: Drive sizes never exceed the original', () => {
   assert.equal(A.summary({ deck: null, paras: ['A short opening.', 'Then more words follow here to fill the card.'] }, 170), 'A short opening. Then more words follow here to fill the card.');
 });
 
-test('the generated Page.html and Doc.gs are up to date', () => {
+test('the generated Page.html, Doc.gs and Issue.gs are up to date', () => {
   const built = buildGas();
   assert.equal(readFileSync(p('google-workspace/publisher/Page.html'), 'utf8'), built.page, 'run node scripts/build-gas.ts');
   assert.equal(readFileSync(p('google-workspace/publisher/Doc.gs'), 'utf8'), built.doc, 'run node scripts/build-gas.ts');
+  assert.equal(readFileSync(p('google-workspace/publisher/Issue.gs'), 'utf8'), built.issue, 'run node scripts/build-gas.ts');
 });

@@ -48,6 +48,13 @@ test('lists stay lists, a quote stays one quote, and other headings keep their w
   assert.equal(cleanDocMarkdown('## **Bold** and **more**\n\n## *Whole*', { title: 'T' }).body, '## **Bold** and **more**\n\n## Whole');
 });
 
+test('a poem keeps its line breaks; stray breaks in prose still make paragraphs', () => {
+  const poem = 'With my hand woven through hers,  \nWe wander barefoot through the damp pond-side grass,  \nWhere rays of gold sift through tall trees.\n\nBut the pond keeps what years could not.  \nOpaque water, trapped inside a frame.  \nThe sun, bound by dark wood,';
+  assert.equal(cleanDocMarkdown(poem, { title: 'Pond Reflections' }).body, poem);
+  const prose = 'A sentence long enough to be prose rather than verse, broken by Shift+Enter in the middle of a thought.  \nIt goes on here.';
+  assert.equal(cleanDocMarkdown(prose, { title: 'T' }).body, 'A sentence long enough to be prose rather than verse, broken by Shift+Enter in the middle of a thought.\n\nIt goes on here.');
+});
+
 test('HTML typed into a Doc shows as text; links may not run code', () => {
   assert.equal(makeSafe('Hi <script>alert(1)</script> and <b>bold</b>'), 'Hi &lt;script>alert(1)&lt;/script> and &lt;b>bold&lt;/b>');
   assert.equal(makeSafe('[click](javascript:alert(1)) and ![x](data:image/png;base64,AA)'), 'click) and ');

@@ -4,14 +4,17 @@ Since 16 October 2026 the newspaper's website is hosted entirely in the school's
 Google Docs; editors list each article in one Google Sheet and set its **Status** (**Draft**, **Ready for Review**
 or **Published**); about a minute after a row is marked Published the article is on the website, in its section,
 on its own page and on the front page. Editing the Doc or the row updates it; setting the Status back to Draft takes
-it down. The Google Site is the address readers use. Nothing costs money, and nothing depends on GitHub.
+it down. A whole print issue can be added at once: drop its PDF into a Drive folder and its articles arrive in
+the Sheet as Google Docs waiting for review. The Google Site is the address readers use. Nothing costs money, and
+nothing depends on GitHub.
 
 | Piece | Where | Code (in this repository) |
 | --- | --- | --- |
 | **The Google Site**, the address readers use | <https://sites.google.com/govsacademy.org/thegovernor>: one page that shows the website full-screen | |
-| **The publisher**: the website itself, plus the minute-by-minute check | Apps Script project "The Governor publisher", owned by `nicholas.zhuo@govsacademy.org`; only the owner can open it | [`publisher/Code.gs`](publisher/Code.gs), [`publisher/Doc.gs`](publisher/Doc.gs) and [`publisher/Page.html`](publisher/Page.html) (both generated), [`publisher/appsscript.json`](publisher/appsscript.json) |
+| **The publisher**: the website itself, plus the minute-by-minute check | Apps Script project "The Governor publisher", owned by `nicholas.zhuo@govsacademy.org`; only the owner can open it | [`publisher/Code.gs`](publisher/Code.gs), [`publisher/Doc.gs`](publisher/Doc.gs), [`publisher/Issue.gs`](publisher/Issue.gs) and [`publisher/Page.html`](publisher/Page.html) (the last three generated), [`publisher/appsscript.json`](publisher/appsscript.json) |
 | **The Sheet**, "The Governor: Publication" | <https://docs.google.com/spreadsheets/d/1n8o4n_5bSl9TOet1IvaAt7pl5FXxLWKiYek6i_2Xbsc/edit> | Its own script (menu, set-up, instant feedback): [`sheet/Code.gs`](sheet/Code.gs), [`sheet/appsscript.json`](sheet/appsscript.json) |
 | **Pictures, PDFs and the site's data** | Drive folder "The Governor website" in the owner's Drive: "Pictures and PDFs (public)" (anyone can view each file) and "Data" (private) | |
+| **Print issues** | Drive folder "The Governor: print issues" in the owner's Drive, shared with the Sheet's editors: drop an issue's PDF here; a folder of Docs per issue appears inside | Splitting: [`scripts/lib/pdf-read.ts`](../scripts/lib/pdf-read.ts), [`scripts/lib/issue-split.ts`](../scripts/lib/issue-split.ts); try it on a PDF with `node scripts/split-issue.ts <file>` |
 | The pages' design | [`site/app.js`](site/app.js) and `src/styles/` | built into Page.html by `node scripts/build-gas.ts` |
 | For editors | The Sheet's **How to publish** tab, and [EDITORIAL_HANDBOOK.md](../EDITORIAL_HANDBOOK.md) | |
 
@@ -40,6 +43,15 @@ it down. The Google Site is the address readers use. Nothing costs money, and no
   issues and every picture and PDF were copied into Drive once, on 16 October 2026, by `importArchive()`, from the
   site this replaced (`google-workspace/import/archive.json`, built by `node scripts/build-archive.ts`). They keep
   their headlines, text, dates and paths.
+- **Print issues.** At each check the publisher looks in "The Governor: print issues". A new or replaced PDF is
+  read in pieces and split by the layout's own styles: a headline (bold, larger than the text), the writers in
+  italics under it, the text in columns, rules between stacked articles, captions under or beside photos. Each
+  article becomes a Google Doc (text, photos and captions) and a *Ready for Review* row; the issue gets a row in
+  the Issues tab, whose Notes list what could not be made into an article. A long issue is finished over a few
+  checks. Setting the issue's row to Published puts a public copy of the PDF on the website (Drive draws the
+  cover from its first page; the issue's page shows the PDF in Google's viewer) and publishes its articles still
+  *Ready for Review*. It was checked against Issue I, whose 14 articles had been typed in by hand: every article,
+  writer and photo matched.
 - **Formatting.** Bold, italics, links, headings, lists, tables and pictures in a Doc carry over; fonts, sizes and
   colours do not (the website has its own typography). A headline and a "By ..." line at the top of the Doc are
   dropped, because they come from the Sheet. An italic line right under a picture becomes its caption, and a
@@ -63,7 +75,9 @@ it down. The Google Site is the address readers use. Nothing costs money, and no
    No Google Cloud project, API key, GitHub key or billing is involved.
 3. **Copy the archive.** Run `importArchive` (choose it in the function menu, then **Run**) until it says the
    archive is in Drive; each run copies for about four and a half minutes.
-4. **Start the check.** Run `setUpPublisher`: it creates the Drive folder if needed and the every-minute trigger.
+4. **Start the check.** Run `setUpPublisher`: it creates the Drive folders (including "The Governor: print
+   issues"), the Issues tab and the every-minute trigger. The print-issues folder is shared with the Sheet's
+   editors once a day.
 5. **The web address.** **Deploy > New deployment > Web app**, *Execute as: Me*, *Who has access: Anyone*. Put the
    address in Project Settings > Script properties as `WEB_APP_URL`.
 6. **The Google Site.** In the Site's editor, the page holds one full-page embed of that address
@@ -106,7 +120,8 @@ The **On the website** column fills itself in:
 **Changing the pages' design.** Edit `google-workspace/site/app.js` or `src/styles/`, run `node scripts/build-gas.ts`
 and `npm test`, then paste the new `Page.html` into the publisher and update the deployment (below).
 
-**Changing the publisher.** Edit `publisher/Code.gs` (or `scripts/lib/doc-markdown.ts`, then rebuild `Doc.gs`), run
+**Changing the publisher.** Edit `publisher/Code.gs` (or `scripts/lib/doc-markdown.ts`, `pdf-read.ts` or
+`issue-split.ts`, then rebuild `Doc.gs` and `Issue.gs` with `node scripts/build-gas.ts`), run
 `npm test` (it runs both scripts against a fake of Google's services, and checks they are plain enough for Apps
 Script), paste the file in, and **Deploy > Manage deployments > (the web app) > Edit > Version: New version > Deploy**.
 That keeps the same web address. After changing `Doc.gs`, raise `PROCESSOR` in `Code.gs` to rebuild every Sheet

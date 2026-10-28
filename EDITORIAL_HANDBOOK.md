@@ -80,13 +80,27 @@ tab, which lists everything on the site) into the Value column:
 The **Masthead** tab (one person per row: group, name, optional role) and the **Site** tab (contact emails,
 masthead school year) work the same way and update the site within a minute.
 
-## Adding a print issue (web editor)
+## Publishing a whole print issue
 
-Print issues are part of the archive the publisher copied into Drive. Adding one is a job for the web editor:
-put the PDF and page images in the repository's `public/issues/`, describe the issue in `src/content/issues/`,
-rebuild the archive bundle (`node scripts/build-archive.ts`) and run `importArchive` again with the new commit
-(see [google-workspace/SETUP.md](google-workspace/SETUP.md)). Then put the issue's ID in **Print issue** on each
-Sheet article that ran in it, and in the Homepage tab's **Print issue to promote**.
+1. **Download the issue from Canva as PDF Print.** (PDF Standard shrinks the photos; they would look blurry on
+   the website.)
+2. **Drop the PDF into the Google Drive folder "The Governor: print issues".** Everyone who can edit the Sheet
+   can use it.
+3. **Within a few minutes** every article in the PDF is in the **Articles** tab as *Ready for Review*: title,
+   writers, a guessed category, the issue's date, the issue and its page order, and a link to a new Google Doc
+   holding the article's text, photos and captions (in a folder for the issue, inside the print-issues folder).
+   The issue gets a row in the **Issues** tab. Its **Notes** list what could not be made into an article
+   (puzzles, memes, a box with no writer); those stay in the PDF on the website.
+4. **Check each article**: open its Doc and compare it with the PDF, fix anything (paragraph breaks, a photo in
+   the wrong article), and choose the right **Category** in its row. A photo can be replaced with a sharper one
+   through the row's **Image link**.
+5. **Set the issue's Status to Published** in the Issues tab. About a minute later the issue is on the website
+   with its PDF (on the Print issues page, and promoted on the front page), and every article of it still
+   *Ready for Review* is published with it. An article set back to Draft beforehand stays a draft.
+
+To correct the PDF, replace the file in Drive (right-click > File information > Manage versions) or drop the new
+PDF: the website's copy is updated, and only articles not already in the Sheet are added. The articles of the
+issues from before October 2026 are in the archive, typed in by hand.
 
 ## Photos and privacy
 

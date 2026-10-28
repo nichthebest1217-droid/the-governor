@@ -68,6 +68,8 @@
       height: img.h || null,
     };
   }
+  /** A print issue's cover: its first page (from the Sheet: Drive draws it from the PDF; from the archive: a page scan). */
+  const coverOf = (issue) => picture(issue.cover || (issue.pages || [])[0]);
   const imgTag = (pic, sizes, extra) => '<img src="' + esc(pic.src) + '" srcset="' + esc(pic.srcset) + '" sizes="' + esc(sizes) + '"'
     + (pic.width ? ' width="' + pic.width + '"' : '') + (pic.height ? ' height="' + pic.height + '"' : '') + ' ' + (extra || 'alt="" loading="lazy" decoding="async"') + '>';
 
@@ -247,8 +249,8 @@
         return { slug: s.slug, label: s.label, list: fresh.concat(mine.filter((a) => used.has(a))).slice(0, 4) };
       }).filter((b) => b.list.length);
       const promoted = home.currentIssue ? issueById.get(home.currentIssue) : editionIssue;
-      const promotedCover = promoted ? picture((promoted.pages || [])[0]) : null;
-      const otherIssues = issues.filter((i) => (!promoted || i.id !== promoted.id) && (i.pages || []).length);
+      const promotedCover = promoted ? coverOf(promoted) : null;
+      const otherIssues = issues.filter((i) => (!promoted || i.id !== promoted.id) && coverOf(i));
       const leadPic = lead ? picture(lead.cover) : null;
 
       let out = '<h1 class="visually-hidden">' + esc(SITE.name) + '</h1>';
@@ -278,7 +280,7 @@
           + link('/issues/', 'All print issues', ' class="button ghost"') + '</div></div>'
           + (otherIssues.length ? '<div class="print-shelf"><span class="kicker" style="color:var(--ink-soft)">Earlier editions</span><div class="shelf-row">'
             + otherIssues.slice(0, 3).map((issue) => {
-              const c = picture(issue.pages[0]);
+              const c = coverOf(issue);
               return link('/issues/' + issue.id + '/', '<span class="cover">' + (c ? imgTag(c, '150px') : '') + '</span><span><h3>' + esc(issue.title) + '</h3><span class="meta">' + esc(issue.dateLabel || issue.year) + '</span></span>', ' class="issue-card"');
             }).join('') + '</div></div>' : '')
           + '</div></section>';
@@ -413,7 +415,7 @@
         + (sorted.length ? '' : '<p>No print issues have been added yet.</p>')
         + years.map((year) => '<section style="margin-bottom:2.5rem"><h2 class="label-head">' + year + '</h2><div class="issue-grid">'
           + sorted.filter((i) => i.year === year).map((issue) => {
-            const cover = picture((issue.pages || [])[0]);
+            const cover = coverOf(issue);
             return link('/issues/' + issue.id + '/', (cover ? '<span class="cover">' + imgTag(cover, '220px') + '</span>' : '<span class="cover empty">No scan in the archive yet</span>')
               + '<span><h3>' + esc(issue.title) + '</h3><span class="meta">' + esc(issue.dateLabel || ((issue.season || '') + ' ' + issue.year).trim()) + (issue.pdf ? ' · PDF' : '') + '</span></span>', ' class="issue-card"');
           }).join('') + '</div></section>').join('') + '</div>' };
@@ -434,6 +436,8 @@
           + list.map((a) => { const au = authorsOf(a); return '<li>' + link(a.path, esc(a.title)) + '<span class="count">' + esc(a.kind === 'editorial' ? 'Editorial' : sectionLabel(a.section)) + (au[0] ? ' · ' + esc(authorLabel(au[0])) + (au.length > 1 ? ' and others' : '') : '') + '</span></li>'; }).join('')
           + '</ul>' + notes.map((n) => '<p class="meta" style="margin-top:.8rem">' + esc(n) + '</p>').join('') + '</section>'
           : notes.length ? '<div style="max-width:52rem;margin-bottom:2.5rem">' + notes.map((n) => '<p class="note">' + esc(n) + '</p>').join('') + '</div>' : '')
+        + (!pages.length && issue.pdf ? '<section aria-label="The issue"><h2 class="label-head" style="max-width:56rem;margin-inline:auto">The issue</h2>'
+          + '<iframe class="issue-viewer" src="https://drive.google.com/file/d/' + encodeURIComponent(issue.pdf.id) + '/preview" title="' + esc(issue.title) + ', the printed edition" loading="lazy" allow="fullscreen"></iframe></section>' : '')
         + (pages.length ? '<section aria-label="Pages"><h2 class="label-head" style="max-width:56rem;margin-inline:auto">The issue, page by page</h2><div class="issue-pages">'
           + pages.map((p, i) => '<figure style="margin:0">' + external(p.large, imgTag(p, '(min-width: 960px) 896px, 100vw', 'alt="' + esc(issue.title) + ', page ' + (i + 1) + '. The text of this page is in the PDF and in the linked articles." loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async"')) + '<figcaption>Page ' + (i + 1) + '</figcaption></figure>').join('')
           + '</div></section>' : '') + '</div>' };

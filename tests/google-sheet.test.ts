@@ -1,7 +1,8 @@
 // The two Apps Script projects, run outside Google against a small fake of the Sheets, Drive, URL,
 // cache and page services:
-//   google-workspace/publisher/ (Code.gs + the generated Doc.gs): statuses and IDs, turning Docs into
-//     pages, taking articles down, the website's own pages and searches, the one-time archive import;
+//   google-workspace/publisher/ (Code.gs + the generated Doc.gs and Issue.gs): statuses and IDs,
+//     turning Docs into pages, taking articles down, the website's own pages and searches, the
+//     one-time archive import, print issues dropped in as PDFs;
 //   google-workspace/sheet/Code.gs: instant feedback and upgrading the Sheet.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -95,6 +96,9 @@ const PHOTO = '1ZyXwVuTsRqPoNmLkJiHgFeDcBa9876543210ab';
 const b64 = (b: Buffer) => b.toString('base64');
 const EXPORT = `# Campus Welcomes New Students\n\nBy Jane Doe '27\n\n![Students on the steps][image1]\n\n*Opening day.*\n\nLast week, students gathered in the **Chapel**. Read the [schedule](https://example.org/s) or [this](javascript:alert(1)). ${'word '.repeat(60)}\n\n<img src=x onerror=alert(1)>\n\n# A part\n\n![](data:image/jpeg;base64,${b64(JPEG)})\n\n[image1]: <data:image/png;base64,${b64(PNG)}>\n`;
 
+const ISSUE_PDF = new Uint8Array(readFileSync(p('public/issues/2026-27-issue-1.pdf')));
+const PRINT = '1PrintIssueOneAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; // the dropped PDF's Drive ID
+
 function world(rows: Record<string, unknown>[]) {
   const articles = new Sheet('Articles', [HEADERS, ...rows.map((r) => HEADERS.map((h) => r[h] ?? ''))]);
   const sheets: Sheet[] = [articles, new Sheet('How to publish', [['How to publish'], [''], ['']]), new Sheet('Homepage', [['Setting', 'Value'], ['Lead story', ''], ['Print issue to promote', '2026-27-issue-1']])];
@@ -105,14 +109,19 @@ function world(rows: Record<string, unknown>[]) {
       [PDF]: { modified: new Date('2026-10-15T15:00:00Z'), mime: 'application/pdf', access: 'PRIVATE', permission: 'VIEW' },
     } as Record<string, any>,
     pages: [] as any[],
+    docs: new Map<string, { name: string; html: string; parent: string }>(),
+    folders: new Map<string, { name: string; parent: string }>(),
+    pdfs: new Map<string, { name: string; bytes: Uint8Array; modifiedTime: string; parent: string }>(),
+    shared: [] as string[],
   };
   let nextId = 0;
-  const newId = () => 'drv' + String(++nextId).padStart(4, '0');
+  const newId = () => 'drv' + String(++nextId).padStart(30, '0'); // as long as Drive's own IDs
   const spreadsheet = chain({
     getSheetByName: (n: string) => sheets.find((s) => s.name === n) ?? null,
     getSheets: () => sheets,
     insertSheet: (n: string) => { const s = new Sheet(n); s.parent = spreadsheet; sheets.push(s); return s; },
     toast: () => {},
+    getEditors: () => [{ getEmail: () => 'nicholas.zhuo@govsacademy.org' }, { getEmail: () => 'Editor@govsacademy.org' }],
   });
   sheets.forEach((s) => { s.parent = spreadsheet; });
   const driveFile = (id: string) => {
@@ -122,7 +131,7 @@ function world(rows: Record<string, unknown>[]) {
     if (own) return { getId: () => id, getBlob: () => blobOf(own.bytes, 'application/json') };
     throw new Error('No item with the given ID could be found');
   };
-  const reply = (code: number, text = '', type = 'application/json', bytes: Buffer = Buffer.alloc(0), headers: Record<string, string> = {}) => ({ getResponseCode: () => code, getContentText: () => text, getHeaders: () => headers, getBlob: () => blobOf(bytes, type) });
+  const reply = (code: number, text = '', type = 'application/json', bytes: Buffer = Buffer.alloc(0), headers: Record<string, string> = {}) => ({ getResponseCode: () => code, getContentText: () => text, getHeaders: () => headers, getBlob: () => blobOf(bytes, type), getContent: () => Array.from(bytes).map((x) => (x > 127 ? x - 256 : x)) });
   const services: Record<string, unknown> = {
     SpreadsheetApp: { openById: () => spreadsheet, getActiveSpreadsheet: () => spreadsheet, getUi: () => chain(), newRichTextValue: () => { let text = ''; let link: string | null = null; const b = { setText: (t: string) => { text = t; return b; }, setLinkUrl: (_a: number, _b: number, u: string) => { link = u; return b; }, build: () => new Rich(text, link) }; return b; }, newDataValidation: () => chain(), newConditionalFormatRule: () => chain(), WrapStrategy: {}, ProtectionType: {} },
     PropertiesService: { getScriptProperties: () => w.script },
@@ -130,17 +139,38 @@ function world(rows: Record<string, unknown>[]) {
     DriveApp: { getFileById: driveFile, searchFiles: () => { const ids = Object.keys(w.files); let i = 0; return { hasNext: () => i < ids.length, next: () => driveFile(ids[i++]) }; }, Permission: { EDIT: 'EDIT', VIEW: 'VIEW' }, Access: { ANYONE: 'ANYONE', ANYONE_WITH_LINK: 'ANYONE_WITH_LINK', PRIVATE: 'PRIVATE' } },
     Drive: {
       Files: {
-        create: (meta: any, blob?: any) => { const id = newId(); w.drive.set(id, { name: meta.name, bytes: blob ? blob.getBytes() : [], trashed: false, public: false }); return { id }; },
+        create: (meta: any, blob?: any) => {
+          const id = newId();
+          if (meta.mimeType === 'application/vnd.google-apps.document') {
+            w.docs.set(id, { name: meta.name, html: blob.getDataAsString(), parent: meta.parents[0] });
+            w.files[id] = { modified: new Date('2026-10-28T12:00:00Z'), mime: meta.mimeType, access: 'PRIVATE', permission: 'VIEW' };
+            return { id };
+          }
+          if (meta.mimeType === 'application/vnd.google-apps.folder') w.folders.set(id, { name: meta.name, parent: (meta.parents || [])[0] || 'root' });
+          w.drive.set(id, { name: meta.name, bytes: blob ? blob.getBytes() : [], trashed: false, public: false });
+          return { id };
+        },
         update: (meta: any, id: string, blob?: any) => { const f = w.drive.get(id)!; if (meta.trashed) f.trashed = true; if (blob) f.bytes = blob.getBytes(); return { id }; },
+        list: (opts: any) => ({ files: [...w.pdfs.entries()].filter(([, f]) => opts.q.includes(`'${f.parent}' in parents`)).map(([id, f]) => ({ id, name: f.name, modifiedTime: f.modifiedTime, size: String(f.bytes.length) })) }),
+        get: (id: string) => { const f = w.pdfs.get(id); if (!f) throw new Error('File not found: ' + id); return { id, name: f.name, modifiedTime: f.modifiedTime }; },
+        copy: (meta: any, id: string) => { const f = w.pdfs.get(id)!; const copy = newId(); w.drive.set(copy, { name: meta.name, bytes: Array.from(f.bytes), trashed: false, public: false }); return { id: copy }; },
       },
-      Permissions: { create: (perm: any, id: string) => { if (perm.type === 'anyone') w.drive.get(id)!.public = true; } },
+      Permissions: { create: (perm: any, id: string) => { if (perm.type === 'anyone') w.drive.get(id)!.public = true; if (perm.type === 'user') w.shared.push(perm.emailAddress); } },
     },
     UrlFetchApp: {
       fetch: (url: string, opts: any = {}) => {
         w.fetched.push(url);
         if (url.startsWith('https://www.googleapis.com/upload/drive/v3/files')) return reply(200, '', 'application/json', Buffer.alloc(0), { Location: 'https://upload.example/session/' + encodeURIComponent(JSON.parse(opts.payload).name) });
         if (url.startsWith('https://upload.example/session/')) { assert.ok(opts.payload && typeof opts.payload.getBytes === 'function', 'uploads send the blob itself'); const id = newId(); w.drive.set(id, { name: decodeURIComponent(url.split('/').pop()!), bytes: opts.payload.getBytes(), trashed: false, public: false }); return reply(200, JSON.stringify({ id })); }
-        if (url.includes(`/document/d/${DOC_A}/export`)) return reply(w.exportCode, w.exportText);
+        const doc = /\/document\/d\/([^/]+)\/export/.exec(url);
+        if (doc && (doc[1] === DOC_A || w.docs.has(doc[1]))) return reply(w.exportCode, w.exportText);
+        const media = /^https:\/\/www\.googleapis\.com\/drive\/v3\/files\/([^?]+)\?alt=media$/.exec(url);
+        if (media) {
+          const f = w.pdfs.get(media[1]);
+          if (!f) return reply(404);
+          const [a, b] = /bytes=(\d+)-(\d+)/.exec(opts.headers.Range)!.slice(1).map(Number);
+          return reply(206, '', 'application/pdf', Buffer.from(f.bytes.subarray(a, b + 1)));
+        }
         if (url.includes('drive.google.com/thumbnail')) return reply(200, '', 'image/jpeg', JPEG);
         if (w.raw[url]) { const r = w.raw[url]; return reply(r.code, r.text ?? '', r.type ?? 'application/octet-stream', r.bytes ?? Buffer.from(r.text ?? '')); }
         return reply(404);
@@ -164,7 +194,7 @@ function world(rows: Record<string, unknown>[]) {
     const src = files.map((f) => readFileSync(p(f), 'utf8')).join('\n');
     return new Function(...keys, `${src}\nreturn { ${names} };`)(...keys.map((k) => services[k]));
   };
-  const pub = load(['google-workspace/publisher/Code.gs', 'google-workspace/publisher/Doc.gs'], 'refresh_, tick, publishNow, doGet, api, importArchive, splitImages_, imageSize_, HEADERS, loadJson_');
+  const pub = load(['google-workspace/publisher/Code.gs', 'google-workspace/publisher/Doc.gs', 'google-workspace/publisher/Issue.gs'], 'refresh_, tick, publishNow, doGet, api, importArchive, splitImages_, imageSize_, HEADERS, loadJson_, checkPrintIssues_, printFolder_, base64_');
   const sheet = load(['google-workspace/sheet/Code.gs'], 'onEdit, quickNote_, rowFrom_, upgradeColumns_, HEADERS');
   const cell = (row: number, header: string) => articles.get(row, HEADERS.indexOf(header) + 1);
   const link = (row: number, header: string) => articles.links[row - 1]?.[HEADERS.indexOf(header)] ?? null;
@@ -186,7 +216,7 @@ test('both scripts use the same columns and the same shared code; Apps Script ca
   assert.deepEqual(sheet.HEADERS, HEADERS);
   const shared = (file: string) => { const s = readFileSync(p(file), 'utf8'); return s.slice(s.indexOf('\n', s.indexOf('// ===== Shared with')), s.indexOf('// ===== End of shared block')); };
   assert.equal(shared('google-workspace/publisher/Code.gs'), shared('google-workspace/sheet/Code.gs'));
-  for (const f of ['google-workspace/publisher/Code.gs', 'google-workspace/publisher/Doc.gs', 'google-workspace/sheet/Code.gs']) {
+  for (const f of ['google-workspace/publisher/Code.gs', 'google-workspace/publisher/Doc.gs', 'google-workspace/publisher/Issue.gs', 'google-workspace/sheet/Code.gs']) {
     assert.doesNotThrow(() => acorn.parse(readFileSync(p(f), 'utf8'), { ecmaVersion: 2019, sourceType: 'script' }), `${f} must be ES2019 for Apps Script`);
   }
   const manifest = (file: string) => JSON.parse(readFileSync(p(file), 'utf8'));
@@ -361,6 +391,97 @@ test('the archive is copied into Drive once: pictures and PDFs shared, addresses
   assert.equal(pub.importArchive(), 'The archive is already in Drive.');
   pub.doGet({});
   assert.deepEqual(w.pages[0].boot.data.articles.map((a: any) => a.id), ['2026-05-01-old']);
+});
+
+test('a print issue dropped into the folder becomes a Doc and a row for each article, waiting for review', () => {
+  const { w, pub, cell, live } = world([ROW]);
+  const folder = pub.printFolder_();
+  assert.equal(w.folders.get(folder)!.name, 'The Governor: print issues');
+  w.pdfs.set(PRINT, { name: 'The Governor Issue 1.pdf', bytes: ISSUE_PDF, modifiedTime: '2026-10-28T12:00:00.000Z', parent: folder });
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  // 14 articles after the row that was already there, in print order, waiting for an editor.
+  const made = Array.from({ length: 14 }, (_, i) => i + 3);
+  assert.deepEqual(made.map((r) => cell(r, 'Status')), made.map(() => 'Ready for Review'));
+  assert.equal(cell(3, 'Title'), 'The New and Improved Weight Room');
+  assert.equal(cell(3, 'Author(s)'), "Parker Baker '27");
+  assert.deepEqual(made.map((r) => cell(r, 'Order in issue')), made.map((_, i) => i + 1));
+  assert.deepEqual(new Set(made.map((r) => cell(r, 'Print issue'))), new Set(['2026-27-issue-1']));
+  assert.ok(made.every((r) => cell(r, 'Publication date') instanceof Date));
+  assert.equal(cell(5, 'Type'), 'Editorial');
+  assert.ok(made.every((r) => /^https:\/\/docs\.google\.com\/document\/d\/drv\d+\/edit$/.test(cell(r, 'Google Doc link'))));
+  // The Docs, in a folder for the issue inside the print-issues folder.
+  assert.equal(w.docs.size, 14);
+  const weight = [...w.docs.values()].find((d) => d.name === 'The New and Improved Weight Room')!;
+  assert.equal(w.folders.get(weight.parent)!.name, 'Issue I, 2026–27 articles');
+  assert.equal(w.folders.get(weight.parent)!.parent, folder);
+  assert.match(weight.html, /<h1>The New and Improved Weight Room<\/h1>\n<p[^>]*>By Parker Baker '27<\/p>/);
+  assert.match(weight.html, /<img src="data:image\/(png|jpeg);base64,[A-Za-z0-9+/]{100,}={0,2}" alt="Coach KK, class of 2021">/, 'the photo is in the Doc, with its caption');
+  // The issue's row.
+  const tab = w.sheets.find((x) => x.name === 'Issues')!;
+  assert.deepEqual([tab.get(2, 1), tab.get(2, 3), tab.get(2, 4), tab.get(2, 6)], ['Ready for Review', 'Issue I, 2026⁠–⁠27', '2026-27-issue-1', `https://drive.google.com/file/d/${PRINT}/view`]);
+  assert.match(String(tab.get(2, 8)), /^Made from The Governor Issue 1\.pdf on .*: 14 articles\. .*MAD LIB/);
+  assert.equal(cell(2, 'Title'), ROW.Title, 'rows already there are left alone');
+  // Nothing is public yet.
+  pub.refresh_();
+  assert.deepEqual(Object.keys(live().articles), [ID_A]);
+  assert.equal(cell(3, 'On the website'), 'Not on the website (waiting for review)');
+  assert.equal(tab.get(2, 2), 'Not on the website (waiting for review)');
+  assert.deepEqual(live().issues, []);
+  // Dropping the same PDF again does nothing; a replaced PDF adds only what is new.
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  assert.equal(w.docs.size, 14);
+  w.pdfs.get(PRINT)!.modifiedTime = '2026-10-28T13:00:00.000Z';
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  assert.equal(w.docs.size, 14);
+  assert.equal(w.articles.getLastRow(), 16);
+  assert.match(String(tab.get(2, 8)), /14 articles \(14 were already in the Sheet\)/);
+});
+
+test('publishing the issue puts its PDF on the website and its waiting articles with it', () => {
+  const { w, pub, cell, live } = world([]);
+  w.sheets.find((x) => x.name === 'Homepage')!.set(3, 2, '2026-spring-issue-4');
+  const folder = pub.printFolder_();
+  w.pdfs.set(PRINT, { name: 'The Governor Issue 1.pdf', bytes: ISSUE_PDF, modifiedTime: '2026-10-28T12:00:00.000Z', parent: folder });
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  w.articles.set(3, 1, 'Draft'); // an editor holds one article back
+  const tab = w.sheets.find((x) => x.name === 'Issues')!;
+  tab.set(2, 1, 'Published');
+  pub.refresh_();
+  assert.equal(cell(2, 'Status'), 'Published');
+  assert.equal(cell(3, 'Status'), 'Draft', 'an article an editor set back to Draft stays a draft');
+  assert.equal(Object.keys(live().articles).length, 13);
+  const issue = live().issues[0];
+  assert.equal(issue.id, '2026-27-issue-1');
+  assert.deepEqual([issue.title, issue.dateLabel, issue.season, issue.year, issue.number], ['Issue I, 2026⁠–⁠27', 'October 9, 2026', 'Fall', 2026, 1]);
+  assert.ok(w.drive.get(issue.pdf.id)!.public, 'the website shows a public copy of the PDF');
+  assert.equal(issue.cover.id, issue.pdf.id, 'Drive draws the cover from the PDF');
+  assert.equal(String(tab.get(2, 2)), `✓ Live: ${APP}?p=${encodeURIComponent('/issues/2026-27-issue-1/')}`);
+  assert.equal(w.sheets.find((x) => x.name === 'Homepage')!.get(3, 2), '2026-27-issue-1', 'the front page promotes the new issue');
+  pub.doGet({ parameter: { p: '/issues/2026-27-issue-1/' } });
+  const boot = w.pages[w.pages.length - 1].boot;
+  assert.equal(boot.data.issues.find((i: any) => i.id === '2026-27-issue-1').pdf.id, issue.pdf.id);
+  // Publishing happens once: an article taken down afterwards stays down.
+  w.articles.set(4, 1, 'Draft');
+  pub.refresh_();
+  assert.equal(cell(4, 'Status'), 'Draft');
+  assert.ok(w.shared.includes('editor@govsacademy.org') && !w.shared.includes('nicholas.zhuo@govsacademy.org'), 'the Sheet\'s editors may use the print-issues folder');
+});
+
+test('a long issue is made over several checks without making anything twice; an unreadable PDF is reported', () => {
+  const { w, pub } = world([]);
+  const folder = pub.printFolder_();
+  w.pdfs.set(PRINT, { name: 'The Governor Issue 1.pdf', bytes: ISSUE_PDF, modifiedTime: '2026-10-28T12:00:00.000Z', parent: folder });
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now() - 4.4 * 60 * 1000);
+  assert.equal(w.docs.size, 0, 'out of time: nothing more is started');
+  assert.equal(w.articles.getLastRow(), 1);
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  assert.equal(w.docs.size, 14);
+  assert.equal(w.articles.getLastRow(), 15);
+  w.pdfs.set('1BrokenPdfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', { name: 'Not really a PDF.pdf', bytes: new Uint8Array(Buffer.from('this is not a pdf at all')), modifiedTime: '2026-10-28T12:00:00.000Z', parent: folder });
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  const tab = w.sheets.find((x) => x.name === 'Issues')!;
+  assert.match(String(tab.get(3, 8)), /^⚠ This PDF could not be read: /);
+  assert.equal(pub.base64_(new Uint8Array([104, 105, 33, 255])), Buffer.from([104, 105, 33, 255]).toString('base64'));
 });
 
 test('picture sizes are read from the file itself', () => {

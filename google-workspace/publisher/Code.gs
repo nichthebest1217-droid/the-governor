@@ -12,6 +12,10 @@
  *     pictures into Drive, takes down rows that are no longer Published, and fills in "On the website".
  *   - The archive (the WordPress articles and the print issues) was copied into Drive once, by
  *     importArchive().
+ *   - A print issue's PDF dropped into the Drive folder "The Governor: print issues" is split into
+ *     its articles (Issue.gs): a Google Doc and a Ready for Review row for each, and a row in the
+ *     Issues tab. Setting that row to Published puts the issue (its PDF) on the website and
+ *     publishes its articles that are still Ready for Review.
  *
  * Everything lives in the school's Google account: the Sheet, the Docs, this script, and a Drive
  * folder "The Governor website" holding the pictures and PDFs (anyone can view them) and the site's
@@ -60,6 +64,34 @@ const COLUMNS = [
   ['ID', 250, 'Filled in by the Sheet when the article is first published. Do not change it: it keeps the article\'s web address.'],
 ];
 const HEADERS = COLUMNS.map(function (c) { return c[0]; });
+
+// The Issues tab: one row per print issue, made when its PDF is dropped into the print-issues folder.
+const ISSUES = 'Issues';
+const ISSUE_STATUSES = ['Ready for Review', 'Published'];
+const PRINT_FOLDER = 'The Governor: print issues';
+const ISSUE_COLUMNS = [
+  ['Status', 130, 'Ready for Review while the editors check the articles made from the PDF. Published puts the issue on the website and publishes its articles that are still Ready for Review.'],
+  ['On the website', 280, 'Filled in by the Sheet. Do not type here.'],
+  ['Issue', 190, 'The issue as the website names it.'],
+  ['ID', 150, 'Read from the PDF, for example 2026-27-issue-2. The issue\'s articles carry it in their Print issue column.'],
+  ['Date', 120, 'The date printed on the issue.'],
+  ['PDF', 230, 'The PDF dropped into the print-issues folder. To correct it, replace that file in Drive (File > Manage versions) or drop the new PDF.'],
+  ['Articles folder', 230, 'The Google Docs made from the PDF, one per article. Fix any mistake in the Doc.'],
+  ['Notes', 380, 'What could not be made into an article (puzzles, memes, a box without a writer). It stays in the PDF on the website.'],
+];
+const ISSUE_HEADERS = ISSUE_COLUMNS.map(function (c) { return c[0]; });
+
+/** The Issues tab, made when first needed. */
+function issueTab_(ss) {
+  let tab = ss.getSheetByName(ISSUES);
+  if (tab) return tab;
+  tab = ss.insertSheet(ISSUES);
+  tab.getRange(1, 1, 1, ISSUE_HEADERS.length).setValues([ISSUE_HEADERS]).setFontWeight('bold').setBackground('#141312').setFontColor('#ffffff');
+  ISSUE_COLUMNS.forEach(function (c, i) { tab.setColumnWidth(i + 1, c[1]); tab.getRange(1, i + 1).setNote(c[2]); });
+  tab.setFrozenRows(1);
+  tab.getRange(2, 1, 300, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ISSUE_STATUSES, true).setAllowInvalid(false).build());
+  return tab;
+}
 
 function ownerEmail_() {
   return PropertiesService.getScriptProperties().getProperty('OWNER_EMAIL') || OWNER_EMAIL;
@@ -449,7 +481,11 @@ function retry_(message, retry) {
  */
 function compile_(assessed, started) {
   const live = loadJson_('live.json') || { version: '', articles: {}, errors: {}, warnings: [], settings: null };
-  const next = { version: '', articles: {}, errors: {}, warnings: [], settings: assessed.settings };
+  const next = { version: '', articles: {}, errors: {}, warnings: [], settings: assessed.settings, issues: (assessed.issues || []).slice() };
+  // An issue Drive could not be asked about just now keeps its live version.
+  (live.issues || []).forEach(function (i) {
+    if ((assessed.keepIssues || []).indexOf(i.id) >= 0 && !next.issues.some(function (x) { return x.id === i.id; })) next.issues.push(i);
+  });
   assessed.ready.forEach(function (r) {
     const prev = live.articles[r.id];
     if (prev && prev.revision === r.revision && prev.processor === PROCESSOR) { next.articles[r.id] = prev; return; }
@@ -472,7 +508,7 @@ function compile_(assessed, started) {
     if (hold && vanished.indexOf(id) >= 0) next.articles[id] = live.articles[id];
     else trash_(live.articles[id].media);
   });
-  next.version = hash_(JSON.stringify([Object.keys(next.articles).sort().map(function (id) { return id + ':' + next.articles[id].revision; }), next.settings]));
+  next.version = hash_(JSON.stringify([Object.keys(next.articles).sort().map(function (id) { return id + ':' + next.articles[id].revision; }), next.settings, next.issues]));
   if (next.version !== live.version || JSON.stringify(next.errors) !== JSON.stringify(live.errors || {}) || JSON.stringify(next.warnings) !== JSON.stringify(live.warnings || [])) {
     saveJson_('live.json', next);
     if (next.version !== live.version) setSiteVersion_();
@@ -631,7 +667,7 @@ function buildSiteData_(version) {
         printOrder: a.printOrder == null ? null : a.printOrder, correction: a.correction || null, featured: !!a.featured, path: a.path, fromSheet: !!a.fromSheet };
     }),
     authors: authors,
-    issues: archive.issues || [],
+    issues: mergeIssues_(archive.issues || [], live.issues || []),
     brand: archive.brand || {},
     settings: live.settings || {},
     contactEmail: archive.contactEmail || null,
@@ -745,7 +781,9 @@ function tick() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(1000)) return 'busy';
   try {
+    const started = Date.now();
     refresh_();
+    if (Date.now() - started < 90 * 1000) checkPrintIssues_(book_(), started);
     return 'done';
   } finally {
     lock.releaseLock();
@@ -769,6 +807,8 @@ function refresh_() {
   const props = PropertiesService.getScriptProperties();
   props.setProperty('LAST_TICK', String(started));
   const ss = book_();
+  const issues = readIssues_(ss);
+  publishIssueArticles_(ss, issues);
   const t = readTable_(ss);
   const today = today_();
 
@@ -792,11 +832,15 @@ function refresh_() {
   const docIds = [];
   t.rows.forEach(function (r) { if (r.status === 'Published' && r.docId && docIds.indexOf(r.docId) < 0) docIds.push(r.docId); });
   const assessed = assess_(ss, t, docInfo_(docIds), today);
+  assessed.issues = siteIssues_(issues);
+  assessed.keepIssues = issues.rows.filter(function (r) { return r.retrying; }).map(function (r) { return r.id; });
   const live = compile_(assessed, started);
 
   if (sameRows_(t)) writeNotes_(t, t.rows.map(function (r) { return noteFor_(r, live); }));
+  writeIssueNotes_(issues, live);
   writeAllArticles_(ss);
   writeGuideStatus_(ss, live);
+  sharePrintFolder_(ss);
 }
 
 /** False when rows were added, removed or moved since the Sheet was read: the notes wait a minute. */
@@ -872,12 +916,312 @@ function writeGuideStatus_(ss, live) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Print issues: a PDF dropped into "The Governor: print issues" becomes the issue's articles
+
+/** The print-issues folder in the owner's Drive. The publisher makes it, so it may add folders inside. */
+function printFolder_() {
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty('FOLDER_PRINT');
+  if (!id) {
+    id = Drive.Files.create({ name: PRINT_FOLDER, mimeType: FOLDER_TYPE, parents: [] }).id;
+    props.setProperty('FOLDER_PRINT', id);
+  }
+  return id;
+}
+
+/** Once a day: everyone who can edit the Sheet may drop PDFs into the folder and fix the Docs made there. */
+function sharePrintFolder_(ss) {
+  const props = PropertiesService.getScriptProperties();
+  if (Date.now() - Number(props.getProperty('PRINT_SHARED_AT') || 0) < 24 * 60 * 60 * 1000) return;
+  props.setProperty('PRINT_SHARED_AT', String(Date.now()));
+  let editors = [];
+  try { editors = ss.getEditors().map(function (u) { return String(u.getEmail() || '').toLowerCase(); }); } catch (err) { return; }
+  const shared = JSON.parse(props.getProperty('PRINT_SHARED') || '[]');
+  const owner = ownerEmail_().toLowerCase();
+  const folder = printFolder_();
+  editors.forEach(function (email) {
+    if (!email || email === owner || shared.indexOf(email) >= 0) return;
+    try {
+      Drive.Permissions.create({ role: 'writer', type: 'user', emailAddress: email }, folder, { sendNotificationEmail: false });
+      shared.push(email);
+    } catch (err) { /* tried again tomorrow */ }
+  });
+  props.setProperty('PRINT_SHARED', JSON.stringify(shared));
+}
+
+/** A Drive file read in pieces as the PDF reader asks for them, so a large PDF never has to fit in memory. */
+function driveBytes_(id, size) {
+  return {
+    size: size,
+    read: function (start, end) {
+      const res = UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
+        headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), Range: 'bytes=' + start + '-' + (end - 1) }, muteHttpExceptions: true,
+      });
+      const code = res.getResponseCode();
+      if (code !== 206 && code !== 200) throw retry_('Could not read the PDF (Google answered ' + code + ').', code === 429 || code >= 500);
+      const raw = res.getContent();
+      const from = code === 200 && raw.length > end - start ? start : 0;
+      const out = new Uint8Array(Math.max(0, Math.min(raw.length - from, end - start)));
+      for (let i = 0; i < out.length; i++) out[i] = raw[from + i] & 255;
+      return out;
+    },
+  };
+}
+
+function base64_(bytes) {
+  const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const out = [];
+  for (let i = 0; i < bytes.length; i += 3) {
+    const n = (bytes[i] << 16) | ((i + 1 < bytes.length ? bytes[i + 1] : 0) << 8) | (i + 2 < bytes.length ? bytes[i + 2] : 0);
+    out.push(abc[(n >> 18) & 63], abc[(n >> 12) & 63], i + 1 < bytes.length ? abc[(n >> 6) & 63] : '=', i + 2 < bytes.length ? abc[n & 63] : '=');
+  }
+  return out.join('');
+}
+
+/** Writers' names as the website already spells them, so "DK RHEE" in a byline becomes DK Rhee. */
+function knownWriters_() {
+  const names = [];
+  const archive = loadJson_('archive.json');
+  if (archive) Object.keys(archive.authors || {}).forEach(function (k) { names.push(archive.authors[k].name); });
+  const live = loadJson_('live.json');
+  if (live) Object.keys(live.articles || {}).forEach(function (id) {
+    const w = live.articles[id].writers || {};
+    Object.keys(w).forEach(function (k) { names.push(w[k].name); });
+  });
+  return names;
+}
+
+/** At each check, when there is time: a new or replaced PDF in the folder becomes its issue's articles. */
+function checkPrintIssues_(ss, started) {
+  const props = PropertiesService.getScriptProperties();
+  const folder = props.getProperty('FOLDER_PRINT');
+  if (!folder) return;
+  const found = Drive.Files.list({ q: "'" + folder + "' in parents and mimeType = 'application/pdf' and trashed = false", fields: 'files(id,name,modifiedTime,size)', orderBy: 'createdTime', pageSize: 50 });
+  const file = (found.files || []).filter(function (f) { return props.getProperty('PRINT_DONE:' + f.id) !== f.modifiedTime; })[0];
+  if (!file) return;
+  try {
+    if (makeIssue_(ss, file, started)) props.setProperty('PRINT_DONE:' + file.id, file.modifiedTime);
+  } catch (err) {
+    if (err.retry) return;
+    props.setProperty('PRINT_DONE:' + file.id, file.modifiedTime);
+    props.deleteProperty('PRINT_JOB:' + file.id);
+    const tab = issueTab_(ss);
+    const values = { 'Issue': file.name.replace(/\.pdf$/i, ''), 'PDF': 'https://drive.google.com/file/d/' + file.id + '/view', 'Notes': '⚠ This PDF could not be read: ' + String(err.message || err) };
+    tab.getRange(tab.getLastRow() + 1, 1, 1, ISSUE_HEADERS.length).setValues([ISSUE_HEADERS.map(function (h) { return values[h] || ''; })]);
+  }
+}
+
+/**
+ * Splits the PDF, makes a Google Doc for each article (picking up where the last check stopped if
+ * it ran out of time), then adds the articles to the Articles tab as Ready for Review, in print
+ * order, and the issue to the Issues tab. A PDF dropped again adds only articles not yet in the Sheet.
+ */
+function makeIssue_(ss, file, started) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'PRINT_JOB:' + file.id;
+  let job = JSON.parse(props.getProperty(key) || 'null');
+  if (!job || job.modified !== file.modifiedTime) job = { modified: file.modifiedTime, folder: null, docs: {} };
+  const pdf = IssuePdf.openPdf(driveBytes_(file.id, Number(file.size)));
+  const split = IssuePdf.splitIssue(pdf, { knownNames: knownWriters_() });
+  const name = file.name.replace(/\.pdf$/i, '');
+  const id = split.id || 'issue-' + (slugify_(name) || file.id.slice(0, 8).toLowerCase());
+  const title = split.title || name;
+  const date = split.date || today_();
+  const t = readTable_(ss);
+  const have = {};
+  t.rows.forEach(function (r) { if (r.issue === id) have[r.title.toLowerCase()] = true; });
+  const todo = split.articles.filter(function (a) { return !have[a.title.toLowerCase()]; });
+  if (todo.length && !job.folder) {
+    job.folder = Drive.Files.create({ name: title.replace(/⁠/g, '') + ' articles', mimeType: FOLDER_TYPE, parents: [printFolder_()] }).id;
+    props.setProperty(key, JSON.stringify(job));
+  }
+  for (let i = 0; i < todo.length; i++) {
+    const a = todo[i];
+    if (job.docs[a.order]) continue;
+    if (Date.now() - started > 4.3 * 60 * 1000) return false; // the next check carries on
+    const html = IssuePdf.articleHtml(a, function (im) {
+      const picture = pdf.image(im.id);
+      return picture ? 'data:' + picture.mime + ';base64,' + base64_(picture.bytes) : null;
+    });
+    job.docs[a.order] = Drive.Files.create({ name: a.title, mimeType: 'application/vnd.google-apps.document', parents: [job.folder] }, Utilities.newBlob(html, 'text/html', 'article.html')).id;
+    props.setProperty(key, JSON.stringify(job));
+  }
+  const day = new Date(date + 'T12:00:00');
+  const rows = todo.map(function (a) {
+    const v = {
+      'Status': 'Ready for Review', 'Title': a.title, 'Author(s)': a.authors.join(', '), 'Category': a.category, 'Publication date': day,
+      'Google Doc link': 'https://docs.google.com/document/d/' + job.docs[a.order] + '/edit', 'Type': a.editorial ? 'Editorial' : 'Article',
+      'Print issue': id, 'Order in issue': a.order,
+    };
+    return t.headers.map(function (h) { return h in v ? v[h] : ''; });
+  });
+  if (rows.length) t.sheet.getRange(t.sheet.getLastRow() + 1, 1, rows.length, t.headers.length).setValues(rows);
+  const tab = issueTab_(ss);
+  const issues = readIssues_(ss);
+  const count = split.articles.length + (split.articles.length === 1 ? ' article' : ' articles');
+  const already = split.articles.length - todo.length;
+  const notes = ['Made from ' + file.name + ' on ' + longDate_(today_()) + ': ' + count + (already ? ' (' + already + ' were already in the Sheet)' : '') + '.'].concat(split.skipped).join(' ');
+  const values = { 'Issue': title, 'ID': id, 'Date': day, 'PDF': 'https://drive.google.com/file/d/' + file.id + '/view', 'Articles folder': job.folder ? 'https://drive.google.com/drive/folders/' + job.folder : '', 'Notes': notes };
+  const existing = issues.rows.filter(function (r) { return r.id === id; })[0];
+  if (existing) Object.keys(values).forEach(function (h) { if (values[h] !== '' && issues.col(h) > 0) tab.getRange(existing.row, issues.col(h)).setValue(values[h]); });
+  else {
+    values['Status'] = 'Ready for Review';
+    tab.getRange(tab.getLastRow() + 1, 1, 1, ISSUE_HEADERS.length).setValues([ISSUE_HEADERS.map(function (h) { return h in values ? values[h] : ''; })]);
+  }
+  const first = pdf.page(1);
+  props.setProperty('PRINT_META:' + id, JSON.stringify({ w: first.width, h: first.height, pages: pdf.pageCount }));
+  props.deleteProperty(key);
+  return true;
+}
+
+/** The Issues tab's rows. */
+function readIssues_(ss) {
+  const tab = ss.getSheetByName(ISSUES);
+  const out = { tab: tab, rows: [], col: function (name) { return ISSUE_HEADERS.indexOf(name) + 1; } };
+  if (!tab || tab.getLastRow() < 2) return out;
+  const values = tab.getRange(1, 1, tab.getLastRow(), ISSUE_HEADERS.length).getValues();
+  const headers = values[0].map(function (h) { return String(h).trim(); });
+  out.col = function (name) { return headers.indexOf(name) + 1; };
+  const at = function (v, name) { const i = headers.indexOf(name); return i < 0 || v[i] == null ? '' : v[i]; };
+  out.rows = values.slice(1).map(function (v, i) {
+    return {
+      row: i + 2, status: String(at(v, 'Status')).trim(), title: String(at(v, 'Issue')).trim(), id: String(at(v, 'ID')).trim(),
+      date: dateOf_(at(v, 'Date')).value, pdf: idFromLink_(String(at(v, 'PDF')).trim()), problem: '', retrying: false,
+    };
+  });
+  return out;
+}
+
+/** The first time an issue is Published: its articles still Ready for Review are published with it, and the front page promotes it. */
+function publishIssueArticles_(ss, issues) {
+  const props = PropertiesService.getScriptProperties();
+  const fresh = issues.rows.filter(function (r) { return r.status === 'Published' && /^[a-z0-9-]+$/.test(r.id) && props.getProperty('ISSUE_PUBLISHED:' + r.id) !== '1'; });
+  if (!fresh.length) return;
+  const sheet = ss.getSheetByName(ARTICLES);
+  const values = sheet ? sheet.getDataRange().getValues() : [[]];
+  const headers = values[0].map(function (h) { return String(h).trim(); });
+  const cs = headers.indexOf('Status');
+  const ci = headers.indexOf('Print issue');
+  fresh.forEach(function (issue) {
+    if (cs >= 0 && ci >= 0) {
+      for (let r = 1; r < values.length; r++) {
+        if (String(values[r][ci]).trim() === issue.id && String(values[r][cs]).trim() === 'Ready for Review') sheet.getRange(r + 1, cs + 1).setValue('Published');
+      }
+    }
+    promoteIssue_(ss, issue, issues);
+    props.setProperty('ISSUE_PUBLISHED:' + issue.id, '1');
+  });
+}
+
+/** The Homepage tab's "Print issue to promote" moves to a newly published issue (not back to an older one). */
+function promoteIssue_(ss, issue, issues) {
+  const tab = ss.getSheetByName('Homepage');
+  if (!tab) return;
+  const values = tab.getDataRange().getValues();
+  for (let r = 1; r < values.length; r++) {
+    if (String(values[r][0]).trim() !== 'Print issue to promote') continue;
+    const current = String(values[r][1] == null ? '' : values[r][1]).trim();
+    const other = issues.rows.filter(function (x) { return x.id === current; })[0];
+    if (current !== issue.id && (!current || !other || (other.date || '') <= (issue.date || ''))) tab.getRange(r + 1, 2).setValue(issue.id);
+    return;
+  }
+}
+
+/** Published issues as the website shows them: a public copy of the PDF, which Drive also draws the cover from. */
+function siteIssues_(issues) {
+  const props = PropertiesService.getScriptProperties();
+  const out = [];
+  issues.rows.forEach(function (r) {
+    if (r.status !== 'Published' || (!r.id && !r.title)) return;
+    if (!/^[a-z0-9-]+$/.test(r.id)) { r.problem = 'The ID should look like 2026-27-issue-2.'; return; }
+    if (!r.pdf) { r.problem = 'Add the link to the PDF.'; return; }
+    let copy;
+    try { copy = publicPdf_(r.pdf); } catch (err) {
+      if (err.retry) r.retrying = true; else r.problem = String(err.message || err);
+      return;
+    }
+    const meta = JSON.parse(props.getProperty('PRINT_META:' + r.id) || '{}');
+    const date = r.date || today_();
+    const month = Number(date.slice(5, 7));
+    const n = /(\d+)$/.exec(r.id);
+    out.push({
+      id: r.id, title: r.title || r.id, season: month >= 8 ? 'Fall' : month <= 3 ? 'Winter' : 'Spring', year: Number(date.slice(0, 4)),
+      number: n ? Number(n[1]) : null, volume: null, dateLabel: longDate_(date), notes: [], pdf: { id: copy }, pages: [],
+      cover: { id: copy, w: 1200, h: Math.round((1200 * (meta.h || 1224)) / (meta.w || 792)) }, fromSheet: true,
+    });
+  });
+  return out;
+}
+
+/** A public copy of the issue's PDF in the website's folder, made again when the PDF is replaced. */
+function publicPdf_(src) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'PRINT_COPY:' + src;
+  const known = JSON.parse(props.getProperty(key) || 'null');
+  if (known && Date.now() - known.checked < 10 * 60 * 1000) return known.id;
+  let meta;
+  try { meta = Drive.Files.get(src, { fields: 'id,name,modifiedTime' }); } catch (err) {
+    if (known) return known.id;
+    throw new Error('The publisher cannot open the PDF. Is it still in Drive, and shared with ' + ownerEmail_() + '?');
+  }
+  if (known && known.modified === meta.modifiedTime) {
+    known.checked = Date.now();
+    props.setProperty(key, JSON.stringify(known));
+    return known.id;
+  }
+  let id;
+  try {
+    id = Drive.Files.copy({ name: meta.name, parents: [folders_().media] }, src).id;
+    Drive.Permissions.create({ role: 'reader', type: 'anyone' }, id);
+  } catch (err) {
+    id = uploadPublic_(DriveApp.getFileById(src).getBlob(), meta.name);
+  }
+  if (known) trash_([known.id]);
+  props.setProperty(key, JSON.stringify({ id: id, modified: meta.modifiedTime, checked: Date.now() }));
+  return id;
+}
+
+/** "On the website" in the Issues tab. */
+function writeIssueNotes_(issues, live) {
+  const c = issues.col('On the website');
+  if (!issues.tab || !issues.rows.length || c < 1) return;
+  const onSite = {};
+  (live.issues || []).forEach(function (i) { onSite[i.id] = true; });
+  const range = issues.tab.getRange(2, c, issues.rows.length, 1);
+  const current = range.getValues();
+  let changed = false;
+  const next = issues.rows.map(function (r, i) {
+    let text = '';
+    let link = null;
+    if (r.id || r.title) {
+      if (r.status !== 'Published') text = 'Not on the website (waiting for review)';
+      else if (onSite[r.id]) { link = pageUrl_('/issues/' + r.id + '/'); text = '✓ Live: ' + link; }
+      else text = r.problem ? '⚠ ' + r.problem : 'Publishing the issue and its articles… (about a minute)';
+    }
+    if (String(current[i][0]) !== text) changed = true;
+    const b = SpreadsheetApp.newRichTextValue().setText(text);
+    if (link) b.setLinkUrl(text.indexOf(link), text.length, link);
+    return [b.build()];
+  });
+  if (changed) range.setRichTextValues(next);
+}
+
+/** The archive's print issues with the Sheet's: an issue in both is shown as the Sheet has it. */
+function mergeIssues_(archive, sheet) {
+  const ids = sheet.map(function (i) { return i.id; });
+  return archive.filter(function (i) { return ids.indexOf(i.id) < 0; }).concat(sheet);
+}
+
+// ---------------------------------------------------------------------------------------------
 // Setting up (for the owner, from the script editor: choose the function, then Run)
 
 /** Once: makes the Drive folder and starts the minute-by-minute check. Safe to run again. */
 function setUpPublisher() {
-  readTable_(book_());
+  const ss = book_();
+  readTable_(ss);
   folders_();
+  printFolder_();
+  issueTab_(ss);
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'tick'; })) ScriptApp.newTrigger('tick').timeBased().everyMinutes(1).create();
   return 'The publisher checks the Sheet every minute.';
 }

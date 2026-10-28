@@ -57,11 +57,23 @@ export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
   text = text.replace(/^\[[^\]\n]+\]:\s*<?data:[^\n]*$/gm, '');
   // Google ends many lines with a hard line break ("  " or "\"): a line break typed with Shift+Enter,
   // and paragraphs with no space between them. Between two lines of a list or a quote it only
-  // continues the list or quote; anywhere else it starts a new paragraph.
+  // continues the list or quote; three or more short lines in a row (a poem's stanza) keep their
+  // breaks; anywhere else it starts a new paragraph.
   const lines = text.replace(/<br\s*\/?>/gi, '  \n').split('\n');
+  const HARD = /^(.*?)(?:[ \t]{2,}|\\)$/;
+  const verse = (l: string | undefined) => l !== undefined && !!l.trim() && l.trim().length <= 72 && !LIST_OR_QUOTE.test(l) && !/^\s*(#|!\[)/.test(l);
+  const keep: boolean[] = lines.map(() => false);
+  for (let i = 0; i < lines.length;) {
+    let j = i;
+    while (j < lines.length && HARD.test(lines[j]) && verse(lines[j])) j++;
+    const end = verse(lines[j]) && !HARD.test(lines[j]) ? j : j - 1; // a stanza's last line has no break
+    if (end - i >= 2) for (let k = i; k < end; k++) keep[k] = true;
+    i = Math.max(j, i + 1);
+  }
   text = lines.map((line, i) => {
-    const hard = /^(.*?)(?:[ \t]{2,}|\\)$/.exec(line);
+    const hard = HARD.exec(line);
     if (!hard) return line;
+    if (keep[i]) return hard[1] + '  ';
     return hard[1] + (LIST_OR_QUOTE.test(line) && LIST_OR_QUOTE.test(lines[i + 1] ?? '') ? '' : '\n');
   }).join('\n');
   let blocks = text.split(/\n[ \t]*\n+/).map((b) => b.replace(/\s+$/, '')).filter((b) => b.trim());

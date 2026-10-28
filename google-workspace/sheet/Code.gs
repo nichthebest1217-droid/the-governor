@@ -44,6 +44,34 @@ const COLUMNS = [
 ];
 const HEADERS = COLUMNS.map(function (c) { return c[0]; });
 
+// The Issues tab: one row per print issue, made when its PDF is dropped into the print-issues folder.
+const ISSUES = 'Issues';
+const ISSUE_STATUSES = ['Ready for Review', 'Published'];
+const PRINT_FOLDER = 'The Governor: print issues';
+const ISSUE_COLUMNS = [
+  ['Status', 130, 'Ready for Review while the editors check the articles made from the PDF. Published puts the issue on the website and publishes its articles that are still Ready for Review.'],
+  ['On the website', 280, 'Filled in by the Sheet. Do not type here.'],
+  ['Issue', 190, 'The issue as the website names it.'],
+  ['ID', 150, 'Read from the PDF, for example 2026-27-issue-2. The issue\'s articles carry it in their Print issue column.'],
+  ['Date', 120, 'The date printed on the issue.'],
+  ['PDF', 230, 'The PDF dropped into the print-issues folder. To correct it, replace that file in Drive (File > Manage versions) or drop the new PDF.'],
+  ['Articles folder', 230, 'The Google Docs made from the PDF, one per article. Fix any mistake in the Doc.'],
+  ['Notes', 380, 'What could not be made into an article (puzzles, memes, a box without a writer). It stays in the PDF on the website.'],
+];
+const ISSUE_HEADERS = ISSUE_COLUMNS.map(function (c) { return c[0]; });
+
+/** The Issues tab, made when first needed. */
+function issueTab_(ss) {
+  let tab = ss.getSheetByName(ISSUES);
+  if (tab) return tab;
+  tab = ss.insertSheet(ISSUES);
+  tab.getRange(1, 1, 1, ISSUE_HEADERS.length).setValues([ISSUE_HEADERS]).setFontWeight('bold').setBackground('#141312').setFontColor('#ffffff');
+  ISSUE_COLUMNS.forEach(function (c, i) { tab.setColumnWidth(i + 1, c[1]); tab.getRange(1, i + 1).setNote(c[2]); });
+  tab.setFrozenRows(1);
+  tab.getRange(2, 1, 300, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ISSUE_STATUSES, true).setAllowInvalid(false).build());
+  return tab;
+}
+
 function ownerEmail_() {
   return PropertiesService.getScriptProperties().getProperty('OWNER_EMAIL') || OWNER_EMAIL;
 }
@@ -192,6 +220,7 @@ function onEdit(e) {
     const range = e && e.range;
     if (!range || range.getLastRow() < 2) return;
     const sheet = range.getSheet();
+    if (sheet.getName() === ISSUES) { issueNote_(sheet, range); return; }
     if (sheet.getName() !== ARTICLES) return;
     const width = sheet.getLastColumn();
     const headers = sheet.getRange(1, 1, 1, width).getValues()[0].map(function (h) { return String(h).trim(); });
@@ -217,6 +246,20 @@ function onEdit(e) {
     if (changed) cells.setValues(next);
   } catch (err) {
     // Feedback only; the publisher corrects anything missed.
+  }
+}
+
+/** An issue's Status was changed: say so at once (the publisher confirms within a minute). */
+function issueNote_(sheet, range) {
+  const headers = sheet.getRange(1, 1, 1, ISSUE_HEADERS.length).getValues()[0].map(function (h) { return String(h).trim(); });
+  const status = headers.indexOf('Status') + 1;
+  const web = headers.indexOf('On the website') + 1;
+  if (!status || !web || range.getColumn() > status || range.getColumn() + range.getNumColumns() - 1 < status) return;
+  for (let r = Math.max(2, range.getRow()); r <= range.getLastRow(); r++) {
+    const value = String(sheet.getRange(r, status).getValue()).trim();
+    const current = String(sheet.getRange(r, web).getValue());
+    const note = value === 'Published' ? (current.indexOf('✓ Live') === 0 ? current : 'Publishing the issue and its articles… (about a minute)') : current.indexOf('✓ Live') === 0 ? 'Taking the issue off the website…' : 'Not on the website (waiting for review)';
+    if (note !== current) sheet.getRange(r, web).setValue(note);
   }
 }
 
@@ -250,6 +293,7 @@ function setUpSheet() {
   }
   upgradeColumns_(ss, sheet);
   formatArticles_(sheet);
+  issueTab_(ss);
   keyValueTab_(ss, 'Homepage', HOME_ROWS);
   keyValueTab_(ss, 'Site', SITE_ROWS);
   if (!ss.getSheetByName('Masthead')) {
@@ -343,6 +387,9 @@ function writeGuide_(ss) {
     ['p', 'Draft while it is being written. Ready for Review when an editor should read it. Published to put it on the website. Only Published articles are public: drafts never leave Google.'],
     ['h2', '5. Watch "On the website"'],
     ['p', 'It says Publishing…, then ✓ Live with the link. Anything missing appears there in plain words, starting with ⚠.'],
+    ['p', ''],
+    ['h2', 'A whole print issue at once'],
+    ['p', 'Drop the issue\'s PDF into the Google Drive folder "' + PRINT_FOLDER + '". Within a few minutes every article in it is in the Articles tab as Ready for Review, each with its own Google Doc (text, photos and captions from the PDF), and the issue has a row in the Issues tab. Check the articles and fix anything in their Docs; then set the issue\'s Status to Published in the Issues tab: the issue goes on the website with its PDF, and so does every article of it still Ready for Review. Puzzles, memes and boxes without a writer are listed in the issue\'s Notes; they stay in the PDF. For sharp photos, download the PDF from Canva as PDF Print.'],
     ['p', ''],
     ['h2', 'Good to know'],
     ['p', '• To fix a published article, edit its Google Doc or its row. The website updates by itself.'],

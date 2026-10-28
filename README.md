@@ -53,7 +53,7 @@ src/pages/              routes; src/components/ and src/layouts/ are the buildin
 src/styles/tokens.css   colours, fonts, sizes. Change the look here (both sites use it).
 public/media/           article photographs (originals; web sizes are generated at build)
 public/issues/          print-issue PDFs and page images
-scripts/                build tools for the publisher, the archive bundle, migration and QA (TypeScript, run directly by Node)
+scripts/                build tools for the publisher, the PDF splitter (split-issue.ts), the archive bundle, migration and QA
 migration/              inventories, URL map, review queue, and the evidence behind them
 tests/                  unit tests and built-site smoke tests
 .pages.yml              Pages CMS settings from the Astro site (not used since the move to Google)
@@ -85,6 +85,10 @@ with blank space.
    moves its **Status** from Draft to Ready for Review to Published.
 3. About a minute later the publisher has put it on the website, and **On the website** says ✓ Live with its
    link. Edits to the Doc or the row follow within a minute; setting the Status back to Draft takes it down.
+
+A whole print issue: drop its PDF (from Canva, as PDF Print) into the Drive folder "The Governor: print issues".
+Each article arrives in the Sheet as a Google Doc and a *Ready for Review* row; setting the issue to Published in
+the Issues tab publishes the issue's PDF and its articles together.
 
 Only Published rows are ever public. The details for editors are in the Sheet's **How to publish** tab and in
 [EDITORIAL_HANDBOOK.md](EDITORIAL_HANDBOOK.md).
