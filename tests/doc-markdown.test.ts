@@ -48,6 +48,12 @@ test('lists stay lists, a quote stays one quote, and other headings keep their w
   assert.equal(cleanDocMarkdown('## **Bold** and **more**\n\n## *Whole*', { title: 'T' }).body, '## **Bold** and **more**\n\n## Whole');
 });
 
+test('a picture exported in bold or italics (from the paragraph before it) is still a picture with its caption', () => {
+  const md = "**Each athlete's favorite memory:**\n\n**![Gracie][image1]**\n\n*Gracie Augustine ’25*\n\nConnor’s highlight was his debut.\n\n*![][image2]*\n\n*Coco Kou ’27*";
+  const out = cleanDocMarkdown(md, { title: 'T', images: { image1: 'gdrive:g1', image2: 'gdrive:c2' } });
+  assert.equal(out.body, "**Each athlete's favorite memory:**\n\n![Gracie](gdrive:g1 \"Gracie Augustine ’25\")\n\nConnor’s highlight was his debut.\n\n![](gdrive:c2 \"Coco Kou ’27\")");
+});
+
 test('a poem keeps its line breaks; stray breaks in prose still make paragraphs', () => {
   const poem = 'With my hand woven through hers,  \nWe wander barefoot through the damp pond-side grass,  \nWhere rays of gold sift through tall trees.\n\nBut the pond keeps what years could not.  \nOpaque water, trapped inside a frame.  \nThe sun, bound by dark wood,';
   assert.equal(cleanDocMarkdown(poem, { title: 'Pond Reflections' }).body, poem);

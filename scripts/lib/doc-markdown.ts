@@ -87,6 +87,9 @@ export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
     return kept;
   }, []).map((b) => (b.startsWith('>') && b.split('\n').every((l) => LIST_IN_QUOTE.test(l)) ? b.replace(/^>[ \t]?/gm, '') : b));
 
+  // A picture Google exported inside bold or italics (it takes the style of the paragraph before it) is still a picture.
+  blocks = blocks.map((b) => { const m = /^(\*{1,3}|_{1,3})(!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\])\1$/.exec(b.trim()); return m ? m[2] : b; });
+
   // The headline and the byline come from the Sheet.
   const title = plain(opts.title);
   if (blocks.length && !blocks[0].includes('\n') && plain(blocks[0]) === title) blocks.shift();

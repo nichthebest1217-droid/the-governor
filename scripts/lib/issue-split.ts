@@ -605,7 +605,8 @@ export function articleHtml(a: IssueArticle, src: (image: ArticleImage) => strin
     else {
       const url = src(b.image);
       if (!url) return;
-      parts.push(p('<img src="' + url + '" alt="' + esc(b.image.caption || '') + '">'));
+      // Plain style around the picture, so Google does not carry over the bold or italics before it.
+      parts.push(p('<span style="font-weight:normal;font-style:normal"><img src="' + url + '" alt="' + esc(b.image.caption || '') + '"></span>'));
       if (b.image.caption) parts.push(p('<em>' + esc(b.image.caption) + '</em>'));
     }
   });

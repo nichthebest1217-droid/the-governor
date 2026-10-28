@@ -29,7 +29,7 @@ const SETTINGS = {
 // Where the archive was copied from, once (a fixed version of the website's old repository).
 const IMPORT_FROM = 'https://raw.githubusercontent.com/nichthebest1217-droid/the-governor/d57ac83c71e7c3617ebc6ddc709f0acfad9fcba2/';
 // Raise to rebuild every article from the Sheet at the next check (after changing Doc.gs).
-const PROCESSOR = 1;
+const PROCESSOR = 2; // 2: pictures Google exports in bold or italics stay pictures (October 2026)
 const FOLDER_TYPE = 'application/vnd.google-apps.folder';
 
 // ===== Shared with sheet/Code.gs: keep this block identical in both files (a test checks). =====
