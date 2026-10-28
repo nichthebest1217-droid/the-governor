@@ -397,7 +397,7 @@ function writeGuide_(ss) {
     ['status', status],
     ['p', ''],
     ['h2', '1. Write the article in Google Docs'],
-    ['p', "Bold, italics, links, headings, lists and pictures carry over to the website. Fonts, sizes and colours don't: the website uses its own. To caption a picture, type the caption in italics on the line right under it. Pictures side by side on one line stay side by side, each over its own italic line (in the same order); at the very top of the Doc they make the cover together. Give every picture a description for readers who can't see it: right-click the picture > Alt text."],
+    ['p', "Bold, italics, links, headings, lists and pictures carry over to the website. Fonts, sizes and colours don't: the website uses its own. To caption a picture, type the caption in italics on the line right under it. Pictures next to each other in one paragraph (no Enter between them) are shown side by side, each over its own italic line (in the same order); at the very top of the Doc they make the cover together. Give every picture a description for readers who can't see it: right-click the picture > Alt text."],
     ['h2', '2. Share the Doc with ' + owner],
     ['p', 'Viewer access is enough. (Or keep the Doc in a shared folder that account can open.)'],
     ['h2', '3. Add a row in the Articles tab'],

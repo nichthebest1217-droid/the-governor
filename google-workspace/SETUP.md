@@ -50,15 +50,15 @@ nothing depends on GitHub.
   the Issues tab, whose Notes list what could not be made into an article. A long issue is finished over a few
   checks. Setting the issue's row to Published puts a public copy of the PDF on the website (Drive draws the
   cover from its first page; the issue's page shows the PDF in Google's viewer) and publishes its articles still
-  *Ready for Review*. Photos printed about the same size open the article's Doc side by side and share its
-  cover. An issue can carry its own nameplate (the Issues tab's **Nameplate** column, a picture in Drive): the
+  *Ready for Review*. Photos printed about the same size open the article's Doc together and share its cover,
+  side by side. An issue can carry its own nameplate (the Issues tab's **Nameplate** column, a picture in Drive): the
   website wears it while that issue is the latest. It was checked against Issue I, whose 14 articles had been
   typed in by hand: every article, writer and photo matched.
 - **Formatting.** Bold, italics, links, headings, lists, tables and pictures in a Doc carry over; fonts, sizes and
   colours do not (the website has its own typography). A headline and a "By ..." line at the top of the Doc are
   dropped, because they come from the Sheet. An italic line right under a picture becomes its caption, and a
-  picture at the very top of the Doc becomes the cover photo (unless the row has an Image link). Pictures side
-  by side on one line stay side by side, each over its own italic line; at the top they share the cover.
+  picture at the very top of the Doc becomes the cover photo (unless the row has an Image link). Pictures in one
+  paragraph are shown side by side, each over its own italic line; at the top they share the cover.
 
 ## Setup (done on 16 October 2026)
 

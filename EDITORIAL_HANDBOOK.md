@@ -28,8 +28,9 @@ Writers need only their Doc.
 
 1. **Write in Google Docs.** Bold, italics, links, headings, lists, tables and pictures carry over; fonts,
    sizes and colours do not (the website uses its own). For a caption, type it in italics on the line right
-   under the picture. Pictures side by side on one line stay side by side, at one height, each over its own
-   italic caption line (in the same order); at the very top of the Doc they make the cover together. Give each
+   under the picture. Pictures next to each other in one paragraph (no Enter between them) are shown side by
+   side, at one height, each over its own italic caption line (in the same order); at the very top of the Doc
+   they make the cover together. Give each
    picture a description for readers who cannot see it: right-click > Alt text.
 2. **Share the Doc** with `nicholas.zhuo@govsacademy.org` (Viewer is enough), or keep it in a shared folder
    that account can open.
@@ -94,7 +95,7 @@ masthead school year) work the same way and update the site within a minute.
    The issue gets a row in the **Issues** tab. Its **Notes** list what could not be made into an article
    (puzzles, memes, a box with no writer); those stay in the PDF on the website. When an article has photos
    printed about the same size (the cast and the crew, three athletes), none is picked over the others: they
-   open its Doc side by side and share the cover on the website.
+   open its Doc together, in one paragraph, and share the cover on the website, side by side.
 4. **Check each article**: open its Doc and compare it with the PDF, fix anything (paragraph breaks, a photo in
    the wrong article), and choose the right **Category** in its row. A photo can be replaced with a sharper one
    through the row's **Image link**.

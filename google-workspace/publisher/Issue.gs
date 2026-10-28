@@ -2426,12 +2426,12 @@ const IssuePdf = (function () {
             else if (b.type === 'list')
                 parts.push((b.ordered ? '<ol>' : '<ul>') + b.items.map((it) => '<li>' + it.map(runHtml).join('') + '</li>').join('') + (b.ordered ? '</ol>' : '</ul>'));
             else if (b.type === 'row') {
-                // Side by side on one line, at one height, together as wide as the page; then each caption, in order.
+                // Together in one paragraph, which the website shows side by side; then each caption, in order. No size is
+                // given: Google would store the pictures at that size, and they would be blurry on the website.
                 const shown = b.images.map((im) => ({ im, url: src(im) })).filter((x) => x.url);
                 if (!shown.length)
                     return;
-                const height = Math.floor(560 / shown.reduce((sum, x) => sum + x.im.width / x.im.height, 0));
-                parts.push(p('<span style="font-weight:normal;font-style:normal">' + shown.map((x) => '<img src="' + x.url + '" alt="' + esc(x.im.caption || '') + '" width="' + Math.round((height * x.im.width) / x.im.height) + '" height="' + height + '">').join(' ') + '</span>'));
+                parts.push(p('<span style="font-weight:normal;font-style:normal">' + shown.map((x) => '<img src="' + x.url + '" alt="' + esc(x.im.caption || '') + '">').join(' ') + '</span>'));
                 shown.forEach((x) => { if (x.im.caption)
                     parts.push(p('<em>' + esc(x.im.caption) + '</em>')); });
             }

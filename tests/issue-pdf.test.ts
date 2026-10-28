@@ -102,7 +102,7 @@ test('the Doc for an article: headline, byline, paragraphs with bold, pictures w
     { type: 'row', images: [{ page: 6, id: 1, caption: '26-27 Fall Drama Cast', x0: 0, y0: 0, x1: 1, y1: 1, width: 615, height: 411 }, { page: 6, id: 2, caption: '26-27 Fall Drama Tech', x0: 0, y0: 0, x1: 1, y1: 1, width: 1133, height: 756 }] },
     { type: 'p', runs: [{ text: 'This fall, Govs continues its tradition.' }] }] };
   const row = articleHtml(behind, (x) => 'data:image/png;base64,P' + x.id);
-  assert.match(row, /<p[^>]*><span style="font-weight:normal;font-style:normal"><img src="data:image\/png;base64,P1" alt="26-27 Fall Drama Cast" width="278" height="186"> <img src="data:image\/png;base64,P2" alt="26-27 Fall Drama Tech" width="279" height="186"><\/span><\/p>\n<p[^>]*><em>26-27 Fall Drama Cast<\/em><\/p>\n<p[^>]*><em>26-27 Fall Drama Tech<\/em><\/p>\n<p[^>]*>This fall/, 'side by side on one line, as wide as the page together, then each caption in order');
+  assert.match(row, /<p[^>]*><span style="font-weight:normal;font-style:normal"><img src="data:image\/png;base64,P1" alt="26-27 Fall Drama Cast"> <img src="data:image\/png;base64,P2" alt="26-27 Fall Drama Tech"><\/span><\/p>\n<p[^>]*><em>26-27 Fall Drama Cast<\/em><\/p>\n<p[^>]*><em>26-27 Fall Drama Tech<\/em><\/p>\n<p[^>]*>This fall/, 'together in one paragraph, at full size, then each caption in order');
   const evil: IssueArticle = { title: '<b>x</b>', authors: ['A <i>B</i>'], page: 1, order: 1, editorial: false, poem: false, gallery: false, category: 'News', words: 2, blocks: [{ type: 'p', runs: [{ text: '<script>alert(1)</script>' }] }] };
   assert.ok(!/<script>|<b>x|<i>B/.test(articleHtml(evil, () => null)), 'text from the PDF is escaped');
 });
