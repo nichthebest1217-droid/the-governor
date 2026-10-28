@@ -57,13 +57,24 @@ const ISSUE_COLUMNS = [
   ['PDF', 230, 'The PDF dropped into the print-issues folder. To correct it, replace that file in Drive (File > Manage versions) or drop the new PDF.'],
   ['Articles folder', 230, 'The Google Docs made from the PDF, one per article. Fix any mistake in the Doc.'],
   ['Notes', 380, 'What could not be made into an article (puzzles, memes, a box without a writer). It stays in the PDF on the website.'],
+  ['Nameplate', 230, 'Optional. A special version of the paper\'s title (for example a Halloween one) to show at the top of the website while this is the latest issue: a Google Drive link to the picture. Leave empty for the usual title, which returns by itself when the next issue is published.'],
 ];
 const ISSUE_HEADERS = ISSUE_COLUMNS.map(function (c) { return c[0]; });
 
-/** The Issues tab, made when first needed. */
+/** The Issues tab, made when first needed. A column added since the tab was made goes on its end. */
 function issueTab_(ss) {
   let tab = ss.getSheetByName(ISSUES);
-  if (tab) return tab;
+  if (tab) {
+    let next = tab.getLastColumn() + 1;
+    const have = next > 1 ? tab.getRange(1, 1, 1, next - 1).getValues()[0].map(function (h) { return String(h).trim(); }) : [];
+    ISSUE_COLUMNS.forEach(function (c) {
+      if (have.indexOf(c[0]) >= 0) return;
+      tab.getRange(1, next).setValue(c[0]).setFontWeight('bold').setBackground('#141312').setFontColor('#ffffff').setNote(c[2]);
+      tab.setColumnWidth(next, c[1]);
+      next++;
+    });
+    return tab;
+  }
   tab = ss.insertSheet(ISSUES);
   tab.getRange(1, 1, 1, ISSUE_HEADERS.length).setValues([ISSUE_HEADERS]).setFontWeight('bold').setBackground('#141312').setFontColor('#ffffff');
   ISSUE_COLUMNS.forEach(function (c, i) { tab.setColumnWidth(i + 1, c[1]); tab.getRange(1, i + 1).setNote(c[2]); });
@@ -386,7 +397,7 @@ function writeGuide_(ss) {
     ['status', status],
     ['p', ''],
     ['h2', '1. Write the article in Google Docs'],
-    ['p', "Bold, italics, links, headings, lists and pictures carry over to the website. Fonts, sizes and colours don't: the website uses its own. To caption a picture, type the caption in italics on the line right under it. Give every picture a description for readers who can't see it: right-click the picture > Alt text."],
+    ['p', "Bold, italics, links, headings, lists and pictures carry over to the website. Fonts, sizes and colours don't: the website uses its own. To caption a picture, type the caption in italics on the line right under it. Pictures side by side on one line stay side by side, each over its own italic line (in the same order); at the very top of the Doc they make the cover together. Give every picture a description for readers who can't see it: right-click the picture > Alt text."],
     ['h2', '2. Share the Doc with ' + owner],
     ['p', 'Viewer access is enough. (Or keep the Doc in a shared folder that account can open.)'],
     ['h2', '3. Add a row in the Articles tab'],
@@ -397,7 +408,8 @@ function writeGuide_(ss) {
     ['p', 'It says Publishing…, then ✓ Live with the link. Anything missing appears there in plain words, starting with ⚠.'],
     ['p', ''],
     ['h2', 'A whole print issue at once'],
-    ['p', 'Drop the issue\'s PDF into the Google Drive folder "' + PRINT_FOLDER + '". Within a few minutes every article in it is in the Articles tab as Ready for Review, each with its own Google Doc (text, photos and captions from the PDF), and the issue has a row in the Issues tab. Check the articles and fix anything in their Docs; then set the issue\'s Status to Published in the Issues tab: the issue goes on the website with its PDF, and so does every article of it still Ready for Review. Puzzles, memes and boxes without a writer are listed in the issue\'s Notes; they stay in the PDF. For sharp photos, download the PDF from Canva as PDF Print.'],
+    ['p', 'Drop the issue\'s PDF into the Google Drive folder "' + PRINT_FOLDER + '". Within a few minutes every article in it is in the Articles tab as Ready for Review, each with its own Google Doc (text, photos and captions from the PDF), and the issue has a row in the Issues tab. Check the articles and fix anything in their Docs; then set the issue\'s Status to Published in the Issues tab: the issue goes on the website with its PDF, and so does every article of it still Ready for Review. Puzzles, memes and boxes without a writer are listed in the issue\'s Notes; they stay in the PDF. Photos printed about the same size share the article\'s cover, side by side. For sharp photos, download the PDF from Canva as PDF Print.'],
+    ['p', 'A special title for an issue (a Halloween nameplate, say): put the picture in Drive and its link in the issue\'s Nameplate column. The website shows it while that issue is the latest and goes back to the usual one by itself when the next issue is published.'],
     ['p', ''],
     ['h2', 'Good to know'],
     ['p', '• To fix a published article, edit its Google Doc or its row. The website updates by itself.'],

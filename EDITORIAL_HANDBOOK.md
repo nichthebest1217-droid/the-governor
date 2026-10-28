@@ -28,7 +28,9 @@ Writers need only their Doc.
 
 1. **Write in Google Docs.** Bold, italics, links, headings, lists, tables and pictures carry over; fonts,
    sizes and colours do not (the website uses its own). For a caption, type it in italics on the line right
-   under the picture. Give each picture a description for readers who cannot see it: right-click > Alt text.
+   under the picture. Pictures side by side on one line stay side by side, at one height, each over its own
+   italic caption line (in the same order); at the very top of the Doc they make the cover together. Give each
+   picture a description for readers who cannot see it: right-click > Alt text.
 2. **Share the Doc** with `nicholas.zhuo@govsacademy.org` (Viewer is enough), or keep it in a shared folder
    that account can open.
 3. **Add a row** in the Articles tab:
@@ -90,13 +92,20 @@ masthead school year) work the same way and update the site within a minute.
    writers, a guessed category, the issue's date, the issue and its page order, and a link to a new Google Doc
    holding the article's text, photos and captions (in a folder for the issue, inside the print-issues folder).
    The issue gets a row in the **Issues** tab. Its **Notes** list what could not be made into an article
-   (puzzles, memes, a box with no writer); those stay in the PDF on the website.
+   (puzzles, memes, a box with no writer); those stay in the PDF on the website. When an article has photos
+   printed about the same size (the cast and the crew, three athletes), none is picked over the others: they
+   open its Doc side by side and share the cover on the website.
 4. **Check each article**: open its Doc and compare it with the PDF, fix anything (paragraph breaks, a photo in
    the wrong article), and choose the right **Category** in its row. A photo can be replaced with a sharper one
    through the row's **Image link**.
 5. **Set the issue's Status to Published** in the Issues tab. About a minute later the issue is on the website
    with its PDF (on the Print issues page, and promoted on the front page), and every article of it still
    *Ready for Review* is published with it. An article set back to Draft beforehand stays a draft.
+
+**A special title for an issue.** For an issue with its own version of the nameplate (the Halloween issue's
+orange lions and spider), put a picture of it in Drive and its link in the issue's **Nameplate** column in the
+Issues tab. The website shows it at the top of every page while that issue is the latest, and goes back to the
+usual nameplate by itself when the next issue is published. Clear the cell to go back sooner.
 
 To correct the PDF, replace the file in Drive (right-click > File information > Manage versions) or drop the new
 PDF: the website's copy is updated, and only articles not already in the Sheet are added. The articles of the

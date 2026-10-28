@@ -4,7 +4,7 @@
 // tables and pictures. This file only:
 //   - drops what the Sheet supplies anyway: a headline and a "By ..." line at the top of the Doc,
 //   - turns an italic line right under a picture into that picture's caption,
-//   - can take a picture at the very top of the Doc as the cover photo,
+//   - can take a picture at the very top of the Doc (or pictures side by side there) as the cover,
 //   - keeps headings below the article's own headline (a Doc "Heading 1" becomes a subheading),
 //   - tidies the export's habits: line breaks become paragraphs, an indented list stays a list,
 //   - makes the result safe: HTML typed into a Doc is shown as text, and links may only point
@@ -18,9 +18,11 @@ export interface CleanOptions {
   /** Use a picture that opens the Doc as the cover photo instead of a body picture. */
   leadImage?: boolean;
 }
+export interface Picture { src: string; alt: string; caption: string | null }
 export interface Cleaned {
   body: string;
-  lead: { src: string; alt: string; caption: string | null } | null;
+  /** The cover: a picture that opens the Doc, with the pictures beside it on that first line (if any). */
+  lead: (Picture & { beside?: Picture[] }) | null;
   /** Picture references that had no file (they are left out of the article). */
   missing: string[];
 }
@@ -42,12 +44,32 @@ const plain = (s: string) => s
 // "By Jane Doe ’27 and Sam Lee ’28", but not "By the time students arrived".
 const NAME = String.raw`[A-Z][A-Za-z’'.\-]*(?:\s+[A-Z][A-Za-z’'.\-]*){0,3}(?:\s*[’'‘]?\s*\d{2}[’']?)?`;
 const BYLINE = new RegExp(String.raw`^(?:[Ww]ritten\s+)?[Bb][Yy]:?\s+${NAME}(?:\s*(?:,|&|\band\b)\s*${NAME})*\.?$`);
-const IMAGE_BLOCK = /^!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]$/;
+// One picture, or pictures side by side, and nothing else.
+const IMAGES_ONLY = /^!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\](?:[ \t]*!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\])*$/;
+const IMAGE_REF = /!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]/g;
 const ITALIC_LINE = /^(?:\*(?!\*)([^\n]+?)\*|_(?!_)([^\n]+?)_)$/;
 const LIST_OR_QUOTE = /^[ \t]*(?:>|[-*+][ \t]|\d+[.)][ \t])/;
 const LIST_IN_QUOTE = /^>[ \t]*(?:$|[-*+][ \t]|\d+[.)][ \t]|[ \t]{2,}\S)/;
 const unescape = (s: string) => s.replace(/\\(.)/g, '$1').trim();
 const titleAttr = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+/** The pictures in a block of pictures (one, or several side by side); a picture with no file is left out and reported. */
+function picturesIn(block: string, images: Record<string, string>, missing: Set<string>) {
+  return [...block.matchAll(IMAGE_REF)]
+    .filter((m) => { if (!images[m[2]]) missing.add(m[2]); return !!images[m[2]]; })
+    .map((m) => ({ src: images[m[2]], alt: unescape(m[1]), rawAlt: m[1] }));
+}
+
+/** The captions under n pictures: an italic line for each, in order, or else a single italic line (or none). */
+function captionsUnder(blocks: string[], n: number): string[] {
+  const caps: string[] = [];
+  for (let i = 0; i < n && i < blocks.length; i++) {
+    const m = blocks[i].length <= (i ? 200 : 400) ? ITALIC_LINE.exec(blocks[i]) : null;
+    if (!m) break;
+    caps.push(unescape(m[1] ?? m[2]));
+  }
+  return caps.length === n ? caps : caps.slice(0, 1);
+}
 
 export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
   const images = opts.images ?? {};
@@ -88,7 +110,10 @@ export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
   }, []).map((b) => (b.startsWith('>') && b.split('\n').every((l) => LIST_IN_QUOTE.test(l)) ? b.replace(/^>[ \t]?/gm, '') : b));
 
   // A picture Google exported inside bold or italics (it takes the style of the paragraph before it) is still a picture.
-  blocks = blocks.map((b) => { const m = /^(\*{1,3}|_{1,3})(!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\])\1$/.exec(b.trim()); return m ? m[2] : b; });
+  blocks = blocks.map((b) => {
+    const bare = b.trim().replace(/(?:\*{1,3}|_{1,3})(?=!\[)/g, '').replace(/(\]\[[^\]\n]+\])(?:\*{1,3}|_{1,3})/g, '$1');
+    return IMAGES_ONLY.test(bare) ? bare : b;
+  });
 
   // The headline and the byline come from the Sheet.
   const title = plain(opts.title);
@@ -97,28 +122,31 @@ export function cleanDocMarkdown(md: string, opts: CleanOptions): Cleaned {
     if (!blocks[i].includes('\n') && BYLINE.test(blocks[i].replace(/\\(.)/g, '$1').replace(/[*_]/g, '').trim())) { blocks.splice(i, 1); break; }
   }
 
-  // A picture that opens the Doc can become the cover photo.
+  // A picture that opens the Doc, or pictures side by side on its first line, can become the cover.
   let lead: Cleaned['lead'] = null;
-  const first = blocks.length ? IMAGE_BLOCK.exec(blocks[0]) : null;
-  if (opts.leadImage && first && images[first[2]]) {
-    blocks.shift();
-    const cap = blocks.length ? ITALIC_LINE.exec(blocks[0]) : null;
-    if (cap && blocks[0].length <= 400) blocks.shift();
-    lead = { src: images[first[2]], alt: unescape(first[1]), caption: cap ? unescape(cap[1] ?? cap[2]) : null };
+  if (opts.leadImage && blocks.length && IMAGES_ONLY.test(blocks[0])) {
+    const pics = picturesIn(blocks[0], images, missing);
+    if (pics.length) {
+      blocks.shift();
+      const caps = captionsUnder(blocks, pics.length);
+      blocks.splice(0, caps.length);
+      const shared = caps.length < pics.length; // one caption for pictures side by side
+      lead = Object.assign({ src: pics[0].src, alt: pics[0].alt, caption: caps[0] ?? null }, pics.length > 1 ? { beside: pics.slice(1).map((pic, i) => ({ src: pic.src, alt: pic.alt, caption: shared ? null : caps[i + 1] })) } : {});
+    }
   }
 
-  // Pictures: a picture on its own line takes the italic line under it as its caption.
+  // Pictures: a picture on its own line takes the italic line under it as its caption. Pictures side by
+  // side take one italic line each, in order (or a single line for them all, which stays a line under them).
   const out: string[] = [];
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    const solo = IMAGE_BLOCK.exec(block);
-    if (solo) {
-      const src = images[solo[2]];
-      if (!src) { missing.add(solo[2]); continue; }
-      const next = blocks[i + 1];
-      const cap = next && next.length <= 400 ? ITALIC_LINE.exec(next) : null;
-      if (cap) i++;
-      out.push(`![${solo[1]}](${src}${cap ? ` "${titleAttr(unescape(cap[1] ?? cap[2]))}"` : ''})`);
+    if (IMAGES_ONLY.test(block)) {
+      const pics = picturesIn(block, images, missing);
+      if (!pics.length) continue;
+      const caps = captionsUnder(blocks.slice(i + 1), pics.length);
+      const own = caps.length === pics.length;
+      if (own) i += caps.length;
+      out.push(pics.map((pic, n) => `![${pic.rawAlt}](${pic.src}${own ? ` "${titleAttr(caps[n])}"` : ''})`).join(' '));
       continue;
     }
     const replaced = block.replace(/!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]/g, (_m, alt: string, ref: string) => {

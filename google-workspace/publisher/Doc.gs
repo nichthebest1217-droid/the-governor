@@ -1102,7 +1102,7 @@ const DocMarkdown = (function () {
     // tables and pictures. This file only:
     //   - drops what the Sheet supplies anyway: a headline and a "By ..." line at the top of the Doc,
     //   - turns an italic line right under a picture into that picture's caption,
-    //   - can take a picture at the very top of the Doc as the cover photo,
+    //   - can take a picture at the very top of the Doc (or pictures side by side there) as the cover,
     //   - keeps headings below the article's own headline (a Doc "Heading 1" becomes a subheading),
     //   - tidies the export's habits: line breaks become paragraphs, an indented list stays a list,
     //   - makes the result safe: HTML typed into a Doc is shown as text, and links may only point
@@ -1122,14 +1122,35 @@ const DocMarkdown = (function () {
     // "By Jane Doe ’27 and Sam Lee ’28", but not "By the time students arrived".
     const NAME = String.raw `[A-Z][A-Za-z’'.\-]*(?:\s+[A-Z][A-Za-z’'.\-]*){0,3}(?:\s*[’'‘]?\s*\d{2}[’']?)?`;
     const BYLINE = new RegExp(String.raw `^(?:[Ww]ritten\s+)?[Bb][Yy]:?\s+${NAME}(?:\s*(?:,|&|\band\b)\s*${NAME})*\.?$`);
-    const IMAGE_BLOCK = /^!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]$/;
+    // One picture, or pictures side by side, and nothing else.
+    const IMAGES_ONLY = /^!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\](?:[ \t]*!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\])*$/;
+    const IMAGE_REF = /!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]/g;
     const ITALIC_LINE = /^(?:\*(?!\*)([^\n]+?)\*|_(?!_)([^\n]+?)_)$/;
     const LIST_OR_QUOTE = /^[ \t]*(?:>|[-*+][ \t]|\d+[.)][ \t])/;
     const LIST_IN_QUOTE = /^>[ \t]*(?:$|[-*+][ \t]|\d+[.)][ \t]|[ \t]{2,}\S)/;
     const unescape = (s) => s.replace(/\\(.)/g, '$1').trim();
     const titleAttr = (s) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    /** The pictures in a block of pictures (one, or several side by side); a picture with no file is left out and reported. */
+    function picturesIn(block, images, missing) {
+        return [...block.matchAll(IMAGE_REF)]
+            .filter((m) => { if (!images[m[2]])
+            missing.add(m[2]); return !!images[m[2]]; })
+            .map((m) => ({ src: images[m[2]], alt: unescape(m[1]), rawAlt: m[1] }));
+    }
+    /** The captions under n pictures: an italic line for each, in order, or else a single italic line (or none). */
+    function captionsUnder(blocks, n) {
+        var _a;
+        const caps = [];
+        for (let i = 0; i < n && i < blocks.length; i++) {
+            const m = blocks[i].length <= (i ? 200 : 400) ? ITALIC_LINE.exec(blocks[i]) : null;
+            if (!m)
+                break;
+            caps.push(unescape((_a = m[1]) !== null && _a !== void 0 ? _a : m[2]));
+        }
+        return caps.length === n ? caps : caps.slice(0, 1);
+    }
     function cleanDocMarkdown(md, opts) {
-        var _a, _b, _c;
+        var _a, _b;
         const images = (_a = opts.images) !== null && _a !== void 0 ? _a : {};
         const missing = new Set();
         let text = md.replace(/\r\n?/g, '\n');
@@ -1174,7 +1195,10 @@ const DocMarkdown = (function () {
             return kept;
         }, []).map((b) => (b.startsWith('>') && b.split('\n').every((l) => LIST_IN_QUOTE.test(l)) ? b.replace(/^>[ \t]?/gm, '') : b));
         // A picture Google exported inside bold or italics (it takes the style of the paragraph before it) is still a picture.
-        blocks = blocks.map((b) => { const m = /^(\*{1,3}|_{1,3})(!\[(?:[^\]\\]|\\.)*\]\[[^\]\n]+\])\1$/.exec(b.trim()); return m ? m[2] : b; });
+        blocks = blocks.map((b) => {
+            const bare = b.trim().replace(/(?:\*{1,3}|_{1,3})(?=!\[)/g, '').replace(/(\]\[[^\]\n]+\])(?:\*{1,3}|_{1,3})/g, '$1');
+            return IMAGES_ONLY.test(bare) ? bare : b;
+        });
         // The headline and the byline come from the Sheet.
         const title = plain(opts.title);
         if (blocks.length && !blocks[0].includes('\n') && plain(blocks[0]) === title)
@@ -1185,32 +1209,32 @@ const DocMarkdown = (function () {
                 break;
             }
         }
-        // A picture that opens the Doc can become the cover photo.
+        // A picture that opens the Doc, or pictures side by side on its first line, can become the cover.
         let lead = null;
-        const first = blocks.length ? IMAGE_BLOCK.exec(blocks[0]) : null;
-        if (opts.leadImage && first && images[first[2]]) {
-            blocks.shift();
-            const cap = blocks.length ? ITALIC_LINE.exec(blocks[0]) : null;
-            if (cap && blocks[0].length <= 400)
+        if (opts.leadImage && blocks.length && IMAGES_ONLY.test(blocks[0])) {
+            const pics = picturesIn(blocks[0], images, missing);
+            if (pics.length) {
                 blocks.shift();
-            lead = { src: images[first[2]], alt: unescape(first[1]), caption: cap ? unescape((_b = cap[1]) !== null && _b !== void 0 ? _b : cap[2]) : null };
+                const caps = captionsUnder(blocks, pics.length);
+                blocks.splice(0, caps.length);
+                const shared = caps.length < pics.length; // one caption for pictures side by side
+                lead = Object.assign({ src: pics[0].src, alt: pics[0].alt, caption: (_b = caps[0]) !== null && _b !== void 0 ? _b : null }, pics.length > 1 ? { beside: pics.slice(1).map((pic, i) => ({ src: pic.src, alt: pic.alt, caption: shared ? null : caps[i + 1] })) } : {});
+            }
         }
-        // Pictures: a picture on its own line takes the italic line under it as its caption.
+        // Pictures: a picture on its own line takes the italic line under it as its caption. Pictures side by
+        // side take one italic line each, in order (or a single line for them all, which stays a line under them).
         const out = [];
         for (let i = 0; i < blocks.length; i++) {
             const block = blocks[i];
-            const solo = IMAGE_BLOCK.exec(block);
-            if (solo) {
-                const src = images[solo[2]];
-                if (!src) {
-                    missing.add(solo[2]);
+            if (IMAGES_ONLY.test(block)) {
+                const pics = picturesIn(block, images, missing);
+                if (!pics.length)
                     continue;
-                }
-                const next = blocks[i + 1];
-                const cap = next && next.length <= 400 ? ITALIC_LINE.exec(next) : null;
-                if (cap)
-                    i++;
-                out.push(`![${solo[1]}](${src}${cap ? ` "${titleAttr(unescape((_c = cap[1]) !== null && _c !== void 0 ? _c : cap[2]))}"` : ''})`);
+                const caps = captionsUnder(blocks.slice(i + 1), pics.length);
+                const own = caps.length === pics.length;
+                if (own)
+                    i += caps.length;
+                out.push(pics.map((pic, n) => `![${pic.rawAlt}](${pic.src}${own ? ` "${titleAttr(caps[n])}"` : ''})`).join(' '));
                 continue;
             }
             const replaced = block.replace(/!\[((?:[^\]\\]|\\.)*)\]\[([^\]\n]+)\]/g, (_m, alt, ref) => {
@@ -1283,22 +1307,28 @@ const DocMarkdown = (function () {
  * Markdown to HTML for articles from the Sheet. HTML typed into a Doc is shown as text, links may
  * only point to web pages, email addresses or this site, and only pictures the publisher copied
  * into Drive (gdrive:<id>) are shown, with sizes for every screen. A picture with a caption on its
- * own line becomes a figure.
+ * own line becomes a figure; pictures side by side on one line stay side by side, at one height.
  */
 const DocRender = (function () {
     const esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     const SAFE = /^(https?:\/\/|mailto:|\/(?!\/)|#)/i;
-    function image(token, sizes) {
+    const ratio = function (token, sizes) {
+        const m = /^gdrive:([A-Za-z0-9_-]+)$/.exec(token.href || '');
+        const info = (m && sizes[m[1]]) || {};
+        return info.w && info.h ? info.w / info.h : 1.5;
+    };
+    function image(token, sizes, share) {
         const m = /^gdrive:([A-Za-z0-9_-]+)$/.exec(token.href || '');
         if (!m)
             return '';
+        share = share || 1;
         const info = sizes[m[1]] || {};
         const widths = [480, 960, 1600].filter(function (w) { return !info.w || w < info.w; });
         if (info.w && (!widths.length || widths[widths.length - 1] < info.w))
             widths.push(Math.min(info.w, 2000));
         const url = function (w) { return 'https://lh3.googleusercontent.com/d/' + m[1] + '=w' + w; };
         return '<img src="' + url(widths[Math.min(1, widths.length - 1)]) + '" srcset="' + widths.map(function (w) { return url(w) + ' ' + w + 'w'; }).join(', ') + '"'
-            + ' sizes="(min-width: 800px) 720px, 100vw"' + (info.w ? ' width="' + info.w + '" height="' + info.h + '"' : '') + ' alt="' + esc(token.text) + '" loading="lazy" decoding="async">';
+            + ' sizes="(min-width: 800px) ' + Math.round(720 * share) + 'px, ' + Math.round(100 * share) + 'vw"' + (info.w ? ' width="' + info.w + '" height="' + info.h + '"' : '') + ' alt="' + esc(token.text) + '" loading="lazy" decoding="async">';
     }
     function render(markdown, sizes) {
         sizes = sizes || {};
@@ -1315,7 +1345,16 @@ const DocRender = (function () {
                 },
                 image: function (token) { return image(token, sizes); },
                 paragraph: function (token) {
-                    const only = token.tokens && token.tokens.length === 1 && token.tokens[0].type === 'image' ? token.tokens[0] : null;
+                    const parts = token.tokens || [];
+                    const pics = parts.filter(function (t) { return t.type === 'image'; });
+                    if (pics.length > 1 && parts.every(function (t) { return t.type === 'image' || (t.type === 'text' && !t.text.trim()); })) {
+                        const total = pics.reduce(function (sum, t) { return sum + ratio(t, sizes); }, 0);
+                        return '<div class="pic-row">' + pics.map(function (t) {
+                            const r = ratio(t, sizes);
+                            return '<figure style="flex:' + r.toFixed(3) + ' 1 0%">' + image(t, sizes, r / total) + (t.title ? '<figcaption>' + esc(t.title) + '</figcaption>' : '') + '</figure>';
+                        }).join('') + '</div>\n';
+                    }
+                    const only = parts.length === 1 && parts[0].type === 'image' ? parts[0] : null;
                     if (only && only.title)
                         return '<figure>' + image(only, sizes) + '<figcaption>' + esc(only.title) + '</figcaption></figure>\n';
                     return '<p>' + this.parser.parseInline(token.tokens) + '</p>\n';

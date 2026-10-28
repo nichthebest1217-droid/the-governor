@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { unzlibSync, zlibSync } from 'fflate';
 import { openPdf } from './lib/pdf-read.ts';
-import { splitIssue } from './lib/issue-split.ts';
+import { splitIssue, type ArticleImage } from './lib/issue-split.ts';
 import { p, readJson, exists } from './lib/util.ts';
 
 const file = process.argv[2];
@@ -18,11 +18,14 @@ const split = splitIssue(pdf, { knownNames });
 
 console.log(`${split.title ?? '(no issue label found)'} · id ${split.id} · date ${split.date} · ${split.articles.length} articles`);
 for (const a of split.articles) {
-  const images = a.blocks.filter((b) => b.type === 'image');
+  const picture = (im: ArticleImage) => `p${im.page} ${im.width}x${im.height}px${im.caption ? ' · "' + im.caption + '"' : ''}`;
   console.log(`\n${a.order}. ${a.title}  (page ${a.page}, ${a.category}${a.editorial ? ', editorial' : ''}${a.poem ? ', poem' : ''}${a.gallery ? ', gallery' : ''}, ${a.words} words)`);
   console.log(`   by ${a.authors.join(', ') || '(no writers)'}`);
-  images.forEach((b) => { if (b.type === 'image') console.log(`   [picture p${b.image.page} ${b.image.width}x${b.image.height}px${b.image.caption ? ' · "' + b.image.caption + '"' : ''}]`); });
-  const paras = a.blocks.filter((b) => b.type !== 'image');
+  a.blocks.forEach((b) => {
+    if (b.type === 'image') console.log(`   [picture ${picture(b.image)}]`);
+    if (b.type === 'row') console.log(`   [side by side: ${b.images.map(picture).join(' | ')}]`);
+  });
+  const paras = a.blocks.filter((b) => b.type !== 'image' && b.type !== 'row');
   (full ? paras : paras.slice(0, 2)).forEach((b) => {
     const t = b.type === 'p' ? b.runs.map((r) => (r.bold ? '**' + r.text + '**' : r.text)).join('') : b.type === 'lines' ? b.lines.map((l) => l.map((r) => r.text).join('')).join(' / ') : b.type === 'list' ? b.items.map((it, i) => (b.ordered ? i + 1 + '. ' : '• ') + it.map((r) => r.text).join('')).join('  ') : '';
     console.log('   | ' + (full ? t : t.slice(0, 160) + (t.length > 160 ? '…' : '')));

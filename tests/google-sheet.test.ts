@@ -112,6 +112,7 @@ function world(rows: Record<string, unknown>[]) {
     docs: new Map<string, { name: string; html: string; parent: string }>(),
     folders: new Map<string, { name: string; parent: string }>(),
     pdfs: new Map<string, { name: string; bytes: Uint8Array; modifiedTime: string; parent: string }>(),
+    pictures: new Map<string, { name: string; bytes: Buffer; mime: string; modifiedTime: string }>(),
     shared: [] as string[],
   };
   let nextId = 0;
@@ -129,6 +130,8 @@ function world(rows: Record<string, unknown>[]) {
     if (f) return { getId: () => id, getLastUpdated: () => f.modified, getMimeType: () => f.mime, getSharingAccess: () => f.access, getSharingPermission: () => f.permission };
     const own = w.drive.get(id);
     if (own) return { getId: () => id, getBlob: () => blobOf(own.bytes, 'application/json') };
+    const pic = w.pictures.get(id);
+    if (pic) return { getId: () => id, getBlob: () => blobOf(pic.bytes, pic.mime, pic.name) };
     throw new Error('No item with the given ID could be found');
   };
   const reply = (code: number, text = '', type = 'application/json', bytes: Buffer = Buffer.alloc(0), headers: Record<string, string> = {}) => ({ getResponseCode: () => code, getContentText: () => text, getHeaders: () => headers, getBlob: () => blobOf(bytes, type), getContent: () => Array.from(bytes).map((x) => (x > 127 ? x - 256 : x)) });
@@ -152,7 +155,13 @@ function world(rows: Record<string, unknown>[]) {
         },
         update: (meta: any, id: string, blob?: any) => { const f = w.drive.get(id)!; if (meta.trashed) f.trashed = true; if (blob) f.bytes = blob.getBytes(); return { id }; },
         list: (opts: any) => ({ files: [...w.pdfs.entries()].filter(([, f]) => opts.q.includes(`'${f.parent}' in parents`)).map(([id, f]) => ({ id, name: f.name, modifiedTime: f.modifiedTime, size: String(f.bytes.length) })) }),
-        get: (id: string) => { const f = w.pdfs.get(id); if (!f) throw new Error('File not found: ' + id); return { id, name: f.name, modifiedTime: f.modifiedTime }; },
+        get: (id: string) => {
+          const pic = w.pictures.get(id);
+          if (pic) return { id, name: pic.name, mimeType: pic.mime, modifiedTime: pic.modifiedTime };
+          const f = w.pdfs.get(id);
+          if (!f) throw new Error('File not found: ' + id);
+          return { id, name: f.name, modifiedTime: f.modifiedTime };
+        },
         copy: (meta: any, id: string) => { const f = w.pdfs.get(id)!; const copy = newId(); w.drive.set(copy, { name: meta.name, bytes: Array.from(f.bytes), trashed: false, public: false }); return { id: copy }; },
       },
       Permissions: { create: (perm: any, id: string) => { if (perm.type === 'anyone') w.drive.get(id)!.public = true; if (perm.type === 'user') w.shared.push(perm.emailAddress); } },
@@ -498,6 +507,46 @@ test('an issue dated a few days ahead goes up, articles and all, the moment it i
   assert.equal(Object.keys(live().articles).length, 14, 'not held back as scheduled');
   assert.match(cell(2, 'On the website'), /^✓ Live: /);
   assert.ok(Object.values<any>(live().articles).every((a) => a.publishedAt === '2099-10-30'), 'they keep the date printed on the issue');
+});
+
+test('an issue\'s own nameplate: the website wears it while the issue is the latest; a bad link is reported, the issue stays up', () => {
+  const { w, pub, live } = world([]);
+  const old = new Sheet('Issues', [['Status', 'On the website', 'Issue', 'ID', 'Date', 'PDF', 'Articles folder', 'Notes']]); // made before the column existed
+  old.parent = w.sheets[0].getParent();
+  w.sheets.push(old);
+  const folder = pub.printFolder_();
+  w.pdfs.set(PRINT, { name: 'The Governor Issue 1.pdf', bytes: ISSUE_PDF, modifiedTime: '2026-10-28T12:00:00.000Z', parent: folder });
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  assert.equal(old.get(1, 9), 'Nameplate', 'the new column goes on the end of the tab');
+  assert.equal(old.get(2, 4), '2026-27-issue-1');
+  const NAMEPLATE = '1HalloweenNameplateAAAAAAAAAAAAAAAAAAAAAA';
+  w.pictures.set(NAMEPLATE, { name: 'Halloween nameplate.png', bytes: PNG, mime: 'image/png', modifiedTime: '2026-10-28T12:00:00.000Z' });
+  old.set(2, 9, 'Halloween nameplate.png', `https://drive.google.com/file/d/${NAMEPLATE}/view`); // a chip: the link is behind the name
+  old.set(2, 1, 'Published');
+  pub.refresh_();
+  const issue = live().issues[0];
+  assert.deepEqual([issue.nameplate.w, issue.nameplate.h], [800, 600]);
+  assert.ok(w.drive.get(issue.nameplate.id)!.public, 'the website shows a public copy');
+  assert.match(String(old.get(2, 2)), /^✓ Live: [^⚠]*$/);
+  pub.refresh_();
+  assert.equal(live().issues[0].nameplate.id, issue.nameplate.id, 'copied once');
+  const NOT_A_PICTURE = '1NotAPictureAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+  w.pictures.set(NOT_A_PICTURE, { name: 'notes.pdf', bytes: Buffer.from('%PDF-1.4'), mime: 'application/pdf', modifiedTime: '2026-10-28T12:00:00.000Z' });
+  old.set(2, 9, `https://drive.google.com/file/d/${NOT_A_PICTURE}/view`);
+  pub.refresh_();
+  assert.equal(live().issues[0].id, '2026-27-issue-1', 'the issue stays on the website');
+  assert.equal(live().issues[0].nameplate, undefined);
+  assert.match(String(old.get(2, 2)), /^✓ Live: \S+ ⚠ The Nameplate link does not point to a picture\.$/);
+});
+
+test('pictures side by side at the top of a Doc are the cover together; side by side in the text they stay side by side', () => {
+  const { w, pub, live } = world([ROW]);
+  w.exportText = `# Campus Welcomes New Students\n\n![The cast][image1] ![The crew][image2]\n\n*The cast.*\n\n*The crew.*\n\nLast week, students gathered. ${'word '.repeat(60)}\n\n![][image3] ![][image4]\n\n*Left.*\n\n*Right.*\n\n[image1]: <data:image/png;base64,${b64(PNG)}>\n[image2]: <data:image/jpeg;base64,${b64(JPEG)}>\n[image3]: <data:image/jpeg;base64,${b64(JPEG)}>\n[image4]: <data:image/png;base64,${b64(PNG)}>\n`;
+  pub.refresh_();
+  const a = live().articles[ID_A];
+  assert.deepEqual([a.cover.caption, a.cover.w, a.cover.beside.length, a.cover.beside[0].caption, a.cover.beside[0].alt, a.cover.beside[0].w], ['The cast.', 800, 1, 'The crew.', 'The crew', 400]);
+  assert.ok(w.drive.get(a.cover.beside[0].id)!.public, 'both photos are public');
+  assert.match(a.body, /<div class="pic-row"><figure style="flex:1\.333 1 0%"><img [^>]*sizes="\(min-width: 800px\) 360px, 50vw"[^>]*><figcaption>Left\.<\/figcaption><\/figure><figure style="flex:1\.333 1 0%"><img [^>]*><figcaption>Right\.<\/figcaption><\/figure><\/div>/);
 });
 
 test('a long issue is made over several checks without making anything twice; an unreadable PDF is reported', () => {

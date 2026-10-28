@@ -73,6 +73,20 @@
   const imgTag = (pic, sizes, extra) => '<img src="' + esc(pic.src) + '" srcset="' + esc(pic.srcset) + '" sizes="' + esc(sizes) + '"'
     + (pic.width ? ' width="' + pic.width + '"' : '') + (pic.height ? ' height="' + pic.height + '"' : '') + ' ' + (extra || 'alt="" loading="lazy" decoding="async"') + '>';
 
+  /** An article's cover: one photo, or photos that share it side by side (cover.beside, from the publisher). */
+  const coverImages = (a) => (a.cover ? [a.cover].concat(a.cover.beside || []) : []).filter((img) => img && img.id);
+  const ratioOf = (img) => (img.w && img.h ? img.w / img.h : 1.5);
+  /** The shape of photos side by side at one height. */
+  const coverRatio = (list) => list.reduce((sum, img) => sum + ratioOf(img), 0);
+  /** A sizes attribute for a photo that takes a share of the width. */
+  const shareOf = (sizes, share) => sizes.split(',').map((entry) => entry.replace(/(\d+(?:\.\d+)?)(px|vw)\s*$/, (m, n, unit) => Math.round(Number(n) * share) + unit)).join(',');
+  /** A cover in a card or the front page's lead: one photo, or photos side by side filling the frame. */
+  function coverMedia(list, sizes, extra) {
+    if (list.length < 2) { const pic = picture(list[0]); return pic ? imgTag(pic, sizes, extra) : ''; }
+    const total = coverRatio(list);
+    return '<span class="pics">' + list.map((img) => '<span style="flex:' + ratioOf(img).toFixed(3) + ' 1 0%">' + imgTag(picture(img), shareOf(sizes, ratioOf(img) / total), extra) + '</span>').join('') + '</span>';
+  }
+
   /** The editor's description, or the article's opening words cut at a word boundary. Never generated text. */
   function summary(article, max) {
     max = max || 170;
@@ -116,9 +130,10 @@
 
     function storyCard(a, o) {
       o = Object.assign({ size: 'medium', layout: 'stack', image: true, dek: true, kicker: true, date: true, heading: 'h3', eager: false, mediaSide: 'right', dekLength: 170, sizes: '(min-width: 1024px) 30vw, (min-width: 768px) 50vw, 100vw' }, o);
-      const pic = o.image ? picture(a.cover) : null;
-      // Keep a photograph's own shape (upright stays upright), within sensible limits.
-      const ratio = pic && pic.width && pic.height ? Math.min(2.6, Math.max(0.66, pic.width / pic.height)) : 1.5;
+      const pics = o.image ? coverImages(a) : [];
+      const pic = pics.length ? picture(pics[0]) : null;
+      // Keep a photograph's own shape (upright stays upright), within sensible limits; photos side by side, their shape together.
+      const ratio = pic && (pics.length > 1 || (pic.width && pic.height)) ? Math.min(2.6, Math.max(0.66, coverRatio(pics))) : 1.5;
       const shape = ratio < 0.95 ? 'tall' : ratio > 1.9 ? 'pano' : 'wide';
       const classes = ['story', 'size-' + o.size, 'layout-' + o.layout];
       if (pic) classes.push('shape-' + shape);
@@ -129,7 +144,7 @@
       const label = a.kind === 'editorial' ? 'Editorial' : sectionLabel(a.section);
       return '<article class="' + classes.join(' ') + '"' + (pic ? ' style="--ar:' + ratio.toFixed(3) + '"' : '') + '>'
         + (pic ? '<a class="media" href="' + esc(url(a.path)) + '" data-route="' + esc(a.path) + '" target="_top" tabindex="-1" aria-hidden="true">'
-          + imgTag(pic, o.sizes, 'alt="" loading="' + (o.eager ? 'eager' : 'lazy') + '"' + (o.eager ? ' fetchpriority="high"' : '') + ' decoding="async"') + '</a>' : '')
+          + coverMedia(pics, o.sizes, 'alt="" loading="' + (o.eager ? 'eager' : 'lazy') + '"' + (o.eager ? ' fetchpriority="high"' : '') + ' decoding="async"') + '</a>' : '')
         + '<div class="story-text">'
         + (o.kicker ? link('/' + a.section + '/', esc(label), ' class="kicker"') : '')
         + '<' + o.heading + ' class="hed">' + link(a.path, esc(a.title)) + '</' + o.heading + '>'
@@ -176,8 +191,12 @@
       const issue = home.currentIssue ? issueById.get(home.currentIssue) : null;
       const sectionLinks = SECTIONS.map((s) => '<li>' + link('/' + s.slug + '/', esc(s.label), current('/' + s.slug + '/')) + '</li>').join('');
       const more = MORE.map((m) => '<li>' + link(m.path, esc(m.label), current(m.path)) + '</li>').join('');
-      const nameplate = picture(brand.nameplate);
-      const wordmark = picture(brand.wordmark);
+      // While a print issue with its own nameplate (a Halloween one, say) is the latest, the website wears it too.
+      const special = issue && issue.nameplate && issue.nameplate.id ? issue : null;
+      const full = (special ? special.nameplate : brand.nameplate) || {};
+      const word = (special ? special.nameplate : brand.wordmark) || {};
+      const nameplate = picture(full);
+      const wordmark = picture(word);
       return '<header class="site-header"><div class="wrap">'
         + '<div class="utility"><span class="left" data-today></span><span class="motto">' + esc(SITE.motto) + '</span><span class="right">'
         + (issue ? link('/issues/' + issue.id + '/', 'Latest print edition: ' + esc(issue.title)) : '') + '</span></div>'
@@ -186,9 +205,9 @@
         + '<nav class="drawer" aria-label="Sections (mobile)"><ul>' + sectionLinks + more
         + '<li>' + link('/issues/', 'Print Issues') + '</li><li>' + link('/search/', 'Search') + '</li></ul></nav></details>'
         + link('/search/', icon('search'), ' class="mobile-search" aria-label="Search"')
-        + '<div class="nameplate">' + link('/',
-          (nameplate ? '<img class="np np-full" src="' + esc(nameplate.large) + '" width="' + (brand.nameplate.w || 3794) + '" height="' + (brand.nameplate.h || 357) + '" alt="' + esc(SITE.name) + '" decoding="async">' : '<span class="np np-full">' + esc(SITE.name) + '</span>')
-          + (wordmark ? '<img class="np np-word" src="' + esc(wordmark.large) + '" width="' + (brand.wordmark.w || 2539) + '" height="' + (brand.wordmark.h || 322) + '" alt="' + esc(SITE.name) + '" decoding="async">' : ''),
+        + '<div class="nameplate' + (special ? ' special' : '') + '">' + link('/',
+          (nameplate ? '<img class="np np-full" src="' + esc(nameplate.large) + '" width="' + (full.w || 3794) + '" height="' + (full.h || 357) + '" alt="' + esc(SITE.name) + '" decoding="async">' : '<span class="np np-full">' + esc(SITE.name) + '</span>')
+          + (wordmark ? '<img class="np np-word" src="' + esc(wordmark.large) + '" width="' + (word.w || 2539) + '" height="' + (word.h || 322) + '" alt="' + esc(SITE.name) + '" decoding="async">' : ''),
           ' aria-label="' + esc(SITE.name) + ', home"')
         + '<p class="tagline">The student newspaper of ' + esc(SITE.school) + ' <span aria-hidden="true">·</span> ' + esc(SITE.location) + '</p></div>'
         + '</div>'
@@ -236,7 +255,7 @@
       const pool = edition.concat(articles.filter((a) => edition.indexOf(a) < 0));
       const used = new Set();
       const take = (list, n) => { const out = list.filter((a) => !used.has(a)).slice(0, n); out.forEach((a) => used.add(a)); return out; };
-      const ratio = (a) => (a.cover && a.cover.w && a.cover.h ? a.cover.w / a.cover.h : 0);
+      const ratio = (a) => { const list = coverImages(a); return list.length > 1 || (list.length && list[0].w && list[0].h) ? coverRatio(list) : 0; };
       const lead = pick([home.lead])[0] || pool.find((a) => a.featured && a.cover) || pool.find((a) => ratio(a) >= 1.4) || pool.find((a) => a.cover) || pool[0];
       if (lead) used.add(lead);
       const rail = take(pick(home.secondary).concat(pool), 4);
@@ -251,7 +270,7 @@
       const promoted = home.currentIssue ? issueById.get(home.currentIssue) : editionIssue;
       const promotedCover = promoted ? coverOf(promoted) : null;
       const otherIssues = issues.filter((i) => (!promoted || i.id !== promoted.id) && coverOf(i));
-      const leadPic = lead ? picture(lead.cover) : null;
+      const leadPics = lead ? coverImages(lead) : [];
 
       let out = '<h1 class="visually-hidden">' + esc(SITE.name) + '</h1>';
       if (!lead) return out + '<div class="wrap band"><p>No articles have been published yet.</p></div>';
@@ -259,7 +278,7 @@
         + '<p class="issue-strip"><strong>' + esc(editionIssue ? editionIssue.title : 'Latest') + '</strong><span>' + esc(editionIssue && editionIssue.dateLabel ? editionIssue.dateLabel : formatDate(first.publishedAt)) + '</span>'
         + (editionIssue ? link('/issues/' + editionIssue.id + '/', 'Read the print edition') : '') + '</p>'
         + '<section class="package" aria-label="Top stories"><article class="hero">'
-        + (leadPic ? '<a class="hero-photo zoom" href="' + esc(url(lead.path)) + '" data-route="' + esc(lead.path) + '" target="_top" tabindex="-1" aria-hidden="true">' + imgTag(leadPic, '(min-width: 1024px) 720px, 100vw', 'alt="" fetchpriority="high" decoding="async"') + '</a>' : '')
+        + (leadPics.length ? '<a class="hero-photo zoom" href="' + esc(url(lead.path)) + '" data-route="' + esc(lead.path) + '" target="_top" tabindex="-1" aria-hidden="true">' + coverMedia(leadPics, '(min-width: 1024px) 720px, 100vw', 'alt="" fetchpriority="high" decoding="async"') + '</a>' : '')
         + storyCard(lead, { size: 'lead', image: false, heading: 'h2', dekLength: 300 })
         + '</article><div class="rail">' + rail.map((a) => storyCard(a, { size: 'medium', layout: 'row', heading: 'h2', dekLength: 200, sizes: '(min-width: 700px) 160px, 110px' })).join('') + '</div></section>'
         + (latest.length ? '<section class="band" aria-labelledby="latest-head"><div class="band-head"><h2 id="latest-head">Latest</h2>' + link('/archives/', 'All articles', ' class="more-link"') + '</div>'
@@ -313,9 +332,23 @@
       return { title: page > 1 ? label + ', page ' + page : label, main: main };
     }
 
+    /** Photos that share an article's cover, side by side at one height, each over its caption (or one caption for them all). */
+    function coverRow(list) {
+      const total = coverRatio(list);
+      const width = Math.min(960, Math.round(total * 448));
+      const captions = list.filter((img) => img.caption);
+      const own = captions.length > 1;
+      return '<figure class="article-cover" style="margin-inline:auto;max-width:min(60rem, ' + width + 'px)"><div class="pic-row">'
+        + list.map((img) => '<figure style="flex:' + ratioOf(img).toFixed(3) + ' 1 0%">'
+          + imgTag(picture(img), shareOf('(min-width: ' + width + 'px) ' + width + 'px, 100vw', ratioOf(img) / total), 'alt="' + esc(img.alt || '') + '" fetchpriority="high" decoding="async"')
+          + (own && img.caption ? '<figcaption class="caption">' + esc(img.caption) + '</figcaption>' : '') + '</figure>').join('')
+        + '</div>' + (captions.length === 1 ? '<figcaption class="caption">' + esc(captions[0].caption) + '</figcaption>' : '') + '</figure>';
+    }
+
     function articlePage(a, body) {
       const list = authorsOf(a);
-      const cover = picture(a.cover);
+      const covers = coverImages(a);
+      const cover = covers.length === 1 ? picture(covers[0]) : null;
       const issue = a.issueId ? issueById.get(a.issueId) : null;
       const isEditorial = a.kind === 'editorial';
       const related = articles.filter((x) => x.id !== a.id)
@@ -332,6 +365,7 @@
         + '<p><time datetime="' + esc(a.publishedAt) + '">' + formatDate(a.publishedAt) + '</time>'
         + (a.updatedAt ? '<span class="sep"> · Updated <time datetime="' + esc(a.updatedAt) + '">' + formatDate(a.updatedAt) + '</time></span>' : '')
         + '<span> · ' + (a.minutes || 1) + ' min read</span></p></div></header>'
+        + (covers.length > 1 ? coverRow(covers) : '')
         + (cover ? '<figure class="article-cover" style="margin-inline:auto;' + (cover.width ? 'max-width:min(42rem, ' + Math.round(cover.width * 0.75) + 'px)' : '') + '">'
           + imgTag(cover, '(min-width: 720px) 672px, 100vw', 'alt="' + esc(a.cover.alt || '') + '" fetchpriority="high" decoding="async"')
           + (a.cover.caption || a.cover.credit ? '<figcaption class="caption">' + esc(a.cover.caption || '') + ' ' + (a.cover.credit ? '<span class="credit">' + esc(a.cover.credit) + '</span>' : '') + '</figcaption>' : '')

@@ -23,6 +23,17 @@ test('pictures: captions from the italic line below, a leading picture as the co
   assert.ok(inBody.body.startsWith('![Team photo](gdrive:id1 "The team after the final.")\n\nText.'));
 });
 
+test('pictures side by side: at the top of the Doc they are the cover together, each over its caption; in the text they stay side by side', () => {
+  const images = { image1: 'gdrive:cast', image2: 'gdrive:tech', image3: 'gdrive:a', image4: 'gdrive:b' };
+  const md = '# Behind the Scenes\n\nBy Nicholas Zhuo ’27\n\n![Cast][image1] ![Tech][image2]\n\n*26-27 Fall Drama Cast*\n\n*26-27 Fall Drama Tech*\n\nThis fall, Govs continues its tradition.\n\n![][image3]![][image4]\n\n*Left*\n\n*Right*\n\n![][image3] ![][image4]\n\n*One line under both.*';
+  const out = cleanDocMarkdown(md, { title: 'Behind the Scenes', images, leadImage: true });
+  assert.deepEqual(out.lead, { src: 'gdrive:cast', alt: 'Cast', caption: '26-27 Fall Drama Cast', beside: [{ src: 'gdrive:tech', alt: 'Tech', caption: '26-27 Fall Drama Tech' }] });
+  assert.equal(out.body, 'This fall, Govs continues its tradition.\n\n![](gdrive:a "Left") ![](gdrive:b "Right")\n\n![](gdrive:a) ![](gdrive:b)\n\n*One line under both.*');
+  const shared = cleanDocMarkdown('*![][image1] ![][image2]*\n\n*The cast and the crew.*\n\nText.', { title: 'T', images, leadImage: true });
+  assert.deepEqual(shared.lead, { src: 'gdrive:cast', alt: '', caption: 'The cast and the crew.', beside: [{ src: 'gdrive:tech', alt: '', caption: null }] }, 'one line for both, even when Google exports them in italics');
+  assert.equal(shared.body, 'Text.');
+});
+
 test('Doc headings sit below the headline; line breaks become paragraphs', () => {
   const out = cleanDocMarkdown('Intro  \nsecond line\n\n# Part one\n\n## Detail\n\n###### Deep', { title: 'T' }).body;
   assert.equal(out, 'Intro\n\nsecond line\n\n## Part one\n\n### Detail\n\n###### Deep');

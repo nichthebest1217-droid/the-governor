@@ -121,6 +121,32 @@ test('a print issue from the Sheet: Drive draws its cover from the PDF, and its 
   assert.ok(listed.indexOf('The article first in print') < listed.indexOf('An article second in print'), 'not alphabetical');
 });
 
+test('photos that share a cover sit side by side: on the article page each over its caption, in cards and the lead filling the frame', () => {
+  const pic = (id: string, w: number, h: number, caption: string) => ({ id, w, h, alt: caption, caption });
+  const a = { id: '2026-10-30-behind', title: 'Behind the Scenes', publishedAt: '2026-10-30', section: 'arts', kind: 'article', authors: [], paras: ['x'], minutes: 2, issueId: null, printOrder: null, path: '/2026/10/30/behind/',
+    cover: { ...pic('cast', 615, 411, '26-27 Fall Drama Cast'), credit: null, beside: [pic('tech', 1133, 756, '26-27 Fall Drama Tech')] } };
+  const small = A.createApp({ articles: [a], authors: {}, issues: [], settings: {}, brand: {} }, { appUrl: APP });
+  const art = small.render(a.path, { bodies: { [a.id]: '<p>x</p>' } }).html;
+  assert.match(art, /<figure class="article-cover" style="margin-inline:auto;max-width:min\(60rem, 960px\)"><div class="pic-row"><figure style="flex:1\.496 1 0%"><img src="https:\/\/lh3\.googleusercontent\.com\/d\/cast=w[^"]*"[^>]*sizes="\(min-width: 960px\) 480px, 50vw"[^>]*alt="26-27 Fall Drama Cast"[^>]*><figcaption class="caption">26-27 Fall Drama Cast<\/figcaption><\/figure><figure style="flex:1\.499 1 0%"><img src="https:\/\/lh3\.googleusercontent\.com\/d\/tech=[^>]*><figcaption class="caption">26-27 Fall Drama Tech<\/figcaption><\/figure><\/div><\/figure>/);
+  const home = small.render('/', {}).html;
+  assert.match(home, /<a class="hero-photo zoom"[^>]*><span class="pics"><span style="flex:1\.496 1 0%"><img src="https:\/\/lh3\.googleusercontent\.com\/d\/cast=[^>]*sizes="\(min-width: 1024px\) 360px, 50vw"[^>]*><\/span><span style="flex:1\.499 1 0%"><img src="https:\/\/lh3\.googleusercontent\.com\/d\/tech=/, 'the lead');
+  assert.match(small.render('/arts/', {}).html, /<article class="story[^"]*shape-pano[^"]*" style="--ar:2\.600"><a class="media"[^>]*><span class="pics">/, 'a card: both photos, in a wide frame');
+  const one = A.createApp({ articles: [{ ...a, cover: { ...a.cover, beside: undefined } }], authors: {}, issues: [], settings: {}, brand: {} }, { appUrl: APP }).render(a.path, { bodies: { [a.id]: '' } }).html;
+  assert.ok(!one.includes('pic-row') && one.includes('<figure class="article-cover"'), 'a single photo as before');
+});
+
+test('while the latest print issue has its own nameplate (a Halloween one), the website wears it; the next issue brings the usual one back', () => {
+  const brand = { nameplate: { id: 'usual', w: 3794, h: 357 }, wordmark: { id: 'usualword', w: 2539, h: 322 }, seal: { id: 'seal', w: 512, h: 512 } };
+  const issue = (n: number, extra = {}) => ({ id: '2026-27-issue-' + n, title: 'Issue ' + n, season: 'Fall', year: 2026, number: n, volume: null, dateLabel: 'x', notes: [], pdf: { id: 'pdf' + n }, pages: [], cover: { id: 'pdf' + n, w: 1200, h: 1855 }, ...extra });
+  const issues = [issue(2, { nameplate: { id: 'halloween', w: 3794, h: 464 } }), issue(3)];
+  const header = (current: string) => A.createApp({ articles: [], authors: {}, issues, settings: { homepage: { currentIssue: current } }, brand }, { appUrl: APP }).render('/', {}).html.split('</header>')[0];
+  const now = header('2026-27-issue-2');
+  assert.match(now, /<div class="nameplate special">.*<img class="np np-full" src="https:\/\/lh3\.googleusercontent\.com\/d\/halloween=w2000" width="3794" height="464"/s);
+  assert.match(now, /<img class="np np-word" src="https:\/\/lh3\.googleusercontent\.com\/d\/halloween=w2000"/, 'phones show it too');
+  const next = header('2026-27-issue-3');
+  assert.match(next, /<div class="nameplate">.*d\/usual=w2000" width="3794" height="357".*d\/usualword=w2000" width="2539" height="322"/s);
+});
+
 test('pictures: Drive sizes never exceed the original', () => {
   const pic = A.picture({ id: 'abc', w: 1200, h: 800 });
   assert.equal(pic.srcset, 'https://lh3.googleusercontent.com/d/abc=w480 480w, https://lh3.googleusercontent.com/d/abc=w960 960w, https://lh3.googleusercontent.com/d/abc=w1200 1200w');

@@ -88,7 +88,8 @@ with blank space.
 
 A whole print issue: drop its PDF (from Canva, as PDF Print) into the Drive folder "The Governor: print issues".
 Each article arrives in the Sheet as a Google Doc and a *Ready for Review* row; setting the issue to Published in
-the Issues tab publishes the issue's PDF and its articles together.
+the Issues tab publishes the issue's PDF and its articles together. A picture linked in the issue's Nameplate
+column (a holiday version of the title) tops the website while that issue is the latest.
 
 Only Published rows are ever public. The details for editors are in the Sheet's **How to publish** tab and in
 [EDITORIAL_HANDBOOK.md](EDITORIAL_HANDBOOK.md).

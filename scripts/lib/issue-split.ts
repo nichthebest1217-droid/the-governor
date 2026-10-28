@@ -10,7 +10,8 @@ import type { Glyph, PageImage, PdfPage, Rule } from './pdf-read.ts';
 
 export interface Run { text: string; bold?: boolean; italic?: boolean }
 export interface ArticleImage { page: number; id: number; caption: string | null; x0: number; y0: number; x1: number; y1: number; width: number; height: number }
-export type Block = { type: 'p'; runs: Run[] } | { type: 'lines'; lines: Run[][] } | { type: 'list'; ordered: boolean; items: Run[][] } | { type: 'image'; image: ArticleImage };
+/** 'row': pictures side by side (an article's cover, when no one photo stands out). */
+export type Block = { type: 'p'; runs: Run[] } | { type: 'lines'; lines: Run[][] } | { type: 'list'; ordered: boolean; items: Run[][] } | { type: 'image'; image: ArticleImage } | { type: 'row'; images: ArticleImage[] };
 export interface IssueArticle {
   title: string; authors: string[]; page: number; order: number;
   editorial: boolean; poem: boolean; gallery: boolean; category: string; words: number; blocks: Block[];
@@ -412,7 +413,7 @@ export function splitIssue(pdf: PageSource, opts: { knownNames?: string[] } = {}
     }
     const authors = parseByline(h.byline.map((l) => l.text).join(', '), known);
     const art = buildArticle(h, authors, bodyFont, (h as Head & { captionOf?: (im: PageImage) => string | null }).captionOf || (() => null));
-    if (art.words < 25 && !art.blocks.some((b) => b.type === 'image')) {
+    if (art.words < 25 && !art.blocks.some((b) => b.type === 'image' || b.type === 'row')) {
       out.skipped.push('"' + h.text + '" (page ' + h.page + '): almost no text under it');
       return;
     }
@@ -427,6 +428,9 @@ export function splitIssue(pdf: PageSource, opts: { knownNames?: string[] } = {}
       const names = lines.map((t) => parseByline(t, known)[0] || clean(t));
       a.blocks.forEach((b, i) => { if (b.type === 'image' && names[i]) b.image.caption = names[i]; });
       a.authors = names.filter((n, i) => names.indexOf(n) === i);
+      const art = a.blocks.flatMap((b) => (b.type === 'image' ? [b.image] : []));
+      const cover = coverRow(art);
+      a.blocks = coverBlocks(cover).concat(art.filter((im) => cover.indexOf(im) < 0).map((image) => ({ type: 'image' as const, image })));
     }
     delete (a as IssueArticle & { creditLines?: string[] }).creditLines;
   });
@@ -438,6 +442,24 @@ export function splitIssue(pdf: PageSource, opts: { knownNames?: string[] } = {}
 
 // ---------------------------------------------------------------------------------------------
 // One article: columns, paragraphs, pictures
+
+const area = (im: ArticleImage) => (im.x1 - im.x0) * (im.y1 - im.y0);
+const sameRow = (a: ArticleImage, b: ArticleImage) => Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 0.5 * Math.min(a.y1 - a.y0, b.y1 - b.y0);
+
+/**
+ * The pictures that open an article as its cover: the largest, or, when others are printed about as
+ * large (three quarters of its area or more), up to three of them side by side, in reading order
+ * (stacked ones top first, a row left to right). Nothing says which of them matters most, so none is
+ * pushed down the article. Only when all of them have captions or none has, so that a caption never
+ * ends up under the wrong photo.
+ */
+export function coverRow(imgs: ArticleImage[]): ArticleImage[] {
+  const bySize = imgs.slice().sort((a, b) => area(b) - area(a));
+  const peers = bySize.filter((im) => area(im) >= 0.75 * area(bySize[0])).sort((a, b) => (sameRow(a, b) ? a.x0 - b.x0 : a.y0 - b.y0)).slice(0, 3);
+  const captioned = peers.filter((im) => im.caption).length;
+  return peers.length > 1 && (captioned === 0 || captioned === peers.length) ? peers : bySize.slice(0, 1);
+}
+const coverBlocks = (cover: ArticleImage[]): Block[] => (cover.length > 1 ? [{ type: 'row', images: cover }] : cover.map((image) => ({ type: 'image' as const, image })));
 
 function buildArticle(h: Head, authors: string[], bodyFont: string, captionOf: (im: PageImage) => string | null): IssueArticle {
   const lines = h.body.slice();
@@ -520,11 +542,12 @@ function buildArticle(h: Head, authors: string[], bodyFont: string, captionOf: (
     flush();
   }
 
-  // Pictures: the largest first (it becomes the cover); the others after the paragraph nearest to them.
-  const imgs = h.images.slice().sort((a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0));
+  // Pictures: the cover first (coverRow); the others after the paragraph nearest to them, the largest first.
   const toImage = (im: PageImage): ArticleImage => ({ page: h.page, id: im.id, caption: captionOf(im), x0: im.x0, y0: im.y0, x1: im.x1, y1: im.y1, width: im.width, height: im.height });
+  const imgs = h.images.map(toImage).sort((a, b) => area(b) - area(a));
+  const cover = coverRow(imgs);
   const after: Record<number, ArticleImage[]> = {};
-  imgs.slice(1).forEach((im) => {
+  imgs.filter((im) => cover.indexOf(im) < 0).forEach((im) => {
     let bestI = -1;
     let bestD = Infinity;
     seq.forEach((s, i) => {
@@ -532,10 +555,9 @@ function buildArticle(h: Head, authors: string[], bodyFont: string, captionOf: (
       if (d < bestD) { bestD = d; bestI = i; }
     });
     const para = bestI >= 0 ? Math.min(paraOfLine[bestI], blocks.length - 1) : blocks.length - 1;
-    (after[para] = after[para] || []).push(toImage(im));
+    (after[para] = after[para] || []).push(im);
   });
-  const final: Block[] = [];
-  if (imgs.length) final.push({ type: 'image', image: toImage(imgs[0]) });
+  const final: Block[] = coverBlocks(cover);
   blocks.forEach((b, i) => { final.push(b); (after[i] || []).forEach((im) => final.push({ type: 'image', image: im })); });
 
   // Numbered or bulleted lines become a list.
@@ -602,7 +624,14 @@ export function articleHtml(a: IssueArticle, src: (image: ArticleImage) => strin
     if (b.type === 'p') parts.push(p(b.runs.map(runHtml).join('')));
     else if (b.type === 'lines') parts.push(p(b.lines.map((l) => l.map(runHtml).join('')).join('<br>')));
     else if (b.type === 'list') parts.push((b.ordered ? '<ol>' : '<ul>') + b.items.map((it) => '<li>' + it.map(runHtml).join('') + '</li>').join('') + (b.ordered ? '</ol>' : '</ul>'));
-    else {
+    else if (b.type === 'row') {
+      // Side by side on one line, at one height, together as wide as the page; then each caption, in order.
+      const shown = b.images.map((im) => ({ im, url: src(im) })).filter((x) => x.url);
+      if (!shown.length) return;
+      const height = Math.floor(560 / shown.reduce((sum, x) => sum + x.im.width / x.im.height, 0));
+      parts.push(p('<span style="font-weight:normal;font-style:normal">' + shown.map((x) => '<img src="' + x.url + '" alt="' + esc(x.im.caption || '') + '" width="' + Math.round((height * x.im.width) / x.im.height) + '" height="' + height + '">').join(' ') + '</span>'));
+      shown.forEach((x) => { if (x.im.caption) parts.push(p('<em>' + esc(x.im.caption) + '</em>')); });
+    } else {
       const url = src(b.image);
       if (!url) return;
       // Plain style around the picture, so Google does not carry over the bold or italics before it.

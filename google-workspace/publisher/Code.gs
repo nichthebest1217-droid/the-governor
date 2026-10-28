@@ -29,7 +29,7 @@ const SETTINGS = {
 // Where the archive was copied from, once (a fixed version of the website's old repository).
 const IMPORT_FROM = 'https://raw.githubusercontent.com/nichthebest1217-droid/the-governor/d57ac83c71e7c3617ebc6ddc709f0acfad9fcba2/';
 // Raise to rebuild every article from the Sheet at the next check (after changing Doc.gs).
-const PROCESSOR = 2; // 2: pictures Google exports in bold or italics stay pictures (October 2026)
+const PROCESSOR = 3; // 2: pictures Google exports in bold or italics stay pictures; 3: pictures side by side make the cover together (October 2026)
 const FOLDER_TYPE = 'application/vnd.google-apps.folder';
 
 // ===== Shared with sheet/Code.gs: keep this block identical in both files (a test checks). =====
@@ -78,13 +78,24 @@ const ISSUE_COLUMNS = [
   ['PDF', 230, 'The PDF dropped into the print-issues folder. To correct it, replace that file in Drive (File > Manage versions) or drop the new PDF.'],
   ['Articles folder', 230, 'The Google Docs made from the PDF, one per article. Fix any mistake in the Doc.'],
   ['Notes', 380, 'What could not be made into an article (puzzles, memes, a box without a writer). It stays in the PDF on the website.'],
+  ['Nameplate', 230, 'Optional. A special version of the paper\'s title (for example a Halloween one) to show at the top of the website while this is the latest issue: a Google Drive link to the picture. Leave empty for the usual title, which returns by itself when the next issue is published.'],
 ];
 const ISSUE_HEADERS = ISSUE_COLUMNS.map(function (c) { return c[0]; });
 
-/** The Issues tab, made when first needed. */
+/** The Issues tab, made when first needed. A column added since the tab was made goes on its end. */
 function issueTab_(ss) {
   let tab = ss.getSheetByName(ISSUES);
-  if (tab) return tab;
+  if (tab) {
+    let next = tab.getLastColumn() + 1;
+    const have = next > 1 ? tab.getRange(1, 1, 1, next - 1).getValues()[0].map(function (h) { return String(h).trim(); }) : [];
+    ISSUE_COLUMNS.forEach(function (c) {
+      if (have.indexOf(c[0]) >= 0) return;
+      tab.getRange(1, next).setValue(c[0]).setFontWeight('bold').setBackground('#141312').setFontColor('#ffffff').setNote(c[2]);
+      tab.setColumnWidth(next, c[1]);
+      next++;
+    });
+    return tab;
+  }
   tab = ss.insertSheet(ISSUES);
   tab.getRange(1, 1, 1, ISSUE_HEADERS.length).setValues([ISSUE_HEADERS]).setFontWeight('bold').setBackground('#141312').setFontColor('#ffffff');
   ISSUE_COLUMNS.forEach(function (c, i) { tab.setColumnWidth(i + 1, c[1]); tab.getRange(1, i + 1).setNote(c[2]); });
@@ -557,8 +568,11 @@ function compileArticle_(r, prev) {
     const saved = keep(picture.bytes, picture.mime, 'cover');
     cover = { id: saved.id, w: saved.w, h: saved.h, alt: r.imageAlt, caption: r.imageCaption || null, credit: r.imageCredit || null };
   } else if (lead) {
-    const id = lead.src.replace(/^gdrive:/, '');
-    cover = { id: id, w: (sizes[id] || {}).w || null, h: (sizes[id] || {}).h || null, alt: lead.alt || '', caption: lead.caption || null, credit: null };
+    // Pictures side by side at the top of the Doc are the cover together, shown side by side.
+    const pic = function (l) { const id = l.src.replace(/^gdrive:/, ''); return { id: id, w: (sizes[id] || {}).w || null, h: (sizes[id] || {}).h || null, alt: l.alt || '', caption: l.caption || null }; };
+    cover = pic(lead);
+    cover.credit = null;
+    if (lead.beside && lead.beside.length) cover.beside = lead.beside.map(pic);
   }
   const text = plainText_(markdown);
   const words = text ? text.split(' ').length : 0;
@@ -1084,14 +1098,17 @@ function readIssues_(ss) {
   const tab = ss.getSheetByName(ISSUES);
   const out = { tab: tab, rows: [], col: function (name) { return ISSUE_HEADERS.indexOf(name) + 1; } };
   if (!tab || tab.getLastRow() < 2) return out;
-  const values = tab.getRange(1, 1, tab.getLastRow(), ISSUE_HEADERS.length).getValues();
+  const values = tab.getRange(1, 1, tab.getLastRow(), Math.max(ISSUE_HEADERS.length, tab.getLastColumn())).getValues();
   const headers = values[0].map(function (h) { return String(h).trim(); });
   out.col = function (name) { return headers.indexOf(name) + 1; };
   const at = function (v, name) { const i = headers.indexOf(name); return i < 0 || v[i] == null ? '' : v[i]; };
+  const np = headers.indexOf('Nameplate');
+  const rich = np >= 0 ? tab.getRange(2, np + 1, values.length - 1, 1).getRichTextValues() : [];
   out.rows = values.slice(1).map(function (v, i) {
     return {
       row: i + 2, status: String(at(v, 'Status')).trim(), title: String(at(v, 'Issue')).trim(), id: String(at(v, 'ID')).trim(),
-      date: dateOf_(at(v, 'Date')).value, pdf: idFromLink_(String(at(v, 'PDF')).trim()), problem: '', retrying: false,
+      date: dateOf_(at(v, 'Date')).value, pdf: idFromLink_(String(at(v, 'PDF')).trim()),
+      nameplate: np >= 0 ? idFromLink_(String(at(v, 'Nameplate')).trim()) || idFromLink_(linkIn_(rich[i] && rich[i][0])) : '', problem: '', retrying: false,
     };
   });
   return out;
@@ -1149,13 +1166,45 @@ function siteIssues_(issues) {
     const date = r.date || today_();
     const month = Number(date.slice(5, 7));
     const n = /(\d+)$/.exec(r.id);
-    out.push({
+    const issue = {
       id: r.id, title: r.title || r.id, season: month >= 8 ? 'Fall' : month <= 3 ? 'Winter' : 'Spring', year: Number(date.slice(0, 4)),
       number: n ? Number(n[1]) : null, volume: null, dateLabel: longDate_(date), notes: [], pdf: { id: copy }, pages: [],
       cover: { id: copy, w: 1200, h: Math.round((1200 * (meta.h || 1224)) / (meta.w || 792)) }, fromSheet: true,
-    });
+    };
+    // Its own nameplate, worn by the website while it is the latest issue. A problem with it does not hold the issue back.
+    if (r.nameplate) {
+      try { const pic = publicPicture_(r.nameplate); issue.nameplate = { id: pic.id, w: pic.w, h: pic.h }; } catch (err) {
+        if (!err.retry) r.problem = String(err.message || err);
+      }
+    }
+    out.push(issue);
   });
   return out;
+}
+
+/** A public copy of a picture in Drive (an issue's nameplate), with its size. Copied again when the picture changes. */
+function publicPicture_(src) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'PICTURE_COPY:' + src;
+  const known = JSON.parse(props.getProperty(key) || 'null');
+  if (known && Date.now() - known.checked < 10 * 60 * 1000) return known;
+  let meta;
+  try { meta = Drive.Files.get(src, { fields: 'id,name,mimeType,modifiedTime' }); } catch (err) {
+    if (known) return known;
+    throw new Error('The publisher cannot open the Nameplate picture. Is it still in Drive, and shared with ' + ownerEmail_() + '?');
+  }
+  if (known && known.modified === meta.modifiedTime) {
+    known.checked = Date.now();
+    props.setProperty(key, JSON.stringify(known));
+    return known;
+  }
+  if (!/^image\//.test(meta.mimeType || '')) throw new Error('The Nameplate link does not point to a picture.');
+  const blob = DriveApp.getFileById(src).getBlob();
+  const size = imageSize_(blob.getBytes());
+  const copy = { id: uploadPublic_(blob, meta.name), w: size.w, h: size.h, modified: meta.modifiedTime, checked: Date.now() };
+  if (known) trash_([known.id]);
+  props.setProperty(key, JSON.stringify(copy));
+  return copy;
 }
 
 /** A public copy of the issue's PDF in the website's folder, made again when the PDF is replaced. */
@@ -1200,12 +1249,12 @@ function writeIssueNotes_(issues, live) {
     let link = null;
     if (r.id || r.title) {
       if (r.status !== 'Published') text = 'Not on the website (waiting for review)';
-      else if (onSite[r.id]) { link = pageUrl_('/issues/' + r.id + '/'); text = '✓ Live: ' + link; }
+      else if (onSite[r.id]) { link = pageUrl_('/issues/' + r.id + '/'); text = '✓ Live: ' + link + (r.problem ? ' ⚠ ' + r.problem : ''); }
       else text = r.problem ? '⚠ ' + r.problem : 'Publishing the issue and its articles… (about a minute)';
     }
     if (String(current[i][0]) !== text) changed = true;
     const b = SpreadsheetApp.newRichTextValue().setText(text);
-    if (link) b.setLinkUrl(text.indexOf(link), text.length, link);
+    if (link) b.setLinkUrl(text.indexOf(link), text.indexOf(link) + link.length, link);
     return [b.build()];
   });
   if (changed) range.setRichTextValues(next);

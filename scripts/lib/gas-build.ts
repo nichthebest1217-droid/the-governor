@@ -82,20 +82,26 @@ return { cleanDocMarkdown: cleanDocMarkdown, textToMarkdown: textToMarkdown, ima
  * Markdown to HTML for articles from the Sheet. HTML typed into a Doc is shown as text, links may
  * only point to web pages, email addresses or this site, and only pictures the publisher copied
  * into Drive (gdrive:<id>) are shown, with sizes for every screen. A picture with a caption on its
- * own line becomes a figure.
+ * own line becomes a figure; pictures side by side on one line stay side by side, at one height.
  */
 const DocRender = (function () {
   const esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   const SAFE = /^(https?:\\/\\/|mailto:|\\/(?!\\/)|#)/i;
-  function image(token, sizes) {
+  const ratio = function (token, sizes) {
+    const m = /^gdrive:([A-Za-z0-9_-]+)$/.exec(token.href || '');
+    const info = (m && sizes[m[1]]) || {};
+    return info.w && info.h ? info.w / info.h : 1.5;
+  };
+  function image(token, sizes, share) {
     const m = /^gdrive:([A-Za-z0-9_-]+)$/.exec(token.href || '');
     if (!m) return '';
+    share = share || 1;
     const info = sizes[m[1]] || {};
     const widths = [480, 960, 1600].filter(function (w) { return !info.w || w < info.w; });
     if (info.w && (!widths.length || widths[widths.length - 1] < info.w)) widths.push(Math.min(info.w, 2000));
     const url = function (w) { return 'https://lh3.googleusercontent.com/d/' + m[1] + '=w' + w; };
     return '<img src="' + url(widths[Math.min(1, widths.length - 1)]) + '" srcset="' + widths.map(function (w) { return url(w) + ' ' + w + 'w'; }).join(', ') + '"'
-      + ' sizes="(min-width: 800px) 720px, 100vw"' + (info.w ? ' width="' + info.w + '" height="' + info.h + '"' : '') + ' alt="' + esc(token.text) + '" loading="lazy" decoding="async">';
+      + ' sizes="(min-width: 800px) ' + Math.round(720 * share) + 'px, ' + Math.round(100 * share) + 'vw"' + (info.w ? ' width="' + info.w + '" height="' + info.h + '"' : '') + ' alt="' + esc(token.text) + '" loading="lazy" decoding="async">';
   }
   function render(markdown, sizes) {
     sizes = sizes || {};
@@ -111,7 +117,16 @@ const DocRender = (function () {
         },
         image: function (token) { return image(token, sizes); },
         paragraph: function (token) {
-          const only = token.tokens && token.tokens.length === 1 && token.tokens[0].type === 'image' ? token.tokens[0] : null;
+          const parts = token.tokens || [];
+          const pics = parts.filter(function (t) { return t.type === 'image'; });
+          if (pics.length > 1 && parts.every(function (t) { return t.type === 'image' || (t.type === 'text' && !t.text.trim()); })) {
+            const total = pics.reduce(function (sum, t) { return sum + ratio(t, sizes); }, 0);
+            return '<div class="pic-row">' + pics.map(function (t) {
+              const r = ratio(t, sizes);
+              return '<figure style="flex:' + r.toFixed(3) + ' 1 0%">' + image(t, sizes, r / total) + (t.title ? '<figcaption>' + esc(t.title) + '</figcaption>' : '') + '</figure>';
+            }).join('') + '</div>\\n';
+          }
+          const only = parts.length === 1 && parts[0].type === 'image' ? parts[0] : null;
           if (only && only.title) return '<figure>' + image(only, sizes) + '<figcaption>' + esc(only.title) + '</figcaption></figure>\\n';
           return '<p>' + this.parser.parseInline(token.tokens) + '</p>\\n';
         },
