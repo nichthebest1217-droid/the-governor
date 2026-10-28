@@ -111,9 +111,14 @@ test('a print issue from the Sheet: Drive draws its cover from the PDF, and its 
   const issue = { id: '2026-27-issue-2', title: 'Issue II, 2026–27', season: 'Fall', year: 2026, number: 2, volume: null, dateLabel: 'October 30, 2026', notes: [], pdf: { id: 'pdfcopy' }, pages: [], cover: { id: 'pdfcopy', w: 1200, h: 1855 } };
   const small = A.createApp({ articles: [], authors: {}, issues: [issue], settings: {}, brand: {} }, { appUrl: APP });
   const page = small.render('/issues/2026-27-issue-2/', {}).html;
-  assert.match(page, /<iframe class="issue-viewer" src="https:\/\/drive\.google\.com\/file\/d\/pdfcopy\/preview" title="Issue II, 2026–27, the printed edition"/);
-  assert.ok(page.includes('https://drive.google.com/file/d/pdfcopy/view'), 'with a download link');
+  assert.match(page, /<section aria-label="The issue" class="issue-front">.*<a href="https:\/\/drive\.google\.com\/file\/d\/pdfcopy\/view"[^>]*><img src="https:\/\/lh3\.googleusercontent\.com\/d\/pdfcopy=w960"[^>]*alt="Issue II, 2026–27, front page"/s, 'the front page, opening the PDF');
+  assert.match(page, />Read the whole issue</);
+  assert.ok(!page.includes('<iframe'), 'no embedded viewer: Google will not show one inside the site');
   assert.match(small.render('/issues/', {}).html, /<span class="cover"><img src="https:\/\/lh3\.googleusercontent\.com\/d\/pdfcopy=w960"/);
+  // The issue's articles are listed in print order.
+  const art = (n: number, title: string) => ({ id: '2026-10-30-a' + n, title, publishedAt: '2026-10-30', section: 'news', kind: 'article', authors: [], paras: ['x'], minutes: 1, cover: null, issueId: '2026-27-issue-2', printOrder: n, path: '/2026/10/30/a' + n + '/' });
+  const listed = A.createApp({ articles: [art(2, 'An article second in print'), art(1, 'The article first in print')], authors: {}, issues: [issue], settings: {}, brand: {} }, { appUrl: APP }).render('/issues/2026-27-issue-2/', {}).html;
+  assert.ok(listed.indexOf('The article first in print') < listed.indexOf('An article second in print'), 'not alphabetical');
 });
 
 test('pictures: Drive sizes never exceed the original', () => {

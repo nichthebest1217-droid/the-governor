@@ -424,8 +424,10 @@
     function issuePage(id) {
       const issue = issueById.get(id);
       if (!issue) return null;
-      const list = articles.filter((a) => a.issueId === id);
+      const list = articles.filter((a) => a.issueId === id).sort((a, b) => (a.printOrder == null ? 999 : a.printOrder) - (b.printOrder == null ? 999 : b.printOrder));
       const pages = (issue.pages || []).map(picture).filter(Boolean);
+      const viewer = issue.pdf ? 'https://drive.google.com/file/d/' + encodeURIComponent(issue.pdf.id) + '/view' : null;
+      const front = !pages.length ? coverOf(issue) : null;
       const when = issue.dateLabel || ((issue.season || '') + ' ' + issue.year).trim();
       const notes = issue.notes || [];
       return { title: issue.title + ', ' + when, main: '<div class="wrap"><header class="page-head">' + link('/issues/', 'Print issues', ' class="kicker"') + '<h1>' + esc(issue.title) + '</h1>'
@@ -436,8 +438,9 @@
           + list.map((a) => { const au = authorsOf(a); return '<li>' + link(a.path, esc(a.title)) + '<span class="count">' + esc(a.kind === 'editorial' ? 'Editorial' : sectionLabel(a.section)) + (au[0] ? ' · ' + esc(authorLabel(au[0])) + (au.length > 1 ? ' and others' : '') : '') + '</span></li>'; }).join('')
           + '</ul>' + notes.map((n) => '<p class="meta" style="margin-top:.8rem">' + esc(n) + '</p>').join('') + '</section>'
           : notes.length ? '<div style="max-width:52rem;margin-bottom:2.5rem">' + notes.map((n) => '<p class="note">' + esc(n) + '</p>').join('') + '</div>' : '')
-        + (!pages.length && issue.pdf ? '<section aria-label="The issue"><h2 class="label-head" style="max-width:56rem;margin-inline:auto">The issue</h2>'
-          + '<iframe class="issue-viewer" src="https://drive.google.com/file/d/' + encodeURIComponent(issue.pdf.id) + '/preview" title="' + esc(issue.title) + ', the printed edition" loading="lazy" allow="fullscreen"></iframe></section>' : '')
+        + (front && viewer ? '<section aria-label="The issue" class="issue-front"><h2 class="label-head">The issue</h2>'
+          + external(viewer, imgTag(front, '(min-width: 760px) 560px, 100vw', 'alt="' + esc(issue.title) + ', front page" loading="lazy" decoding="async"'))
+          + '<p>' + external(viewer, 'Read the whole issue', ' class="button"') + ' <span class="meta">Every page, in Google’s PDF viewer.</span></p></section>' : '')
         + (pages.length ? '<section aria-label="Pages"><h2 class="label-head" style="max-width:56rem;margin-inline:auto">The issue, page by page</h2><div class="issue-pages">'
           + pages.map((p, i) => '<figure style="margin:0">' + external(p.large, imgTag(p, '(min-width: 960px) 896px, 100vw', 'alt="' + esc(issue.title) + ', page ' + (i + 1) + '. The text of this page is in the PDF and in the linked articles." loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async"')) + '<figcaption>Page ' + (i + 1) + '</figcaption></figure>').join('')
           + '</div></section>' : '') + '</div>' };

@@ -23,8 +23,10 @@ const extra = `
 .search-form { display: flex; gap: 0.6rem; max-width: 46rem; margin-bottom: 1.6rem; }
 .search-form input { flex: 1; min-width: 0; font: 400 1.0625rem var(--font-ui); padding: 0.75rem 0.9rem; border: 1px solid var(--ink-faint); border-radius: 0; background: #fff; color: var(--ink); }
 .search-results .archive-row .dek { color: var(--ink-soft); font-size: 0.95rem; }
-/* A print issue from the Sheet: the PDF in Google's viewer. */
-.issue-viewer { display: block; width: 100%; max-width: 56rem; height: min(88vh, 1150px); margin: 0 auto 2.5rem; border: 1px solid var(--ink-faint); background: #f3f1ec; }
+/* A print issue from the Sheet: its front page (Drive draws it from the PDF), opening the PDF. */
+.issue-front { max-width: 35rem; margin: 0 auto 2.5rem; }
+.issue-front img { display: block; width: 100%; height: auto; border: 1px solid var(--ink-faint); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12); }
+.issue-front p { margin-top: 1rem; display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
 `;
 // Google Fonts names the families without "Variable".
 const css = (tokens + global + extra).replace(/'Newsreader Variable'/g, "'Newsreader'").replace(/'Inter Variable'/g, "'Inter'");
