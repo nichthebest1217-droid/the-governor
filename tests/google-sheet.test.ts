@@ -189,18 +189,22 @@ function world(rows: Record<string, unknown>[]) {
     HtmlService: { createTemplateFromFile: (name: string) => { const t: any = { evaluate: () => { w.pages.push({ name, boot: JSON.parse(t.boot) }); const out: any = chain({}); return out; } }; return t; }, XFrameOptionsMode: { ALLOWALL: 'ALLOWALL' } },
     Logger: { log: () => {} },
   };
-  const load = (files: string[], names: string) => {
+  const load = (files: string[], names: string, transform = (src: string) => src) => {
     const keys = Object.keys(services);
-    const src = files.map((f) => readFileSync(p(f), 'utf8')).join('\n');
+    const src = transform(files.map((f) => readFileSync(p(f), 'utf8')).join('\n'));
     return new Function(...keys, `${src}\nreturn { ${names} };`)(...keys.map((k) => services[k]));
   };
-  const pub = load(['google-workspace/publisher/Code.gs', 'google-workspace/publisher/Doc.gs', 'google-workspace/publisher/Issue.gs'], 'refresh_, tick, publishNow, doGet, api, importArchive, splitImages_, imageSize_, HEADERS, loadJson_, checkPrintIssues_, printFolder_, base64_');
+  const PUBLISHER = ['google-workspace/publisher/Code.gs', 'google-workspace/publisher/Doc.gs', 'google-workspace/publisher/Issue.gs'];
+  const NAMES = 'refresh_, tick, publishNow, doGet, api, importArchive, splitImages_, imageSize_, HEADERS, loadJson_, checkPrintIssues_, printFolder_, base64_';
+  const pub = load(PUBLISHER, NAMES);
+  /** The same publisher one PROCESSOR earlier, sharing this fake Google. */
+  const olderPublisher = () => load(PUBLISHER, NAMES, (src) => src.replace(/const PROCESSOR = (\d+);/, (_m, n) => 'const PROCESSOR = ' + (Number(n) - 1) + ';'));
   const sheet = load(['google-workspace/sheet/Code.gs'], 'onEdit, quickNote_, rowFrom_, upgradeColumns_, HEADERS');
   const cell = (row: number, header: string) => articles.get(row, HEADERS.indexOf(header) + 1);
   const link = (row: number, header: string) => articles.links[row - 1]?.[HEADERS.indexOf(header)] ?? null;
   const guide = (row = 3) => String(sheets[1].get(row, 1));
   const live = () => pub.loadJson_('live.json');
-  return { w, pub, sheet, cell, link, guide, live };
+  return { w, pub, sheet, cell, link, guide, live, olderPublisher };
 }
 
 const ROW = {
@@ -294,6 +298,19 @@ test('edits rebuild the page; Draft takes it down and its pictures go to the tra
   assert.equal(live().articles[ID_A], undefined);
   assert.equal(cell(2, 'On the website'), 'Not on the website (draft)');
   assert.equal(cell(2, 'ID'), ID_A, 'the ID stays, so republishing keeps the address');
+});
+
+test('raising PROCESSOR rebuilds every article from its Doc and the rebuilt pages are saved', () => {
+  const { w, pub, live, olderPublisher } = world([ROW]);
+  olderPublisher().refresh_();
+  const older = live().articles[ID_A].processor;
+  w.exportText = w.exportText.replace('Last week', 'This week'); // the Doc reads differently; its row and edit time do not change
+  pub.refresh_();
+  assert.equal(live().articles[ID_A].processor, older + 1, 'rebuilt by the current processor');
+  assert.match(live().articles[ID_A].body, /This week, students gathered/, 'and the rebuilt page is saved');
+  const exports = w.fetched.filter((u) => u.includes('/export')).length;
+  pub.refresh_();
+  assert.equal(w.fetched.filter((u) => u.includes('/export')).length, exports, 'once saved, it is not rebuilt again');
 });
 
 test('a row with a problem keeps the live version; Google being busy is simply retried', () => {

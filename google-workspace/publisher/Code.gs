@@ -510,7 +510,8 @@ function compile_(assessed, started) {
     if (hold && vanished.indexOf(id) >= 0) next.articles[id] = live.articles[id];
     else trash_(live.articles[id].media);
   });
-  next.version = hash_(JSON.stringify([Object.keys(next.articles).sort().map(function (id) { return id + ':' + next.articles[id].revision; }), next.settings, next.issues]));
+  // An article rebuilt by a newer processor (same row, same Doc) changes the version too, so it is saved.
+  next.version = hash_(JSON.stringify([Object.keys(next.articles).sort().map(function (id) { return id + ':' + next.articles[id].revision + ':' + (next.articles[id].processor || 0); }), next.settings, next.issues]));
   if (next.version !== live.version || JSON.stringify(next.errors) !== JSON.stringify(live.errors || {}) || JSON.stringify(next.warnings) !== JSON.stringify(live.warnings || [])) {
     saveJson_('live.json', next);
     if (next.version !== live.version) setSiteVersion_();
