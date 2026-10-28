@@ -467,6 +467,22 @@ test('publishing the issue puts its PDF on the website and its waiting articles 
   assert.ok(w.shared.includes('editor@govsacademy.org') && !w.shared.includes('nicholas.zhuo@govsacademy.org'), 'the Sheet\'s editors may use the print-issues folder');
 });
 
+test('an issue dated a few days ahead goes up, articles and all, the moment it is Published', () => {
+  const { w, pub, cell, live } = world([]);
+  const folder = pub.printFolder_();
+  w.pdfs.set(PRINT, { name: 'The Governor Issue 1.pdf', bytes: ISSUE_PDF, modifiedTime: '2026-10-28T12:00:00.000Z', parent: folder });
+  pub.checkPrintIssues_(w.sheets[0].getParent(), Date.now());
+  const later = new Date('2099-10-30T12:00:00');
+  for (let r = 2; r <= 15; r++) w.articles.set(r, HEADERS.indexOf('Publication date') + 1, later);
+  pub.refresh_();
+  assert.equal(cell(2, 'On the website'), 'Not on the website (waiting for review)');
+  w.sheets.find((x) => x.name === 'Issues')!.set(2, 1, 'Published');
+  pub.refresh_();
+  assert.equal(Object.keys(live().articles).length, 14, 'not held back as scheduled');
+  assert.match(cell(2, 'On the website'), /^✓ Live: /);
+  assert.ok(Object.values<any>(live().articles).every((a) => a.publishedAt === '2099-10-30'), 'they keep the date printed on the issue');
+});
+
 test('a long issue is made over several checks without making anything twice; an unreadable PDF is reported', () => {
   const { w, pub } = world([]);
   const folder = pub.printFolder_();
@@ -503,6 +519,7 @@ test('the Sheet\'s own script: instant feedback when a row is edited', () => {
   assert.equal(sheet.quickNote_(row({ ...ROW, 'Author(s)': '' }), '', true, TODAY), "⚠ Add the author(s), for example Jane Doe '27.");
   assert.equal(sheet.quickNote_(row({ ...ROW, 'Google Doc link': 'see my email' }), '', true, TODAY), '⚠ The Google Doc link is not a link to a Google Doc.');
   assert.equal(sheet.quickNote_(row({ ...ROW, 'Publication date': '2099-01-05' }), '', true, TODAY), 'Scheduled for January 5, 2099');
+  assert.equal(sheet.quickNote_(row({ ...ROW, 'Publication date': '2099-01-05', 'Print issue': '2026-27-issue-2' }), '', true, TODAY, { '2026-27-issue-2': true }), 'Publishing… (usually live within a minute)', 'an article of a Published issue is not scheduled');
   assert.equal(sheet.quickNote_(row({}), '', true, TODAY), '');
   HEADERS.forEach((h, j) => w.articles.set(2, j + 1, (ROW as any)[h] ?? ''));
   w.sheets[1].set(3, 1, 'Publishing is ON: articles appear on the website about a minute after they are marked Published.');

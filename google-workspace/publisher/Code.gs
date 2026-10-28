@@ -291,7 +291,7 @@ function revision_(r) {
  * problem (`held`: the live version stays), and rows that are not Published or are scheduled for
  * later (`unpublished`: taken down). Also reads the Homepage, Site and Masthead tabs.
  */
-function assess_(ss, t, docs, today) {
+function assess_(ss, t, docs, today, printed) {
   const out = { ready: [], held: [], unpublished: [], settings: null };
   t.rows.forEach(function (r) {
     r.problems = [];
@@ -312,7 +312,9 @@ function assess_(ss, t, docs, today) {
     if (!r.id) return; // not ready yet: the minute-by-minute check gives it an ID first
     if (r.problems.length) { out.held.push(r.id); return; }
     r.date = goLiveDate_(r, today);
-    r.scheduled = r.date > today;
+    // A future date schedules the article, except in a print issue that is Published: the issue's
+    // Status says when its articles go up, and they keep the date printed on it.
+    r.scheduled = r.date > today && !(r.issue && printed && printed[r.issue]);
     if (r.scheduled) { out.unpublished.push(r.id); return; }
     r.revision = revision_(r);
     out.ready.push(r);
@@ -831,7 +833,9 @@ function refresh_() {
 
   const docIds = [];
   t.rows.forEach(function (r) { if (r.status === 'Published' && r.docId && docIds.indexOf(r.docId) < 0) docIds.push(r.docId); });
-  const assessed = assess_(ss, t, docInfo_(docIds), today);
+  const printed = {};
+  issues.rows.forEach(function (r) { if (r.status === 'Published' && r.id) printed[r.id] = true; });
+  const assessed = assess_(ss, t, docInfo_(docIds), today, printed);
   assessed.issues = siteIssues_(issues);
   assessed.keepIssues = issues.rows.filter(function (r) { return r.retrying; }).map(function (r) { return r.id; });
   const live = compile_(assessed, started);

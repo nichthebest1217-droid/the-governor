@@ -237,9 +237,17 @@ function onEdit(e) {
     const guide = sheet.getParent().getSheetByName(GUIDE);
     const instant = !!guide && String(guide.getRange(GUIDE_STATUS_ROW, 1).getValue()).indexOf(INSTANT_ON) === 0;
     const today = today_();
+    // Articles of a Published print issue go up with it, whatever date is printed on it.
+    const printed = {};
+    const issueTab = sheet.getParent().getSheetByName(ISSUES);
+    if (issueTab && issueTab.getLastRow() > 1) {
+      issueTab.getRange(2, 1, issueTab.getLastRow() - 1, ISSUE_HEADERS.length).getValues().forEach(function (v) {
+        if (String(v[ISSUE_HEADERS.indexOf('Status')]).trim() === 'Published') printed[String(v[ISSUE_HEADERS.indexOf('ID')]).trim()] = true;
+      });
+    }
     let changed = false;
     const next = values.map(function (v, i) {
-      const note = quickNote_(rowFrom_(v, headers, links[i], i + first), String(current[i][0]), instant, today);
+      const note = quickNote_(rowFrom_(v, headers, links[i], i + first), String(current[i][0]), instant, today, printed);
       if (note !== current[i][0]) changed = true;
       return [note];
     });
@@ -263,14 +271,14 @@ function issueNote_(sheet, range) {
   }
 }
 
-function quickNote_(r, current, instant, today) {
+function quickNote_(r, current, instant, today, printed) {
   if (r.blank) return '';
   const wasOnSite = /^(✓|Updating|Taking it off|⚠ The website still shows)/.test(current);
   if (r.status !== 'Published') return wasOnSite ? 'Taking it off the website…' : offNote_(r.status);
   const problem = basicProblems_(r)[0];
   if (problem) return (wasOnSite ? '⚠ The website still shows the earlier version: ' : '⚠ ') + problem;
   const day = goLiveDate_(r, today);
-  if (day > today) return 'Scheduled for ' + longDate_(day) + (wasOnSite ? ' (off the website until then)' : '');
+  if (day > today && !(r.issue && printed && printed[r.issue])) return 'Scheduled for ' + longDate_(day) + (wasOnSite ? ' (off the website until then)' : '');
   return (wasOnSite ? 'Updating…' : 'Publishing…') + waitNote_(instant);
 }
 
