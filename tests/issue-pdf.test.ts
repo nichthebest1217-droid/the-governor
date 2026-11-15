@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { unzlibSync, zlibSync } from 'fflate';
 import { openPdf } from '../scripts/lib/pdf-read.ts';
-import { splitIssue, articleHtml, parseByline, guessCategory, coverRow, type IssueArticle, type ArticleImage } from '../scripts/lib/issue-split.ts';
+import { splitIssue, articleHtml, parseByline, guessCategory, coverRow, type IssueArticle, type ArticleImage, type Block } from '../scripts/lib/issue-split.ts';
+import type { PdfPage } from '../scripts/lib/pdf-read.ts';
 import { p, readJson } from '../scripts/lib/util.ts';
 
 const zlib = { inflate: (d: Uint8Array) => unzlibSync(d), deflate: (d: Uint8Array) => zlibSync(d) };
@@ -69,6 +70,8 @@ test('Issue I: pictures go with their articles, captions included; puzzles and c
   assert.equal(pics('New Policy on Cellphones').length, 0, 'the meme behind a vertical rule is not the article\'s photo');
   assert.equal(pics('From the Editors: Buzzing First Week Back!').length, 0, 'the comic credited to its artist is not part of the editorial');
   assert.equal(pics('Teachers & Their Summer Breaks').length, 2, 'small photos count; small cut-out decorations do not');
+  assert.equal(pics('The Staff Art Show').length, 4, 'the skateboards in the grid of the show\'s pieces, under its own text');
+  assert.equal(pics('Dummer Cup 2026!').length, 0, 'not the next article\'s, across the gutter');
   assert.ok(split.skipped.some((s) => /MAD LIB/.test(s)));
   assert.ok(split.skipped.some((s) => /pictures? not placed/.test(s)));
   assert.ok(split.contributors.includes("DK Rhee '28"));
@@ -114,4 +117,91 @@ test('names, sections and lists', () => {
   assert.equal(guessCategory('Boys Varsity Soccer Midseason Review', 'the team won'), 'Sports');
   assert.equal(guessCategory('Introducing Mr. Carney', 'he teaches history'), 'People');
   assert.equal(guessCategory('Three Activity Controversy: Is the Rule Outdated?', 'I think we should'), 'Opinion');
+});
+
+// ---------------------------------------------------------------------------------------------
+// A made-up issue set like Issue III (November 2026), for what Issue I does not have: a headline set
+// in italics like a byline, a caption on two lines, a word in italics inside a justified line, a
+// work credited to its artist inside the article about it, and pictures below other articles' text.
+const BODY = 'TimesNewRomanPSMT';
+function fakeIssue() {
+  let bt = 0;
+  const pages: PdfPage[] = [1, 2].map((number) => ({ number, width: 792, height: 1224, glyphs: [], images: [], rules: [{ x0: 52, x1: 740, y: 60 }], vrules: [] }));
+  /** One text object from x on baseline y: letters half an em wide, spaces `space` wide. Returns where it ends. */
+  const put = (p: PdfPage, text: string, x: number, y: number, font: string, size: number, space = 0.25 * size) => {
+    bt++;
+    for (const ch of text) {
+      const w = ch === ' ' ? space : 0.5 * size;
+      p.glyphs.push({ text: ch, font, bold: /Bold/.test(font), italic: /Italic/.test(font), size, x, y, w, bt });
+      x += w;
+    }
+    return x;
+  };
+  /** A line of text justified to the column's width (a paragraph's last line is not). */
+  const justified = (p: PdfPage, text: string, x: number, y: number, width: number, last: boolean) => {
+    const spaces = (text.match(/ /g) || []).length;
+    put(p, text, x, y, BODY, 11, last || !spaces ? 2.75 : (width - (text.length - spaces) * 5.5) / spaces);
+  };
+  /** Paragraphs down a column 207 points wide, first lines indented. */
+  const column = (p: PdfPage, x: number, y: number, paras: string[][]) => {
+    paras.forEach((lines) => lines.forEach((t, i) => { justified(p, t, x + (i ? 0 : 15), y, i ? 207 : 192, i === lines.length - 1); y += 15; }));
+    return y;
+  };
+  const filler = (count: number) => Array.from({ length: count }, () => ['Students gathered in the gym to', 'cheer for the teams and to see the', 'games that the seniors planned for', 'everyone on a cold and bright day.', 'It went well.']);
+  const head = (p: PdfPage, title: string, byline: string, cx: number, y: number, font = 'OldStandard-Bold', size = 16) => {
+    put(p, title, cx - (title.length * size) / 4, y, font, size);
+    put(p, byline, cx - (byline.length * 6) / 4, y + 24, 'OldStandard-Italic', 12);
+  };
+  const [one, two] = pages;
+  put(one, '26-27 Issue III', 340, 40, 'OldStandard-Regular', 14);
+  put(one, 'November 17, 2026', 640, 40, 'OldStandard-Regular', 12);
+  // A headline set in italics, like the byline under it.
+  head(one, 'Girls Cross Country: Success Under the Radar', 'VIV BLAKE ‘27', 400, 90, 'OldStandard-Italic', 12);
+  let y = column(one, 52, 140, [['The girls had a very strong season', 'this fall, and they stayed close as a', 'team through every single race.', 'They ran well.']]);
+  y = column(one, 52, y, [['The team hopes that students will', 'enroll after the letters go out in', 'March. This is when the power', 'shifts back to students. Their decisions']]);
+  // The next line has a word in italics: three text objects on one baseline, the gaps stretched.
+  const gap = (207 - 25 * 5.5) / 5;
+  put(one, ': the', put(one, 'yield rate', put(one, 'determine the', 52, y, BODY, 11, gap) + gap, y, 'TimesNewRomanPS-ItalicMT', 11, gap), y, BODY, 11, gap);
+  justified(one, 'percentage of admitted students who', 52, y + 15, 207, false);
+  justified(one, 'enroll.', 52, y + 30, 207, true);
+  column(one, 293, 140, filler(2));
+  // A photo whose caption runs onto a second line.
+  one.images.push({ id: 1, x0: 533, y0: 140, x1: 739, y1: 330, width: 410, height: 615, alpha: false });
+  put(one, 'Special Olympics Athlete Posing at The Medal', 540, 342, 'Zarid-Regular', 9);
+  put(one, 'Ceremony', 615, 353, 'Zarid-Regular', 9);
+  one.rules.push({ x0: 52, x1: 740, y: 600 });
+  head(one, 'Governors Governors', 'LANA HARDIN ‘27', 400, 630);
+  column(one, 52, 680, filler(2));
+  column(one, 293, 680, [['Shakila made two sculptures from', 'the words “crushed cage.” Using the', 'same words, she tried two clays.', 'They worked.']]);
+  // A work credited to its artist, inside the article that writes about it.
+  one.images.push({ id: 2, x0: 533, y0: 680, x1: 739, y1: 870, width: 505, height: 615, alpha: false });
+  put(one, 'Crushed Cage by Shakila ‘29', 580, 882, 'Zarid-Regular', 9);
+  // Three articles side by side; under the shortest two, a puzzle and clip art that belong to none of them.
+  head(two, 'Pep Rallies', 'LORELAI BLUME ‘27', 155, 90);
+  head(two, 'Wrestling', 'DK RHEE ‘28', 396, 90);
+  head(two, 'Youth and Loss', 'GAVIN ANDERSON ‘28', 636, 90);
+  column(two, 52, 140, filler(10));
+  column(two, 293, 140, filler(4));
+  column(two, 533, 140, filler(6));
+  two.images.push({ id: 3, x0: 292, y0: 480, x1: 510, y1: 700, width: 502, height: 502, alpha: false });
+  two.images.push({ id: 4, x0: 567, y0: 640, x1: 713, y1: 737, width: 384, height: 260, alpha: true });
+  return { pageCount: 2, page: (n: number) => pages[n - 1] };
+}
+
+test('Issue III: a headline in italics, a caption on two lines, italics in a justified line, a credited work, pictures under other articles', () => {
+  const s = splitIssue(fakeIssue());
+  const text = (b: Block) => (b.type === 'p' ? b.runs.map((r) => r.text).join('') : '');
+  const pics = (a: IssueArticle) => a.blocks.flatMap((b) => (b.type === 'image' ? [b.image] : b.type === 'row' ? b.images : []));
+  assert.deepEqual([s.id, s.date], ['2026-27-issue-3', '2026-11-17']);
+  assert.deepEqual(s.articles.map((a) => a.title), ['Girls Cross Country: Success Under the Radar', 'Governors Governors', 'Pep Rallies', 'Wrestling', 'Youth and Loss']);
+  const xc = s.articles[0];
+  assert.deepEqual(xc.authors, ["Viv Blake '27"], 'the headline set like a byline is found by the byline under it');
+  assert.equal(pics(xc)[0].caption, 'Special Olympics Athlete Posing at The Medal Ceremony', 'both lines of the caption');
+  assert.ok(!xc.blocks.some((b) => /Ceremony/.test(text(b))), 'not a stray line of text');
+  const yieldRate = xc.blocks.find((b) => /yield rate/.test(text(b)));
+  assert.ok(yieldRate && /Their decisions determine the yield rate: the percentage of admitted students who enroll\.$/.test(text(yieldRate)), 'the words in italics stay in their line');
+  assert.ok(yieldRate.type === 'p' && yieldRate.runs.some((r) => r.italic && r.text.trim() === 'yield rate'), 'still in italics');
+  assert.equal(pics(s.articles[1])[0]?.caption, 'Crushed Cage by Shakila ‘29', 'the work goes with the article that writes about it');
+  assert.deepEqual(s.articles.slice(2).map((a) => pics(a).length), [0, 0, 0], 'a picture under one article\'s column is not its neighbour\'s');
+  assert.ok(s.skipped.some((x) => /^2 pictures not placed/.test(x)), s.skipped.join(' | '));
 });

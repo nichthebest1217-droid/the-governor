@@ -42,6 +42,8 @@ const toRoman = (n: number) => {
   parts.forEach(([v, s]) => { while (n >= v) { out += s; n -= v; } });
   return out;
 };
+/** A typeface without its weight or slant: "TimesNewRomanPS-ItalicMT" -> "TimesNewRoman". */
+const family = (f: string) => f.replace(/^[A-Z]{6}\+/, '').replace(/[-,](Bold|Italic|Oblique|Regular|Medium|Semibold|Light)\w*$/i, '').replace(/(PS)?MT$/, '').replace(/PS$/, '');
 const median = (xs: number[]) => { const s = xs.slice().sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0; };
 const clean = (s: string) => s.replace(/\s+/g, ' ').trim();
 // "1. Apple cider donuts", "2)Cinnamon rolls", "• Free blocks" (but not "35.5% of students").
@@ -76,7 +78,11 @@ function linesOf(p: PdfPage): Line[] {
         const gap = g.x - (prev.x + prev.w);
         const size = Math.max(prev.size, g.size);
         // Measured on both formats: justified word gaps stay under about 16pt; column gutters are 25pt or more.
-        const apart = byObject ? prev.bt !== g.bt && gap > 0.6 * size : gap > (prev.text.trim() ? 0.9 : 2.2) * size;
+        // A word set in italics or bold is a text object of its own on the line's baseline, in the same face:
+        // the gap before it is a justified line's word gap, not the gutter to another text box.
+        const ink = seg.filter((x) => x.text.trim()).pop() || prev;
+        const restyled = family(ink.font) === family(g.font) && Math.abs(ink.size - g.size) < 0.1 && Math.abs(ink.y - g.y) < 0.6 && gap <= 1.5 * size;
+        const apart = byObject ? prev.bt !== g.bt && gap > 0.6 * size && !restyled : gap > (prev.text.trim() ? 0.9 : 2.2) * size;
         if (apart || Math.abs(prev.size - g.size) > 0.35 * size) flush();
       }
       seg.push(g);
@@ -274,6 +280,26 @@ export function splitIssue(pdf: PageSource, opts: { knownNames?: string[] } = {}
         if (more && more.top - under[0].bottom < 0.8 * more.size && more.italic === under[0].italic && YEAR_MARK.test(more.text)) { h.byline.push(more); more.role = 'byline'; }
       }
     });
+    // A headline set small and in italics like a byline ("Girls Cross Country: Success Under the Radar" over
+    // "VIV BLAKE '27"): a writer's name in capitals with a class year that no headline claims, under a title.
+    content.filter((l) => !l.role && !l.bold && l.italic && YEAR_MARK.test(l.text) && l.text === l.text.toUpperCase() && /[A-Z]{2}/.test(l.text)
+      && l.text.length < 90 && l.size >= 0.75 * bodySize).sort((a, b) => a.top - b.top).forEach((by) => {
+      if (by.role) return;
+      const near = (l: Line, below: Line, room: number) => !l.role && l !== below && l.bottom <= below.top + 3 && below.top - l.bottom <= room && Math.abs(l.cx - below.cx) < 80;
+      const title = content.filter((l) => near(l, by, 1.6 * by.size) && !YEAR_MARK.test(l.text) && l.font !== bodyFont && l.size >= by.size - 0.5 && /[a-z]/.test(l.text))
+        .sort((a, b) => b.top - a.top)[0];
+      if (!title) return;
+      const lines = [title];
+      for (let up = 0; up < 2; up++) {
+        const prev = content.filter((l) => near(l, lines[0], 0.9 * l.size) && l.font === title.font && Math.abs(l.size - title.size) < 0.5).sort((a, b) => b.top - a.top)[0];
+        if (prev) lines.unshift(prev); else break;
+      }
+      const x0 = Math.min.apply(null, lines.map((l) => l.x0));
+      const x1 = Math.max.apply(null, lines.map((l) => l.x1));
+      lines.forEach((l) => { l.role = 'head'; });
+      by.role = 'byline';
+      pageHeads.push({ page: p.number, lines, text: clean(lines.map((l) => l.text).join(' ')), x0, x1, top: lines[0].top, bottom: lines[lines.length - 1].bottom, cx: (x0 + x1) / 2, size: title.size, byline: [by], body: [], images: [] });
+    });
     // Artists' names: italic with a class year, not under a headline (the Student Arts page).
     content.filter((l) => !l.role && l.italic && !l.bold && YEAR_MARK.test(l.text) && l.size >= bodySize && l.text.length < 60)
       .forEach((l) => { l.role = 'credit'; credits.push({ line: l, image: null }); });
@@ -289,8 +315,12 @@ export function splitIssue(pdf: PageSource, opts: { knownNames?: string[] } = {}
         && ((l.x0 >= im.x1 - 2 && l.x0 - im.x1 <= 15) || (l.x1 <= im.x0 + 2 && im.x0 - l.x1 <= 15))).sort((a, b) => a.top - b.top);
       const found = under.length ? under : beside;
       if (found.length) {
-        const parts = [found[0]];
-        found.slice(1).forEach((l) => { if (l.top - parts[parts.length - 1].bottom < 1.4 * l.size) parts.push(l); });
+        // Its further lines: the same face, each just under the last, however far below the picture they reach.
+        const first = found[0];
+        const more = content.filter((l) => !l.role && l !== first && l.top > first.top && l.font === first.font && Math.abs(l.size - first.size) < 0.5
+          && (under.length ? l.cx > im.x0 - 10 && l.cx < im.x1 + 10 : Math.abs(l.x0 - first.x0) < 15)).sort((a, b) => a.top - b.top);
+        const parts = [first];
+        found.slice(1).concat(more.filter((l) => found.indexOf(l) < 0)).sort((a, b) => a.top - b.top).forEach((l) => { if (l.top > parts[parts.length - 1].top && l.top - parts[parts.length - 1].bottom < 1.4 * l.size) parts.push(l); });
         parts.forEach((l) => { l.role = 'caption'; });
         captions[im.id * 10000 + Math.round(im.y0)] = clean(parts.map((l) => l.text).join(' '));
       }
@@ -346,23 +376,45 @@ export function splitIssue(pdf: PageSource, opts: { knownNames?: string[] } = {}
       }).sort((a, b) => b.n - a.n);
       return scores.length && scores[0].n >= 2 && (scores.length < 2 || scores[0].n > scores[1].n) ? scores[0].h : null;
     };
+    // A work named in its caption ("Crushed Cage by Shakila '29") belongs to the one article that writes about it.
+    const plainText = (s: string) => ' ' + s.toLowerCase().replace(/[‘’'`´“”"]/g, '').replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
+    const hostOf = (work: string): Head | null => {
+      const key = plainText(work);
+      if (key.length < 8) return null;
+      const hosts = pageHeads.filter((h) => h.byline.length && plainText(h.body.map((l) => l.text).join(' ')).indexOf(key) >= 0);
+      return hosts.length === 1 ? hosts[0] : null;
+    };
+    // The article whose text is printed right above a point, in that column and with no rule between them, if any.
+    const textAbove = (x: number, y: number): Head | null => {
+      const best: { head: Head | null; bottom: number } = { head: null, bottom: -Infinity };
+      pageHeads.forEach((h) => h.body.forEach((l) => {
+        if (l.x0 < x && l.x1 > x && l.bottom <= y + 5 && l.bottom > best.bottom && !parted(l.bottom - 2, y, x)) { best.bottom = l.bottom; best.head = h; }
+      }));
+      return best.head;
+    };
     const claims: { im: PageImage; head: Head | null; named?: boolean; alone?: boolean }[] = [];
     pictures.filter((im) => artworks.indexOf(im) < 0).forEach((im) => {
       const cap = captionOf(im);
       const centre = (im.x0 + im.x1) / 2;
       let head: Head | null = null;
+      const work = cap ? /^(.{4,}?)\s+by\s+[A-Z]/.exec(cap) : null;
+      const host = work ? hostOf(work[1]) : null;
+      if (host) { claims.push({ im, head: host, named: true }); return; }
       // A credited work of its own ("Dumber & G-Dawg by Lana Hardin '27") or a preview of another page stands alone.
       if (cap && ((/\bby\s+[A-Z]/.test(cap) && !/^(photos?|photographs?|images?|graphics?|courtesy)\b/i.test(cap)) || /^(preview|coming up|next issue|see page)\b/i.test(cap))) { claims.push({ im, head: null, alone: true }); return; }
       if (cap) head = named(cap);
       if (head) { claims.push({ im, head, named: true }); return; }
       if (!head) {
         let bestD = Infinity;
+        const over = textAbove(centre, im.y0);
         pageHeads.filter((h) => h.top < im.y1 && !parted(h.bottom - 2, im.y0, centre) && !walled(centre, h.cx, (im.y0 + im.y1) / 2)).forEach((h) => {
           const boxes = [h as { x0: number; x1: number; top: number; bottom: number }].concat(h.body);
           const left = Math.min.apply(null, boxes.map((b) => b.x0));
           const right = Math.max.apply(null, boxes.map((b) => b.x1));
           const last = Math.max.apply(null, boxes.map((b) => b.bottom));
           if (!cap && im.y0 > last + 15) return;
+          // Not across the page from the article, nor under another article's column.
+          if (!cap && (centre < left || centre > right) && (Math.max(0, left - im.x1, im.x0 - right) > 40 || (over && over !== h))) return;
           const textArea = (right - left) * (last - h.top);
           if (!cap && (im.x1 - im.x0) * (im.y1 - im.y0) > 1.2 * textArea) return;
           const d = Math.min.apply(null, boxes.map((l) => dist(im, l))) + (centre < left || centre > right ? 100 : 0);

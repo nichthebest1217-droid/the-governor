@@ -93,11 +93,12 @@ masthead school year) work the same way and update the site within a minute.
    writers, a guessed category, the issue's date, the issue and its page order, and a link to a new Google Doc
    holding the article's text, photos and captions (in a folder for the issue, inside the print-issues folder).
    The issue gets a row in the **Issues** tab. Its **Notes** list what could not be made into an article
-   (puzzles, memes, a box with no writer); those stay in the PDF on the website. When an article has photos
+   (puzzles, memes, a box with no writer); those stay in the PDF on the website. A meme printed inside an
+   article's own column looks like a photo to the publisher, so it lands in that article: check. When an article has photos
    printed about the same size (the cast and the crew, three athletes), none is picked over the others: they
    open its Doc together, in one paragraph, and share the cover on the website, side by side.
 4. **Check each article**: open its Doc and compare it with the PDF, fix anything (paragraph breaks, a photo in
-   the wrong article), and choose the right **Category** in its row. A photo can be replaced with a sharper one
+   the wrong article, a meme or clip art used as a photo), and choose the right **Category** in its row. A photo can be replaced with a sharper one
    through the row's **Image link**.
 5. **Set the issue's Status to Published** in the Issues tab. About a minute later the issue is on the website
    with its PDF (on the Print issues page, and promoted on the front page), and every article of it still

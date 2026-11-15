@@ -51,7 +51,11 @@ nothing depends on GitHub.
   checks. Setting the issue's row to Published puts a public copy of the PDF on the website (Drive draws the
   cover from its first page; the issue's page shows the PDF in Google's viewer) and publishes its articles still
   *Ready for Review*. Photos printed about the same size open the article's Doc together and share its cover,
-  side by side. An issue can carry its own nameplate (the Issues tab's **Nameplate** column, a picture in Drive): the
+  side by side. A headline set small and in italics, like a byline, is found by the writer's name under it; a caption
+  may run over several lines; a work credited to its artist ("Crushed Cage by Shakila '29") goes with the article that
+  writes about it; a picture under another article's column, or across the page from an article, belongs to neither
+  (Issue III, November 2026). A meme printed in an article's own column cannot be told from a photo: editors check.
+  An issue can carry its own nameplate (the Issues tab's **Nameplate** column, a picture in Drive): the
   website wears it while that issue is the latest. It was checked against Issue I, whose 14 articles had been
   typed in by hand: every article, writer and photo matched.
 - **Formatting.** Bold, italics, links, headings, lists, tables and pictures in a Doc carry over; fonts, sizes and
